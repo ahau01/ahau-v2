@@ -3,7 +3,8 @@
 Backend-agnostic data-access contract for Āhau — the definition of what any
 backend must provide for the whakapapa application, independent of protocol.
 
-Status: **Leg 1, Milestone 2.** The contract is being written; no backend
+Status: **Leg 1, Milestone 2 complete.** The contract is written: 65 operations
+across 14 domains, covering all 68 accessors kept during triage. No backend
 adapter exists yet, and no application shell exists yet.
 
 ## Why this exists
@@ -37,7 +38,9 @@ npm run typecheck
 | `npm run typecheck` | `tsc --noEmit` — the contract's primary gate |
 | `npm run build` | Compile to `dist/` |
 | `npm test` | Build, then run the test suite |
-| `npm run check:coverage` | Verify the contract covers the triage (added in Task 7) |
+| `npm run check:coverage` | Verify the contract covers the triage, in both directions |
+| `npm run check:manifest` | Fail if the derived manifest is stale |
+| `npm run refresh:source` | Re-pull the triage and inventory from `ahau` |
 
 ## Licence
 
