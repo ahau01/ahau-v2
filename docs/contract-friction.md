@@ -221,3 +221,42 @@ Worth noting, because it is evidence the shape is broadly right:
 - **The person/profile split** held up. They were never tempted to collapse.
 - **Paired writes** reported honestly under both profiles with no branching in
   calling code, which is what the design was for.
+
+## New, found by consuming the contract from a user interface
+
+Milestone 3 wired a Svelte shell to `DataAccess`. Two findings, both about what
+the contract cannot express rather than what it expresses wrongly.
+
+### 12. A write that is refused has no representation
+
+`Supported<T>` covers a backend declining a capability it never claimed. Nothing
+covers a backend refusing a write the caller is not permitted to make — a member
+retracting a record only a kaitiaki may retract, for instance.
+
+Every write returns `WriteResult`, which has no failure state, so an adapter has
+only one option left: throw. That contradicts the contract's own principle that
+refusals are values, and it means a UI must wrap ordinary, expected outcomes in
+exception handling.
+
+The shell currently assumes every write succeeds, which is wrong and will stay
+wrong until this is settled.
+
+**To resolve**: decide whether writes can be refused, and if so give them a
+result that says so. This is distinct from capability negotiation — the backend
+*can* do it, this caller may not. Likely the more common case of the two in a
+system built around kaitiaki permissions.
+
+### 13. The contract has no notion of the group you are currently in
+
+Āhau is group-centric: people, stories, submissions and settings are all scoped
+to a group. But `DataAccess` has no current-group concept, so the shell reads
+`getViewer()` and picks `memberships[0]` arbitrarily.
+
+That is not a real answer. A person belonging to several iwi has no way to say
+which they are looking at, and every group-scoped call would need the choice
+threaded through it.
+
+**To resolve**: decide whether current group is contract state, a parameter
+threaded everywhere, or purely an application concern the shell owns. The third
+is defensible, but it should be a decision rather than an accident of there
+being nowhere to put it.

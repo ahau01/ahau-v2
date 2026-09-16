@@ -12,14 +12,22 @@
     "derive:manifest": "node scripts/derive-manifest.mjs",
     "check:manifest": "node scripts/derive-manifest.mjs --check",
     "refresh:source": "cp ../ahau/plans/data-access-triage.json ../ahau/plans/data-access-inventory.json contract-source/ && npm run derive:manifest",
-    "check:conformance": "npm run build && node scripts/check-conformance-coverage.mjs --ci"
+    "check:conformance": "npm run build && node scripts/check-conformance-coverage.mjs --ci",
+    "dev": "vite",
+    "build:app": "vite build",
+    "check:app": "svelte-check --tsconfig ./tsconfig.app.json --threshold error"
   },
   "engines": {
     "node": ">=20 <21"
   },
   "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.1.1",
     "@types/node": "^20.19.43",
-    "typescript": "^5.6.3"
+    "bits-ui": "^2.19.2",
+    "svelte": "^5.57.0",
+    "svelte-check": "^4.7.6",
+    "typescript": "^5.6.3",
+    "vite": "^6.4.3"
   },
   "license": "UNLICENSED"
 }

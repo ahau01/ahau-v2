@@ -1,0 +1,100 @@
+/*
+ * Āhau v2 design tokens.
+ *
+ * Every value here was verified against the running application's source in
+ * ahau-monorepo, not adopted from ahau-styles. That extraction is a proof of
+ * concept and was found to contain at least one inverted attribution, so it is
+ * treated as a candidate list rather than a specification.
+ *
+ * Provenance is recorded per token. A token whose origin could not be traced is
+ * absent, and listed in docs/token-verification.md with what is unknown.
+ *
+ * Source files, all under apps/ahau/ui in ahau-monorepo:
+ *   vuetify.config.js               the Vuetify theme actually applied
+ *   src/lib/constants.mjs           ALIVE_COLOUR / DECEASED_COLOUR
+ *   src/assets/themes/<name>/theme.json   theme-service palettes (see note below)
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* Brand. vuetify.config.js VUETIFY_THEME_COLORS - the applied theme. */
+  --ahau-primary: #383838;
+  --ahau-secondary: #b12526;
+  --ahau-accent: #a70000;
+  --ahau-error: #ff0000;
+
+  /*
+   * Life status.
+   *
+   * These are the values the Vuetify theme actually uses: vuetify.config.js
+   * imports ALIVE_COLOUR and DECEASED_COLOUR from src/lib/constants.mjs and
+   * spreads them into the theme.
+   *
+   * ahau-styles records the opposite - it labels #023000 / #282828 as "Vuetify
+   * theme values, used by themed components" and these as "tree/table rendering
+   * values". That is inverted. Building themed components from that extraction
+   * would produce the wrong colour.
+   */
+  --ahau-alive: #427979;
+  --ahau-deceased: #bfbfbf;
+
+  /*
+   * The theme.json palettes carry a different pair (#023000 / #282828) and feed
+   * the theme service rather than the Vuetify config. They are deliberately not
+   * tokens here: which surface should use them is unverified, and theming
+   * itself is an open question for this milestone.
+   */
+
+  /* Surface. Vuetify dark theme, which vuetify.config.js sets with dark: true. */
+  --ahau-surface: #121212;
+  --ahau-surface-raised: #1e1e1e;
+  --ahau-surface-sunken: #0d0d0d;
+
+  /* Text. Vuetify dark-theme defaults. */
+  --ahau-text: rgba(255, 255, 255, 0.87);
+  --ahau-text-muted: rgba(255, 255, 255, 0.6);
+  --ahau-text-disabled: rgba(255, 255, 255, 0.38);
+  --ahau-divider: rgba(255, 255, 255, 0.12);
+
+  /* Focus. Not taken from the source: see docs/token-verification.md. */
+  --ahau-focus-ring: #5f9ea0;
+
+  /* Typography. ahau-v2 pins the family the Vue app loads via typeface-roboto. */
+  --ahau-font-body: Roboto, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ahau-font-size-base: 16px;
+  --ahau-line-height: 1.5;
+
+  /*
+   * Spacing. Not verified against the source.
+   *
+   * Vuetify 2's spacing came from its own scale, applied through utility
+   * classes rather than declared anywhere in this application. These are a
+   * fresh 4px scale, chosen here rather than recovered, and flagged so nobody
+   * mistakes them for Āhau's.
+   */
+  --ahau-space-1: 4px;
+  --ahau-space-2: 8px;
+  --ahau-space-3: 16px;
+  --ahau-space-4: 24px;
+  --ahau-space-5: 32px;
+  --ahau-space-6: 48px;
+
+  --ahau-radius: 4px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ahau-surface);
+  color: var(--ahau-text);
+  font-family: var(--ahau-font-body);
+  font-size: var(--ahau-font-size-base);
+  line-height: var(--ahau-line-height);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ahau-focus-ring);
+  outline-offset: 2px;
+}
