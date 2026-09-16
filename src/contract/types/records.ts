@@ -151,7 +151,16 @@ export interface Story extends RecordMeta {
   readonly id: RecordId
   readonly title: string | null
   readonly description: string | null
-  readonly artefacts: readonly RecordId[]
+  /**
+   * Artefacts delivered inline rather than by reference.
+   *
+   * The source frontend had no artefact read path -- getArtefact and
+   * getArtefacts had no call sites -- because stories and collections carried
+   * their artefacts inline through fragments. Modelling them as ids here left
+   * a reference nothing could resolve. Writes still reference by id; reads
+   * deliver the artefact.
+   */
+  readonly artefacts: readonly Artefact[]
   /** People this story mentions; the basis of the reverse lookup. */
   readonly mentions: readonly RecordId[]
 }

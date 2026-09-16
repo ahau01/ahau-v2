@@ -1,8 +1,10 @@
 /**
  * Which source accessor each contract operation answers for.
  *
- * Machine-readable so the coverage gate can prove every kept accessor survived
- * into the contract, and that nothing was invented. Several entries are
+ * Machine-readable so the coverage gate can prove every kept operation survived
+ * into the contract, and that nothing was invented. Sources are exported
+ * accessors from data-access-triage.json, plus the inline templates triaged
+ * separately in data-access-leakage-triage.json and keyed by root field. Several entries are
  * many-to-one: where the triage recorded that accessors differed only in ways
  * the contract should not preserve, they collapse here.
  */
@@ -59,6 +61,7 @@ export const OPERATION_SOURCES: Readonly<Record<string, readonly string[]>> = {
 
   'artefact.saveArtefact': ['saveArtefact'],
   'artefact.retractArtefact': ['DELETE_ARTEFACT'],
+  'artefact.uploadMedia': ['uploadFile'],
 
   'submissions.listSubmissions': ['getSubmissions'],
   'submissions.proposeNewPerson': ['proposeNewGroupPerson'],
@@ -88,10 +91,13 @@ export const OPERATION_SOURCES: Readonly<Record<string, readonly string[]>> = {
   'applications.offerMembershipCredential': ['offerMembershipCredential'],
 
   'credentials.listCredentials': ['getAllCredentials'],
+  'credentials.presentCredential': ['sendCredentialProof'],
 
   'readiness.getReadiness': ['getIndexes'],
 
   'storehouse.listStorehouses': ['getPatakas'],
   'storehouse.blockStorehouse': ['blockPataka'],
-  'storehouse.unblockStorehouse': ['unblockPataka']
+  'storehouse.unblockStorehouse': ['unblockPataka'],
+  'storehouse.acceptInvite': ['acceptInvite'],
+  'storehouse.listConnectedPeers': ['connectedPeers']
 }

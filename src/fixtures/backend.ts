@@ -27,9 +27,10 @@ import {
   type WriteResult
 } from '../contract/semantics.js'
 import type { DataAccess } from '../contract/operations/index.js'
-import { asGroupId } from '../contract/types/index.js'
+import { asGroupId, asPeerId } from '../contract/types/index.js'
 import type {
   Collection as CollectionRecord,
+  Artefact,
   Credential,
   Group,
   GroupApplication,
@@ -40,6 +41,7 @@ import type {
   Person,
   Profile,
   Story,
+  Storehouse,
   Submission,
   SubmissionProposal,
   Viewer,
@@ -81,11 +83,10 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
     [seed.GROUPS.main, seed.GROUP],
     [seed.GROUPS.sub, seed.SUBGROUP]
   ])
+  const artefacts = new Collection<Artefact>()
   const subgroupParents = new Map(seed.SUBGROUP_PARENTS)
-  const storehouses = [
-    { id: seed.GROUPS.main as unknown as never, name: null, blocked: false }
-  ]
-  void storehouses
+  const storehouses = new Map<string, Storehouse>()
+  const connected = new Set<string>()
 
   const seen = (): readonly Membership[] => members.for(viewer)
 
@@ -494,7 +495,16 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
       async saveStory (given, input) {
         const id = given ?? nextId('story')
         const existing = stories.get(id) ?? seed.STORIES[0]!
-        stories.put({ ...existing, ...input, id, visibility: input.visibility })
+        stories.put({
+          ...existing,
+          ...input,
+          id,
+          visibility: input.visibility,
+          // Written by reference, read inline: resolve what the store knows.
+          artefacts: input.artefacts
+            .map(ref => artefacts.get(ref))
+            .filter((a): a is Artefact => a !== undefined)
+        })
         return wrote(id)
       },
       async retractStory (id, reason) {
@@ -534,12 +544,26 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
 
     artefact: {
       async saveArtefact (given, input) {
-        void input
-        return wrote(given ?? nextId('artefact'))
+        const id = given ?? nextId('artefact')
+        artefacts.put({
+          status: { state: 'active' },
+          visibility: input.visibility,
+          provenance: { author: viewer, recordedAt: TODAY },
+          id,
+          media: input.media,
+          description: input.description
+        })
+        return wrote(id)
       },
       async retractArtefact (id, reason) {
         void reason
         return wrote(id)
+      },
+      async uploadMedia (upload) {
+        return {
+          ref: `fixture-media-${nextId('media')}`,
+          mimeType: upload.mimeType
+        }
       }
     },
 
@@ -680,6 +704,11 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
     credentials: {
       async listCredentials () {
         return credentials.readable(viewer, seen())
+      },
+      async presentCredential (invitationUrl, credential) {
+        void invitationUrl
+        void credential
+        return wrote(nextId('presentation'))
       }
     },
 
@@ -691,15 +720,26 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
 
     storehouse: {
       async listStorehouses () {
-        return []
+        return [...storehouses.values()]
       },
       async blockStorehouse (id) {
-        void id
+        const existing = storehouses.get(id)
+        if (existing) storehouses.set(id, { ...existing, blocked: true })
         return wrote(nextId('storehouse'))
       },
       async unblockStorehouse (id) {
-        void id
+        const existing = storehouses.get(id)
+        if (existing) storehouses.set(id, { ...existing, blocked: false })
         return wrote(nextId('storehouse'))
+      },
+      async acceptInvite (inviteCode) {
+        const id = asPeerId(`peer-${inviteCode}`)
+        storehouses.set(id, { id, name: `Storehouse ${inviteCode}`, blocked: false })
+        connected.add(id)
+        return { id, acknowledgement: acknowledge() }
+      },
+      async listConnectedPeers () {
+        return [...storehouses.values()].filter(s => connected.has(s.id) && !s.blocked)
       }
     }
   }

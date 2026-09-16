@@ -23,6 +23,7 @@ import { fileURLToPath } from 'url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const TRIAGE = join(ROOT, 'contract-source', 'data-access-triage.json')
+const LEAKAGE = join(ROOT, 'contract-source', 'data-access-leakage-triage.json')
 const DIST_OPS = join(ROOT, 'dist', 'contract', 'operations')
 
 if (!existsSync(DIST_OPS)) {
@@ -33,8 +34,15 @@ if (!existsSync(DIST_OPS)) {
 const { OPERATION_SOURCES } = await import(join(DIST_OPS, 'sources.js'))
 const triage = JSON.parse(readFileSync(TRIAGE, 'utf8'))
 
-const kept = Object.entries(triage).filter(([, v]) => v.decision === 'keep').map(([k]) => k)
-const dropped = Object.entries(triage).filter(([, v]) => v.decision === 'drop').map(([k]) => k)
+const leakage = Object.entries(JSON.parse(readFileSync(LEAKAGE, 'utf8'))).filter(([k]) => k !== '_note')
+const kept = [
+  ...Object.entries(triage).filter(([, v]) => v.decision === 'keep').map(([k]) => k),
+  ...leakage.filter(([, v]) => v.decision === 'keep').map(([k]) => k)
+]
+const dropped = [
+  ...Object.entries(triage).filter(([, v]) => v.decision === 'drop').map(([k]) => k),
+  ...leakage.filter(([, v]) => v.decision === 'drop').map(([k]) => k)
+]
 const merges = Object.entries(triage)
   .filter(([, v]) => v.decision.startsWith('merge into '))
   .map(([from, v]) => [from, v.decision.slice('merge into '.length).trim()])

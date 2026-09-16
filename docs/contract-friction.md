@@ -98,7 +98,7 @@ and the fixture no longer destructures ids away to satisfy the compiler.
 Inputs moved beside the record types rather than staying with the operations
 because a proposal carries one -- see finding 10.
 
-### 5. Artefacts can be written but never read
+### 5. Artefacts can be written but never read — **resolved**
 
 `artefact.saveArtefact` and `retractArtefact` exist; no read operation does,
 because `getArtefact` and `getArtefacts` had no call sites and were dropped
@@ -108,11 +108,16 @@ a record type that can only be written.
 Stories and collections reference artefacts by `RecordId`, so a consumer
 holding one has no contract operation to resolve it.
 
-**To resolve**: either accept that artefacts are always delivered inline within
-stories and collections — in which case `Artefact` should not be addressable by
-id — or reinstate a read specified against a real requirement.
+**Resolved, and the cause was not what this entry assumed.** Stories now carry
+`readonly Artefact[]` rather than ids: the source frontend delivered artefacts
+inline through fragments, which is why no separate read had call sites. Writes
+still reference by id.
 
-### 6. Storehouses can be blocked but never added
+The other half was missing entirely. `uploadMedia` was recovered from an inline
+template in the upload-file mixin — without it a `MediaRef` could be referenced
+but never produced, so the artefact model had no way in at all.
+
+### 6. Storehouses can be blocked but never added — **resolved**
 
 `storehouse.blockStorehouse` and `unblockStorehouse` take a `PeerId`, and
 `listStorehouses` returns them, but nothing in the contract introduces one. The
@@ -149,6 +154,28 @@ return and nothing to acknowledge. Recorded only so the inconsistency is a
 decision rather than an oversight.
 
 ---
+
+## Method failure found while resolving findings 5 and 6
+
+### 11. Seven templates were never triaged, and the gate reported complete anyway
+
+Milestone 1 reported 77 of 77 accessors triaged with `--ci` exiting 0. Six files
+holding seven inline `gql` templates had no decision at all. The tracker listed
+them as file-level checkboxes, the triage file is keyed by accessor, and the gate
+counted accessors — so it reported complete work while a sixth of the tracked
+items were undecided.
+
+That is precisely the failure a gate exists to prevent, and it held for four
+commits. Four of the seven turned out to be operations the contract was missing,
+including the two this milestone had filed as design faults.
+
+**Resolved**: `plans/data-access-leakage-triage.json` records the six decisions,
+and `--ci` now fails when a leakage file has no decision — control tested by
+removing one. The coverage gate counts both sources, giving 72 kept rather than
+68.
+
+**Worth carrying forward**: a gate is only as honest as the set it counts. This
+one counted the easy set.
 
 ## New, exposed by acting on finding 1
 

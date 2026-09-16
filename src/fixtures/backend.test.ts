@@ -326,3 +326,69 @@ test('finding 4: writing takes the identifier as an argument', async () => {
   })
   assert.equal(updated.id, created.id, 'an id updates in place')
 })
+
+// --- Added after acting on findings 5 and 6 ---
+
+test('finding 6: a storehouse can be introduced, then blocked', async () => {
+  const backend = enforced()
+  assert.deepEqual(await backend.storehouse.listStorehouses(), [], 'none known yet')
+
+  const accepted = await backend.storehouse.acceptInvite('abc123')
+  const known = await backend.storehouse.listStorehouses()
+  assert.equal(known.length, 1, 'accepting an invite introduces a storehouse')
+  assert.equal(known[0]?.id, accepted.id)
+
+  const connectedBefore = await backend.storehouse.listConnectedPeers()
+  assert.equal(connectedBefore.length, 1)
+
+  await backend.storehouse.blockStorehouse(accepted.id)
+  const connectedAfter = await backend.storehouse.listConnectedPeers()
+  assert.equal(connectedAfter.length, 0, 'a blocked storehouse is not connected')
+  assert.equal(
+    (await backend.storehouse.listStorehouses()).length,
+    1,
+    'but it is still known'
+  )
+})
+
+test('finding 5: media can be introduced and reaches a story inline', async () => {
+  const backend = enforced()
+
+  const media = await backend.artefact.uploadMedia({
+    content: null,
+    sizeBytes: 1024,
+    mimeType: 'image/png',
+    encrypt: true
+  })
+  assert.ok(media.ref, 'upload produces a reference')
+
+  const artefact = await backend.artefact.saveArtefact(null, {
+    media,
+    description: 'A fictional photograph',
+    visibility: { scope: 'group', group: GROUPS.main }
+  })
+
+  const story = await backend.story.saveStory(null, {
+    title: 'With a photograph',
+    description: null,
+    artefacts: [artefact.id],
+    mentions: [],
+    visibility: { scope: 'group', group: GROUPS.main }
+  })
+
+  const read = await backend.story.getStory(story.id)
+  assert.equal(read?.artefacts.length, 1, 'the artefact arrives with the story')
+  assert.equal(
+    read?.artefacts[0]?.media?.mimeType,
+    'image/png',
+    'delivered inline, not as an id nothing could resolve'
+  )
+})
+
+test('a credential can be presented, not only listed', async () => {
+  const result = await enforced().credentials.presentCredential(
+    'https://example.invalid/verify',
+    'credential-membership'
+  )
+  assert.ok(result.id)
+})

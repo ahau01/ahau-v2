@@ -20,4 +20,27 @@ export interface StorehouseOperations {
 
   /** Source: `unblockPataka`. */
   unblockStorehouse(id: PeerId): Promise<WriteResult>
+
+  /**
+   * Accept an invitation to connect to a storehouse.
+   *
+   * Source: the inline acceptInvite mutation in NewPatakaDialog.vue. The
+   * contract could block and unblock storehouses but nothing introduced one,
+   * because this lives in a dialog rather than a helper module and so was
+   * invisible to the accessor triage. Invitation is how trust is established
+   * between a community and a storehouse, which makes it a sovereignty
+   * operation rather than plumbing.
+   */
+  acceptInvite(inviteCode: string): Promise<WriteResult<PeerId>>
+
+  /**
+   * Which storehouses are connected right now.
+   *
+   * Source: the inline connectedPeers query in PatakaList.vue, polled every
+   * ten seconds there. Distinct from listStorehouses, which reports what is
+   * known rather than what is reachable. No candidate backend reports peer
+   * connectivity the same way, and a request-response contract leaves
+   * liveness to the caller.
+   */
+  listConnectedPeers(): Promise<readonly Storehouse[]>
 }
