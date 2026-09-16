@@ -232,8 +232,17 @@ export const SUBMISSIONS: readonly Submission[] = [
     ...inGroup(IDENTITIES.member),
     id: id('submission-pending'),
     group: GROUPS.main,
-    targetType: 'edit-person',
-    target: id('person-mere'),
+    proposal: {
+      kind: 'edit-person',
+      target: id('person-mere'),
+      person: {
+        preferredName: 'Mere Ānaru',
+        legalName: null,
+        gender: null,
+        birthOrder: null,
+        customFields: []
+      }
+    },
     comments: [{ author: IDENTITIES.member, comment: 'Correcting a spelling.' }],
     dependencies: []
   }

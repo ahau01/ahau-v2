@@ -1,5 +1,5 @@
 import type { PairedWriteResult, PermissionWriteResult, RecordId, WriteResult } from '../semantics.js'
-import type { Group, GroupId, IdentityId, MediaRef, Membership, Visibility } from '../types/index.js'
+import type { Group, GroupFaceInput, GroupId, IdentityId, Membership, Visibility } from '../types/index.js'
 
 /**
  * Groups: iwi, hapū, whānau.
@@ -88,9 +88,3 @@ export interface GroupOperations {
   ): Promise<PairedWriteResult>
 }
 
-export interface GroupFaceInput {
-  readonly id: RecordId | null
-  readonly name: string | null
-  readonly description: string | null
-  readonly avatar: MediaRef | null
-}

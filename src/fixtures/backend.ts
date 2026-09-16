@@ -41,6 +41,7 @@ import type {
   Profile,
   Story,
   Submission,
+  SubmissionProposal,
   Viewer,
   WhakapapaLink,
   WhakapapaView
@@ -120,6 +121,62 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
    * remaining half of friction finding 1 and needs a decision about how
    * proposals are represented before any backend can satisfy this properly.
    */
+  /**
+   * Apply a proposal. Under enforced field approval only the allowed fields
+   * are written; under advisory the restriction is recorded but not applied,
+   * which is the difference the capability describes.
+   */
+  const applyProposal = (
+    proposal: SubmissionProposal,
+    allowedFields: readonly string[] | null
+  ): readonly RecordId[] => {
+    const restrict = <T extends object>(fields: T): Partial<T> => {
+      if (allowedFields === null) return fields
+      if (capabilities.fieldLevelApproval !== 'enforced') return fields
+      return Object.fromEntries(
+        Object.entries(fields).filter(([key]) => allowedFields.includes(key))
+      ) as Partial<T>
+    }
+    switch (proposal.kind) {
+      case 'edit-person': {
+        const existing = people.get(proposal.target)
+        if (!existing) return []
+        people.put({ ...existing, ...restrict(proposal.person) })
+        return [proposal.target]
+      }
+      case 'new-person': {
+        const id = nextId('person')
+        people.put({ ...seed.PEOPLE[0]!, ...proposal.person, id })
+        return [id]
+      }
+      case 'new-link': {
+        const id = nextId('link')
+        links.put({
+          status: { state: 'active' },
+          visibility: proposal.link.visibility,
+          provenance: { author: viewer, recordedAt: TODAY },
+          id,
+          parent: proposal.link.parent,
+          child: proposal.link.child,
+          relationshipType: proposal.link.relationshipType,
+          isPartner: proposal.link.isPartner
+        })
+        return [id]
+      }
+      case 'edit-whakapapa-view': {
+        const existing = views.get(proposal.target)
+        if (!existing) return []
+        views.put({ ...existing, ...restrict(proposal.view) })
+        return [proposal.target]
+      }
+      case 'retraction': {
+        people.retract(proposal.target, TODAY, proposal.reason)
+        stories.retract(proposal.target, TODAY, proposal.reason)
+        return [proposal.target]
+      }
+    }
+  }
+
   const approved = (submission: RecordId, applied: readonly RecordId[]): ApprovalResult => ({
     submission,
     acknowledgement: acknowledge(),
@@ -197,8 +254,8 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
       async getPersonCustomFields (id) {
         return people.readableOne(id, viewer, seen())?.customFields ?? []
       },
-      async savePerson (input) {
-        const id = input.id ?? nextId('person')
+      async savePerson (given, input) {
+        const id = given ?? nextId('person')
         const existing = people.get(id)
         people.put({
           ...(existing ?? seed.PEOPLE[0]!),
@@ -252,8 +309,8 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
           .readable(viewer, seen())
           .filter(v => group === null || v.group === group)
       },
-      async saveWhakapapaView (input) {
-        const id = input.id ?? nextId('view')
+      async saveWhakapapaView (given, input) {
+        const id = given ?? nextId('view')
         const existing = views.get(id) ?? seed.WHAKAPAPA_VIEWS[0]!
         views.put({ ...existing, ...input, id })
         return wrote(id)
@@ -269,8 +326,8 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
     },
 
     link: {
-      async saveLink (input) {
-        const id = input.id ?? nextId('link')
+      async saveLink (given, input) {
+        const id = given ?? nextId('link')
         links.put({
           status: { state: 'active' },
           visibility: input.visibility,
@@ -308,7 +365,7 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
           status: { state: 'active' as const },
           visibility: { scope: 'group' as const, group },
           provenance: { author: viewer, recordedAt: TODAY },
-          id: input.id ?? nextId('group-face'),
+          id: nextId('group-face'),
           name: input.name,
           description: input.description,
           avatar: input.avatar
@@ -324,11 +381,9 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
         // input.id is RecordId | null, the record's is RecordId, so it cannot
         // simply be spread. Recorded as friction: create and update share an
         // input type whose optional id collides with the record type.
-        const { id: _ignored, ...fields } = input
-        void _ignored
         const updated: Group = {
           ...existing,
-          [face]: { ...existing[face], ...fields, visibility }
+          [face]: { ...existing[face], ...input, visibility }
         }
         groups.set(group, updated)
         return wrote(updated[face].id)
@@ -336,14 +391,10 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
       async updateGroup (group, publicFace, privateFace) {
         const existing = groups.get(group)
         if (!existing) return pairedWrite([nextId('group-face'), nextId('group-face')])
-        const { id: _pubId, ...publicFields } = publicFace
-        const { id: _privId, ...privateFields } = privateFace
-        void _pubId
-        void _privId
         groups.set(group, {
           ...existing,
-          public: { ...existing.public, ...publicFields },
-          private: { ...existing.private, ...privateFields }
+          public: { ...existing.public, ...publicFace },
+          private: { ...existing.private, ...privateFace }
         })
         return pairedWrite([existing.public.id, existing.private.id])
       },
@@ -376,7 +427,7 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
           status: { state: 'active' as const },
           visibility: { scope: 'group' as const, group: parent },
           provenance: { author: viewer, recordedAt: TODAY },
-          id: input.id ?? nextId('subgroup-face'),
+          id: nextId('subgroup-face'),
           name: input.name,
           description: input.description,
           avatar: input.avatar
@@ -403,10 +454,10 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
       async listGroupSettings () {
         return settings.readable(viewer, seen())
       },
-      async saveGroupSettings (group, input) {
-        const id = input.id ?? nextId('settings')
-        const existing = settings.get(id) ?? seed.GROUP_SETTINGS[0]!
-        settings.put({ ...existing, id, group })
+      async saveGroupSettings (input) {
+        const id = nextId('settings')
+        const existing = seed.GROUP_SETTINGS[0]!
+        settings.put({ ...existing, id, group: input.group })
         return wrote(id)
       },
       async retractGroupSettings (group) {
@@ -440,8 +491,8 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
           stories.readable(viewer, seen()).filter(s => s.mentions.includes(request.from))
         )
       },
-      async saveStory (input) {
-        const id = input.id ?? nextId('story')
+      async saveStory (given, input) {
+        const id = given ?? nextId('story')
         const existing = stories.get(id) ?? seed.STORIES[0]!
         stories.put({ ...existing, ...input, id, visibility: input.visibility })
         return wrote(id)
@@ -459,8 +510,8 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
       async listCollections () {
         return collections.readable(viewer, seen())
       },
-      async saveCollection (input) {
-        const id = input.id ?? nextId('collection')
+      async saveCollection (given, input) {
+        const id = given ?? nextId('collection')
         const existing = collections.get(id) ?? seed.COLLECTIONS[0]!
         collections.put({ ...existing, ...input, id, visibility: input.visibility })
         return wrote(id)
@@ -482,8 +533,9 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
     },
 
     artefact: {
-      async saveArtefact (input) {
-        return wrote(input.id ?? nextId('artefact'))
+      async saveArtefact (given, input) {
+        void input
+        return wrote(given ?? nextId('artefact'))
       },
       async retractArtefact (id, reason) {
         void reason
@@ -531,18 +583,22 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
       },
       async approveSubmission (id, comment) {
         void comment
+        const submission = submissions.get(id)
+        const applied = submission ? applyProposal(submission.proposal, null) : []
         submissions.retract(id, TODAY, 'approved')
-        return approved(id, [])
+        return approved(id, applied)
       },
-      async approveSubmissionFields (id, target, allowedFields, comment) {
-        void target
+      async approveSubmissionFields (id, allowedFields, comment) {
         void comment
         // Under an advisory backend the restriction is recorded but not
         // applied. The contract does not say what approval does to the target
         // record, which is recorded as friction.
-        void allowedFields
+        const submission = submissions.get(id)
+        const applied = submission
+          ? applyProposal(submission.proposal, allowedFields)
+          : []
         submissions.retract(id, TODAY, 'approved with field restrictions')
-        return approved(id, [])
+        return approved(id, applied)
       },
       async rejectSubmission (id, comment) {
         void comment

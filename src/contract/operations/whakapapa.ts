@@ -1,6 +1,6 @@
 import type { Supported } from '../capabilities.js'
 import type { RecordId, TraversalRequest, WriteResult } from '../semantics.js'
-import type { GroupId, WhakapapaLink, WhakapapaView } from '../types/index.js'
+import type { GroupId, WhakapapaLink, WhakapapaView, WhakapapaViewInput } from '../types/index.js'
 
 /** Whakapapa views: saved lenses over the graph. The graph itself is links. */
 export interface WhakapapaOperations {
@@ -11,7 +11,7 @@ export interface WhakapapaOperations {
   listWhakapapaViews(group: GroupId | null): Promise<readonly WhakapapaView[]>
 
   /** Source: `saveWhakapapaView`. */
-  saveWhakapapaView(view: WhakapapaViewInput): Promise<WriteResult>
+  saveWhakapapaView(id: RecordId | null, view: WhakapapaViewInput): Promise<WriteResult>
 
   /**
    * Walk down from a person, returning the links beneath them.
@@ -28,11 +28,3 @@ export interface WhakapapaOperations {
   getFamily(request: TraversalRequest): Promise<Supported<readonly WhakapapaLink[]>>
 }
 
-export interface WhakapapaViewInput {
-  readonly id: RecordId | null
-  readonly group: GroupId
-  readonly name: string | null
-  readonly description: string | null
-  readonly focus: RecordId | null
-  readonly ignoredProfiles: readonly RecordId[]
-}

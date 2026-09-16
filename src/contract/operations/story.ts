@@ -1,6 +1,6 @@
 import type { Supported } from '../capabilities.js'
 import type { RecordId, TraversalRequest, WriteResult } from '../semantics.js'
-import type { MediaRef, Story, Visibility } from '../types/index.js'
+import type { Story, StoryInput } from '../types/index.js'
 
 /** Stories: records of events, with their media and the people they mention. */
 export interface StoryOperations {
@@ -21,24 +21,10 @@ export interface StoryOperations {
   ): Promise<Supported<readonly Story[]>>
 
   /** Source: `saveStory`. */
-  saveStory(story: StoryInput): Promise<WriteResult>
+  saveStory(id: RecordId | null, story: StoryInput): Promise<WriteResult>
 
   /** Source: `deleteStory`, another save carrying a tombstone. */
   retractStory(id: RecordId, reason: string | null): Promise<WriteResult>
 }
 
-export interface StoryInput {
-  readonly id: RecordId | null
-  readonly title: string | null
-  readonly description: string | null
-  readonly artefacts: readonly RecordId[]
-  readonly mentions: readonly RecordId[]
-  readonly visibility: Visibility
-}
 
-export interface ArtefactInput {
-  readonly id: RecordId | null
-  readonly media: MediaRef | null
-  readonly description: string | null
-  readonly visibility: Visibility
-}

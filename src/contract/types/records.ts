@@ -11,6 +11,7 @@
  */
 
 import type { RecordId } from '../semantics.js'
+import type { LinkInput, PersonInput, WhakapapaViewInput } from './inputs.js'
 import type {
   GroupId,
   IdentityId,
@@ -171,19 +172,39 @@ export interface Artefact extends RecordMeta {
 export interface Submission extends RecordMeta {
   readonly id: RecordId
   readonly group: GroupId
-  readonly targetType: SubmissionTarget
-  readonly target: RecordId | null
+  /**
+   * What is being proposed.
+   *
+   * A submission originally recorded only what it targeted, never what it
+   * proposed -- so approval had nothing to apply, and a backend that discarded
+   * every approved change was indistinguishable from one that honoured them.
+   * The payload lives here so approval is implementable at all.
+   */
+  readonly proposal: SubmissionProposal
   readonly comments: readonly SubmissionComment[]
   /** Proposals this one depends on, which must be applied in order. */
   readonly dependencies: readonly RecordId[]
 }
 
-export type SubmissionTarget =
-  | 'new-person'
-  | 'edit-person'
-  | 'new-link'
-  | 'edit-whakapapa-view'
-  | 'retraction'
+/**
+ * The content of a proposal, discriminated by what it changes.
+ *
+ * Mirrors the arguments of the propose operations, so proposing and approving
+ * share one shape rather than describing the same change twice.
+ */
+export type SubmissionProposal =
+  | { readonly kind: 'new-person'; readonly person: PersonInput }
+  | { readonly kind: 'edit-person'; readonly target: RecordId; readonly person: PersonInput }
+  | { readonly kind: 'new-link'; readonly link: LinkInput }
+  | {
+      readonly kind: 'edit-whakapapa-view'
+      readonly target: RecordId
+      readonly view: WhakapapaViewInput
+    }
+  | { readonly kind: 'retraction'; readonly target: RecordId; readonly reason: string | null }
+
+/** Derived from the proposal union so the two can never drift apart. */
+export type SubmissionTarget = SubmissionProposal['kind']
 
 export interface SubmissionComment {
   readonly author: IdentityId

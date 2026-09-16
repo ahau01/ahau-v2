@@ -1,8 +1,5 @@
 import type { ApprovalResult, RecordId, WriteResult } from '../semantics.js'
-import type { GroupId, Submission, SubmissionTarget } from '../types/index.js'
-import type { PersonInput } from './person.js'
-import type { LinkInput } from './link.js'
-import type { WhakapapaViewInput } from './whakapapa.js'
+import type { GroupId, LinkInput, PersonInput, Submission, WhakapapaViewInput } from '../types/index.js'
 
 /**
  * Submissions: proposals awaiting review.
@@ -65,7 +62,6 @@ export interface SubmissionOperations {
    */
   approveSubmissionFields(
     id: RecordId,
-    target: SubmissionTarget,
     allowedFields: readonly string[],
     comment: string | null
   ): Promise<ApprovalResult>

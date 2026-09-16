@@ -82,7 +82,7 @@ them a refusal would have been as misleading as saying nothing.
 
 ## Moderate
 
-### 4. Create and update share an input type, and its optional id collides
+### 4. Create and update share an input type, and its optional id collides — **resolved**
 
 `GroupFaceInput.id` is `RecordId | null` because the same type serves creation
 and update, while `GroupFace.id` is `RecordId`. An input therefore cannot be
@@ -90,8 +90,13 @@ spread into a record, and the fixture destructures the id away at two call
 sites to satisfy the compiler. Every `*Input` type in the contract has this
 shape, so the problem is systemic rather than local.
 
-**To resolve**: separate creation inputs from update inputs, or make update
-take the id as an argument alongside a body with no id of its own.
+**Resolved.** Inputs carry fields only and moved to `types/inputs.ts`; write
+operations take the identifier as an argument, null to create and an id to
+update. That removed the ambiguity without doubling the number of input types,
+and the fixture no longer destructures ids away to satisfy the compiler.
+
+Inputs moved beside the record types rather than staying with the operations
+because a proposal carries one -- see finding 10.
 
 ### 5. Artefacts can be written but never read
 
@@ -147,7 +152,7 @@ decision rather than an oversight.
 
 ## New, exposed by acting on finding 1
 
-### 10. A submission records what is targeted, but not what is proposed
+### 10. A submission records what is targeted, but not what is proposed — **resolved**
 
 `Submission` carries `targetType` and `target`, plus comments and
 dependencies — but no payload. There is no field holding the proposed person,
@@ -161,11 +166,18 @@ This was invisible until the return type forced the question. It is the clearest
 demonstration in this milestone of why implementing a contract finds things
 reading it does not.
 
-**To resolve**: decide how a proposal is represented. Likely a discriminated
-payload keyed by `targetType`, mirroring the propose operations' arguments —
-which would also let the four propose operations and the approval path share one
-shape. That is a design decision rather than a typing fix, and it should be
-taken deliberately rather than folded into this milestone.
+**Resolved.** `Submission.proposal` is a discriminated payload mirroring the
+propose operations, and `SubmissionTarget` is now derived from that union so the
+two cannot drift apart. `targetType` is gone, and so is the redundant `target`
+argument on `approveSubmissionFields` — the submission already knew what it
+targeted, so passing it was the same inversion found in `loadPersonList` during
+triage.
+
+Approval now applies the proposal, and the difference between enforcement levels
+is demonstrable rather than asserted: under `enforced` field approval only the
+allowed fields are written, while under `advisory` the restriction is recorded
+and the whole change lands anyway. Three tests cover it, including the advisory
+case — which is the behaviour a community would most need warning about.
 
 ## What did not resist
 

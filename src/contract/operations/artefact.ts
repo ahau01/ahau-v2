@@ -1,5 +1,5 @@
 import type { RecordId, WriteResult } from '../semantics.js'
-import type { ArtefactInput } from './story.js'
+import type { ArtefactInput } from '../types/index.js'
 
 /**
  * Artefacts: images, recordings and documents held in the archive.
@@ -16,7 +16,7 @@ export interface ArtefactOperations {
    * differs completely across the candidates: SSB hyper-blobs, no Holochain
    * store designed for large media, external hosts under nostr.
    */
-  saveArtefact(artefact: ArtefactInput): Promise<WriteResult>
+  saveArtefact(id: RecordId | null, artefact: ArtefactInput): Promise<WriteResult>
 
   /** Source: `DELETE_ARTEFACT`, renamed -- it was a function in SHOUT_CASE. */
   retractArtefact(id: RecordId, reason: string | null): Promise<WriteResult>

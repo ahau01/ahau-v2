@@ -1,5 +1,5 @@
 import type { RecordId, WriteResult } from '../semantics.js'
-import type { Collection, Visibility } from '../types/index.js'
+import type { Collection, CollectionInput } from '../types/index.js'
 
 /**
  * Collections: curated groupings of stories.
@@ -16,7 +16,7 @@ export interface CollectionOperations {
   listCollections(): Promise<readonly Collection[]>
 
   /** Source: `saveCollection`. */
-  saveCollection(collection: CollectionInput): Promise<WriteResult>
+  saveCollection(id: RecordId | null, collection: CollectionInput): Promise<WriteResult>
 
   /** Source: `deleteCollection`, another save carrying a tombstone. */
   retractCollection(id: RecordId, reason: string | null): Promise<WriteResult>
@@ -33,8 +33,3 @@ export interface CollectionOperations {
   ): Promise<WriteResult>
 }
 
-export interface CollectionInput {
-  readonly id: RecordId | null
-  readonly name: string | null
-  readonly visibility: Visibility
-}

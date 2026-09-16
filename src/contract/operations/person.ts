@@ -1,6 +1,6 @@
 import type { Supported } from '../capabilities.js'
 import type { RecordId, WriteResult } from '../semantics.js'
-import type { CustomField, GroupId, Person, Viewer } from '../types/index.js'
+import type { CustomField, GroupId, Person, PersonInput, Viewer } from '../types/index.js'
 
 /** People: the nodes of the whakapapa, and the viewer's own identity. */
 export interface PersonOperations {
@@ -27,7 +27,7 @@ export interface PersonOperations {
   getPersonCustomFields(id: RecordId): Promise<readonly CustomField[]>
 
   /** Source: `savePerson`. */
-  savePerson(person: PersonInput): Promise<WriteResult>
+  savePerson(id: RecordId | null, person: PersonInput): Promise<WriteResult>
 
   /**
    * Search people by name within a group.
@@ -56,11 +56,3 @@ export interface PersonOperations {
   listPeople(group: GroupId): Promise<readonly Person[]>
 }
 
-export interface PersonInput {
-  readonly id: RecordId | null
-  readonly preferredName: string | null
-  readonly legalName: string | null
-  readonly gender: string | null
-  readonly birthOrder: number | null
-  readonly customFields: readonly CustomField[]
-}

@@ -1,5 +1,5 @@
 import type { RecordId, WriteResult } from '../semantics.js'
-import type { GroupId, GroupSettings } from '../types/index.js'
+import type { GroupId, GroupSettings, GroupSettingsInput } from '../types/index.js'
 
 /** Group settings, identity backup, and local store management. */
 export interface SettingsOperations {
@@ -10,7 +10,7 @@ export interface SettingsOperations {
   listGroupSettings(): Promise<readonly GroupSettings[]>
 
   /** Source: `saveSettings`. */
-  saveGroupSettings(group: GroupId, settings: GroupSettingsInput): Promise<WriteResult>
+  saveGroupSettings(settings: GroupSettingsInput): Promise<WriteResult>
 
   /**
    * Retract a group's settings.
@@ -35,9 +35,6 @@ export interface SettingsOperations {
   resetLocalStore(): Promise<void>
 }
 
-export interface GroupSettingsInput {
-  readonly id: RecordId | null
-}
 
 export interface IdentityExport {
   /** Opaque backup material. Format is the adapter's business. */

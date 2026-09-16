@@ -185,7 +185,6 @@ test('promise: the viewer reports their own memberships', async () => {
 test('finding 2: creating a group returns an identity you can use', async () => {
   const backend = enforced()
   const created = await backend.group.createGroup({
-    id: null,
     name: 'Te Rōpū Hou',
     description: null,
     avatar: null
@@ -199,7 +198,6 @@ test('finding 2: creating a group returns an identity you can use', async () => 
 test('finding 2: creating a subgroup returns a usable identity too', async () => {
   const backend = enforced()
   const created = await backend.group.createSubgroup(GROUPS.main, {
-    id: null,
     name: 'Te Whānau Hou',
     description: null,
     avatar: null
@@ -245,9 +243,86 @@ test('finding 1: approval states what it applied', async () => {
 test('finding 1: field approval reports advisory enforcement on a weak backend', async () => {
   const result = await weak().submissions.approveSubmissionFields(
     asRecordId('submission-pending'),
-    'edit-person',
     ['preferredName'],
     null
   )
   assert.equal(result.enforcement, 'advisory')
+})
+
+// --- Added after acting on finding 10 ---
+
+test('finding 10: approval applies the proposed change', async () => {
+  const backend = enforced()
+  const target = asRecordId('person-mere')
+
+  const before = await backend.person.getPerson(target)
+  assert.equal(before?.preferredName, 'Mere')
+
+  const result = await backend.submissions.approveSubmission(
+    asRecordId('submission-pending'),
+    null
+  )
+
+  assert.deepEqual(result.applied, [target], 'the approval names what it changed')
+  const after = await backend.person.getPerson(target)
+  assert.equal(after?.preferredName, 'Mere Ānaru', 'the change was actually applied')
+})
+
+test('finding 10: an enforcing backend honours the field restriction', async () => {
+  const backend = enforced()
+  const target = asRecordId('person-mere')
+
+  // The proposal changes preferredName. Allow a different field only.
+  await backend.submissions.approveSubmissionFields(
+    asRecordId('submission-pending'),
+    ['legalName'],
+    null
+  )
+
+  const after = await backend.person.getPerson(target)
+  assert.equal(
+    after?.preferredName,
+    'Mere',
+    'preferredName was not in allowedFields, so it was not applied'
+  )
+})
+
+test('finding 10: an advisory backend records the restriction but cannot apply it', async () => {
+  const backend = weak()
+  const target = asRecordId('person-mere')
+
+  const result = await backend.submissions.approveSubmissionFields(
+    asRecordId('submission-pending'),
+    ['legalName'],
+    null
+  )
+
+  assert.equal(result.enforcement, 'advisory')
+  const after = await backend.person.getPerson(target)
+  assert.equal(
+    after?.preferredName,
+    'Mere Ānaru',
+    'the restriction was not enforced -- the whole change landed'
+  )
+})
+
+test('finding 4: writing takes the identifier as an argument', async () => {
+  const backend = enforced()
+  const created = await backend.person.savePerson(null, {
+    preferredName: 'Anaru',
+    legalName: null,
+    gender: null,
+    birthOrder: null,
+    customFields: []
+  })
+  assert.ok(created.id, 'null creates')
+
+  const updated = await backend.person.savePerson(created.id, {
+    preferredName: 'Anaru Rātana',
+    legalName: null,
+    gender: null,
+    birthOrder: null,
+    customFields: []
+  })
+  assert.equal(updated.id, created.id, 'an id updates in place')
 })
