@@ -1,4 +1,4 @@
-import type { RecordId, WriteResult } from '../semantics.js'
+import type { PermissionWriteResult, RecordId, WriteResult } from '../semantics.js'
 import type { GroupApplication, GroupId, IdentityId } from '../types/index.js'
 
 /**
@@ -20,7 +20,7 @@ export interface ApplicationOperations {
    * therefore the one most in need of backend enforcement -- consult
    * `membershipEnforcement` before presenting it as a guarantee.
    */
-  acceptApplication(id: RecordId, comment: string | null): Promise<WriteResult>
+  acceptApplication(id: RecordId, comment: string | null): Promise<PermissionWriteResult>
 
   /** Source: `declineGroupApplication`. */
   declineApplication(id: RecordId, comment: string | null): Promise<WriteResult>

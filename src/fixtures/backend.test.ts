@@ -179,3 +179,75 @@ test('promise: the viewer reports their own memberships', async () => {
   assert.equal(viewer.identity, IDENTITIES.kaitiaki)
   assert.ok(viewer.memberships.some(m => m.role === 'kaitiaki'))
 })
+
+// --- Added after acting on friction findings 1-3 ---
+
+test('finding 2: creating a group returns an identity you can use', async () => {
+  const backend = enforced()
+  const created = await backend.group.createGroup({
+    id: null,
+    name: 'Te Rōpū Hou',
+    description: null,
+    avatar: null
+  })
+  // The returned id is a GroupId, so it can be passed straight back in.
+  const fetched = await backend.group.getGroup(created.id)
+  assert.ok(fetched, 'the created group is retrievable by the returned id')
+  assert.equal(fetched?.id, created.id)
+})
+
+test('finding 2: creating a subgroup returns a usable identity too', async () => {
+  const backend = enforced()
+  const created = await backend.group.createSubgroup(GROUPS.main, {
+    id: null,
+    name: 'Te Whānau Hou',
+    description: null,
+    avatar: null
+  })
+  const listed = await backend.group.listSubgroups(GROUPS.main)
+  assert.ok(listed.some(g => g.id === created.id))
+})
+
+test('finding 3: a permission write reports how strongly it was applied', async () => {
+  const strong = await enforced().group.grantAdministration(GROUPS.main, [
+    IDENTITIES.member
+  ])
+  assert.equal(strong.enforcement, 'enforced')
+
+  const loose = await weak().group.grantAdministration(GROUPS.main, [
+    IDENTITIES.member
+  ])
+  assert.equal(loose.enforcement, 'advisory')
+  // Both succeeded. Only the enforcement field distinguishes a permission from
+  // a suggestion, which is the point of the finding.
+  assert.ok(strong.id && loose.id)
+})
+
+test('finding 3: admitting a member reports enforcement', async () => {
+  const loose = await weak().applications.acceptApplication(
+    asRecordId('application-pending'),
+    null
+  )
+  assert.equal(loose.enforcement, 'advisory')
+})
+
+test('finding 1: approval states what it applied', async () => {
+  const backend = enforced()
+  const result = await backend.submissions.approveSubmission(
+    asRecordId('submission-pending'),
+    null
+  )
+  assert.equal(result.submission, asRecordId('submission-pending'))
+  assert.ok(Array.isArray(result.applied))
+  assert.equal(result.enforcement, 'enforced')
+})
+
+test('finding 1: field approval reports advisory enforcement on a weak backend', async () => {
+  const result = await weak().submissions.approveSubmissionFields(
+    asRecordId('submission-pending'),
+    'edit-person',
+    ['preferredName'],
+    null
+  )
+  assert.equal(result.enforcement, 'advisory')
+})

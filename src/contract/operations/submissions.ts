@@ -1,4 +1,4 @@
-import type { RecordId, WriteResult } from '../semantics.js'
+import type { ApprovalResult, RecordId, WriteResult } from '../semantics.js'
 import type { GroupId, Submission, SubmissionTarget } from '../types/index.js'
 import type { PersonInput } from './person.js'
 import type { LinkInput } from './link.js'
@@ -48,7 +48,7 @@ export interface SubmissionOperations {
    * fields. Worth confirming against real use whether wholesale approval is
    * still wanted or is a superseded earlier form.
    */
-  approveSubmission(id: RecordId, comment: string | null): Promise<WriteResult>
+  approveSubmission(id: RecordId, comment: string | null): Promise<ApprovalResult>
 
   /**
    * Approve a proposal, accepting only the fields the reviewer allows.
@@ -68,7 +68,7 @@ export interface SubmissionOperations {
     target: SubmissionTarget,
     allowedFields: readonly string[],
     comment: string | null
-  ): Promise<WriteResult>
+  ): Promise<ApprovalResult>
 
   /**
    * Decline a proposal, on the record.

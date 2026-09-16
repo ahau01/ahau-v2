@@ -1,4 +1,4 @@
-import type { PairedWriteResult, RecordId, WriteResult } from '../semantics.js'
+import type { PairedWriteResult, PermissionWriteResult, RecordId, WriteResult } from '../semantics.js'
 import type { Group, GroupId, IdentityId, MediaRef, Membership, Visibility } from '../types/index.js'
 
 /**
@@ -22,7 +22,7 @@ export interface GroupOperations {
    * expected to be hardest to port: SSB establishes a keyring, Holochain needs
    * a DNA or membrane decision, nostr has no group primitive at all.
    */
-  createGroup(input: GroupFaceInput): Promise<WriteResult>
+  createGroup(input: GroupFaceInput): Promise<WriteResult<GroupId>>
 
   /**
    * Write one face of a group's profile.
@@ -61,7 +61,7 @@ export interface GroupOperations {
   grantAdministration(
     group: GroupId,
     identities: readonly IdentityId[]
-  ): Promise<WriteResult>
+  ): Promise<PermissionWriteResult>
 
   /**
    * List the people belonging to a group.
@@ -71,7 +71,7 @@ export interface GroupOperations {
   listMembers(group: GroupId): Promise<readonly Membership[]>
 
   /** Source: `createSubGroup`. */
-  createSubgroup(parent: GroupId, input: GroupFaceInput): Promise<WriteResult>
+  createSubgroup(parent: GroupId, input: GroupFaceInput): Promise<WriteResult<GroupId>>
 
   /** Source: `getSubGroups`. */
   listSubgroups(parent: GroupId): Promise<readonly Group[]>

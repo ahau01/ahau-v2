@@ -6,6 +6,8 @@
  * docs/contract-decisions.md; this file is the shape, not the argument.
  */
 
+import type { EnforcementLevel } from './capabilities.js'
+
 /**
  * Opaque identifier for a stored record.
  *
@@ -43,9 +45,50 @@ export interface WriteFailure {
   readonly reason: string
 }
 
-export interface WriteResult {
-  readonly id: RecordId
+/**
+ * The outcome of a write.
+ *
+ * Parameterised by the kind of identifier it returns. Most writes produce a
+ * RecordId, but creating a group produces a GroupId -- and a result that could
+ * only carry a RecordId left a caller unable to use what it had just created.
+ */
+export interface WriteResult<TId = RecordId> {
+  readonly id: TId
   readonly acknowledgement: WriteAcknowledgement
+}
+
+/**
+ * The outcome of a write that carries a permission rule.
+ *
+ * Granting administration, admitting a member and approving selected fields
+ * all succeed on a backend that cannot enforce them -- the record is written,
+ * the rule is simply not applied. A plain WriteResult cannot express that, so a
+ * caller would have no way to tell a permission from a suggestion.
+ *
+ * The operation is not refused, so this is not Supported<T>. It succeeds, and
+ * reports how strongly the rule behind it was applied.
+ */
+export interface PermissionWriteResult<TId = RecordId> extends WriteResult<TId> {
+  readonly enforcement: EnforcementLevel
+}
+
+/**
+ * The outcome of approving a proposal.
+ *
+ * Approval applies the proposed change; it does not merely resolve the
+ * proposal. Saying so is the point of this type: without it, a backend that
+ * discarded every approved change would be indistinguishable from one that
+ * applied them.
+ *
+ * `applied` names the records the approval created or altered, and is empty
+ * only when the proposal turned out to change nothing.
+ */
+export interface ApprovalResult {
+  readonly submission: RecordId
+  readonly acknowledgement: WriteAcknowledgement
+  readonly applied: readonly RecordId[]
+  /** How strongly any field restriction was applied. */
+  readonly enforcement: EnforcementLevel
 }
 
 /**

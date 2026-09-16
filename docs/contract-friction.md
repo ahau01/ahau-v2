@@ -16,9 +16,13 @@ but it is a simulation, not a protocol.
 
 ---
 
-## Significant — should be settled before Milestone 5
+## Significant
 
-### 1. Approval does not say what happens to the thing approved
+All three were acted on. The contract changed; the fixture and its tests were
+updated to match. Acting on the first exposed a further gap, recorded as
+finding 10.
+
+### 1. Approval does not say what happens to the thing approved — **partly resolved**
 
 `submissions.approveSubmissionFields` and `approveSubmission` accept a proposal
 and return a `WriteResult`, but the contract never says the proposed change is
@@ -30,11 +34,16 @@ This is the most serious gap found. Approval is the entire point of the
 submissions workflow, and the contract currently describes only its
 bookkeeping.
 
-**To resolve**: say whether approval applies the change, and if so what the
-result identifies — the submission, or the record it altered. `allowedFields`
-makes this sharper, since partial application must state what was applied.
+**Resolved in the contract.** Both approvals now return `ApprovalResult`, which
+names the submission, the records the approval applied, and how strongly any
+field restriction was enforced. The contract now states the obligation: approval
+applies the proposed change rather than merely resolving the proposal.
 
-### 2. Creating a group cannot tell you the group's identity
+**Not resolved in the data model.** See finding 10 — a `Submission` records what
+is targeted but not what is proposed, so there is still nothing for a backend to
+apply.
+
+### 2. Creating a group cannot tell you the group's identity — **resolved**
 
 `group.createGroup` and `group.createSubgroup` return `WriteResult`, whose `id`
 is a `RecordId`. Groups are keyed by `GroupId`. A caller therefore cannot learn
@@ -44,11 +53,13 @@ then cannot use.
 The same shape affects anything whose identity is not a `RecordId`, which today
 means groups and storehouses.
 
-**To resolve**: let a write result carry the identity of what it created, or
-give creation operations their own return types. This is a typing decision, not
-a protocol one, and is cheap to fix now and expensive after adapters exist.
+**Resolved.** `WriteResult<TId = RecordId>` is now parameterised by the kind of
+identifier it returns, and `createGroup` and `createSubgroup` return
+`WriteResult<GroupId>`. A caller can pass the result straight back into
+`getGroup`, which is covered by a test. The fixture now genuinely creates groups
+rather than fabricating an id it could not use.
 
-### 3. Capability gating is applied inconsistently
+### 3. Capability gating is applied inconsistently — **resolved**
 
 Traversal and name search return `Supported<T>`, so a caller branches on
 refusal. But `group.grantAdministration` depends on `membershipEnforcement` and
@@ -59,10 +70,13 @@ thing was enforced or merely recorded.
 That is the difference between a permission and a suggestion, and on tribal
 records it is not a detail.
 
-**To resolve**: either return `Supported<T>` wherever a declared capability
-governs the outcome, or state explicitly that static `capabilities` inspection
-is the only signal for write operations and that callers must check it first.
-The current mixture invites treating an advisory backend as enforcing.
+**Resolved.** `PermissionWriteResult` extends `WriteResult` with the
+`EnforcementLevel` actually applied, and `grantAdministration` and
+`acceptApplication` now return it. `ApprovalResult` carries the same field.
+
+Deliberately not `Supported<T>`: these operations are not refused. They succeed,
+and the record is written — the rule behind them is simply not enforced. Calling
+them a refusal would have been as misleading as saying nothing.
 
 ---
 
@@ -130,6 +144,28 @@ return and nothing to acknowledge. Recorded only so the inconsistency is a
 decision rather than an oversight.
 
 ---
+
+## New, exposed by acting on finding 1
+
+### 10. A submission records what is targeted, but not what is proposed
+
+`Submission` carries `targetType` and `target`, plus comments and
+dependencies — but no payload. There is no field holding the proposed person,
+link or view.
+
+So although the contract now says approval applies the change, no backend can
+satisfy that: there is nothing recorded to apply. The fixture returns an empty
+`applied` list, which is honest rather than lazy.
+
+This was invisible until the return type forced the question. It is the clearest
+demonstration in this milestone of why implementing a contract finds things
+reading it does not.
+
+**To resolve**: decide how a proposal is represented. Likely a discriminated
+payload keyed by `targetType`, mirroring the propose operations' arguments —
+which would also let the four propose operations and the approval path share one
+shape. That is a design decision rather than a typing fix, and it should be
+taken deliberately rather than folded into this milestone.
 
 ## What did not resist
 

@@ -16,14 +16,18 @@ import {
   supported,
   unsupported
 } from '../contract/capabilities.js'
-import type {
-  PairedWriteResult,
-  RecordId,
-  TraversalRequest,
-  WriteAcknowledgement,
-  WriteResult
+import {
+  asRecordId,
+  type ApprovalResult,
+  type PairedWriteResult,
+  type PermissionWriteResult,
+  type RecordId,
+  type TraversalRequest,
+  type WriteAcknowledgement,
+  type WriteResult
 } from '../contract/semantics.js'
 import type { DataAccess } from '../contract/operations/index.js'
+import { asGroupId } from '../contract/types/index.js'
 import type {
   Collection as CollectionRecord,
   Credential,
@@ -76,6 +80,7 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
     [seed.GROUPS.main, seed.GROUP],
     [seed.GROUPS.sub, seed.SUBGROUP]
   ])
+  const subgroupParents = new Map(seed.SUBGROUP_PARENTS)
   const storehouses = [
     { id: seed.GROUPS.main as unknown as never, name: null, blocked: false }
   ]
@@ -98,6 +103,29 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
       : { status: 'partial', accepted: 1, attempted: 2, failures: [{ target: 'relay-2', reason: 'no response' }] }
 
   const wrote = (id: RecordId): WriteResult => ({ id, acknowledgement: acknowledge() })
+
+  /** A write carrying a permission rule reports how strongly it was applied. */
+  const wroteUnderRule = (id: RecordId, rule: 'membershipEnforcement' | 'fieldLevelApproval'): PermissionWriteResult => ({
+    id,
+    acknowledgement: acknowledge(),
+    enforcement: capabilities[rule]
+  })
+
+  /**
+   * Approval applies the proposed change, per the contract.
+   *
+   * The fixture reports nothing applied, and that is honest rather than lazy:
+   * the Submission record carries targetType and target but no proposal
+   * payload, so there is literally nothing recorded to apply. That gap is the
+   * remaining half of friction finding 1 and needs a decision about how
+   * proposals are represented before any backend can satisfy this properly.
+   */
+  const approved = (submission: RecordId, applied: readonly RecordId[]): ApprovalResult => ({
+    submission,
+    acknowledgement: acknowledge(),
+    applied,
+    enforcement: capabilities.fieldLevelApproval
+  })
 
   const pairedWrite = (ids: readonly RecordId[]): PairedWriteResult =>
     capabilities.atomicMultiWrite
@@ -275,8 +303,19 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
         )
       },
       async createGroup (input) {
-        const id = nextId('group')
-        return wrote(input.id ?? id)
+        const group = asGroupId(`group-${nextId('new')}`)
+        const face = {
+          status: { state: 'active' as const },
+          visibility: { scope: 'group' as const, group },
+          provenance: { author: viewer, recordedAt: TODAY },
+          id: input.id ?? nextId('group-face'),
+          name: input.name,
+          description: input.description,
+          avatar: input.avatar
+        }
+        groups.set(group, { id: group, public: { ...face, visibility: { scope: 'public' } }, private: face })
+        members.add({ identity: viewer, group, role: 'kaitiaki', since: TODAY, until: null })
+        return { id: group, acknowledgement: acknowledge() }
       },
       async saveGroupProfile (group, visibility, input) {
         const existing = groups.get(group)
@@ -326,22 +365,31 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
         for (const identity of identities) {
           members.add({ identity, group, role: 'kaitiaki', since: TODAY, until: null })
         }
-        return wrote(nextId('grant'))
+        return wroteUnderRule(nextId('grant'), 'membershipEnforcement')
       },
       async listMembers (group) {
         return members.of(group)
       },
       async createSubgroup (parent, input) {
-        void parent
-        return wrote(input.id ?? nextId('subgroup'))
+        const group = asGroupId(`subgroup-${nextId('new')}`)
+        const face = {
+          status: { state: 'active' as const },
+          visibility: { scope: 'group' as const, group: parent },
+          provenance: { author: viewer, recordedAt: TODAY },
+          id: input.id ?? nextId('subgroup-face'),
+          name: input.name,
+          description: input.description,
+          avatar: input.avatar
+        }
+        groups.set(group, { id: group, public: { ...face, visibility: { scope: 'public' } }, private: face })
+        subgroupParents.set(group, parent)
+        return { id: group, acknowledgement: acknowledge() }
       },
       async listSubgroups (parent) {
-        return [...groups.values()].filter(
-          g => seed.SUBGROUP_PARENTS.get(g.id) === parent
-        )
+        return [...groups.values()].filter(g => subgroupParents.get(g.id) === parent)
       },
       async removeSubgroupMembership (subgroup, identity) {
-        const parent = seed.SUBGROUP_PARENTS.get(subgroup)
+        const parent = subgroupParents.get(subgroup)
         members.end(identity, subgroup, TODAY)
         if (parent) members.end(identity, parent, TODAY)
         return pairedWrite([nextId('membership'), nextId('membership')])
@@ -484,7 +532,7 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
       async approveSubmission (id, comment) {
         void comment
         submissions.retract(id, TODAY, 'approved')
-        return wrote(id)
+        return approved(id, [])
       },
       async approveSubmissionFields (id, target, allowedFields, comment) {
         void target
@@ -494,7 +542,7 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
         // record, which is recorded as friction.
         void allowedFields
         submissions.retract(id, TODAY, 'approved with field restrictions')
-        return wrote(id)
+        return approved(id, [])
       },
       async rejectSubmission (id, comment) {
         void comment
@@ -545,7 +593,7 @@ export function createFixtureBackend (options: FixtureOptions = {}): DataAccess 
             until: null
           })
         }
-        return wrote(id)
+        return wroteUnderRule(id, 'membershipEnforcement')
       },
       async declineApplication (id, comment) {
         void comment
