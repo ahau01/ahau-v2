@@ -7,11 +7,12 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc",
-    "test": "npm run check:manifest && npm run build && node --test dist && node scripts/check-contract-coverage.mjs --ci",
+    "test": "npm run check:manifest && npm run build && node --test dist && node scripts/check-contract-coverage.mjs --ci && node scripts/check-conformance-coverage.mjs --ci",
     "check:coverage": "npm run build && node scripts/check-contract-coverage.mjs --ci",
     "derive:manifest": "node scripts/derive-manifest.mjs",
     "check:manifest": "node scripts/derive-manifest.mjs --check",
-    "refresh:source": "cp ../ahau/plans/data-access-triage.json ../ahau/plans/data-access-inventory.json contract-source/ && npm run derive:manifest"
+    "refresh:source": "cp ../ahau/plans/data-access-triage.json ../ahau/plans/data-access-inventory.json contract-source/ && npm run derive:manifest",
+    "check:conformance": "npm run build && node scripts/check-conformance-coverage.mjs --ci"
   },
   "engines": {
     "node": ">=20 <21"
