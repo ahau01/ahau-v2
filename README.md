@@ -45,6 +45,15 @@ npm run typecheck
 | `npm run check:manifest` | Fail if the derived manifest is stale |
 | `npm run refresh:source` | Re-pull the triage and inventory from `ahau` |
 
+## Planning and outcomes
+
+Requirements, plans and what was learned building against them:
+
+- `.claude/` — the PRDs and milestone plans, copied from the `ahau` repository
+- `docs/contract-decisions.md` — why the cross-cutting semantics are shaped as they are
+- `docs/contract-friction.md` — thirteen findings from implementing the contract, eleven resolved
+- `docs/writing-an-adapter.md` — start here to build a backend
+
 ## Licence
 
 Unlicensed pending a decision. The `ahau` repository is AGPL-3.0 under Āhau
