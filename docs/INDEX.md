@@ -8,7 +8,7 @@ else here is `ahau-v2`'s own, living documentation.
 
 | Location | Contents |
 |---|---|
-| [`adr/`](adr/) | Architecture decision records for `ahau-v2` itself (currently holds the one migrated from `ahau-monorepo`, `0001-consolidate-plugin-ecosystem-into-monorepo.md` — read it as historical context on the monorepo consolidation, not a decision about `ahau-v2`'s own architecture). New ADRs for `ahau-v2` go here. |
+| [`adr/`](adr/) | Architecture decision records for `ahau-v2` itself: `0001-consolidate-plugin-ecosystem-into-monorepo.md` (migrated from `ahau-monorepo`, historical context on that repo's own consolidation, not a decision about `ahau-v2`'s architecture) and `0002-rewrite-instead-of-continuing-to-patch-ssb-architecture.md` (`ahau-v2`'s own — why the contract/adapter rewrite continues rather than reverting to feature work on `ahau-monorepo`'s SSB stack, grounded in concrete evidence from 3 in-flight `ahau-monorepo` PRs). New ADRs for `ahau-v2` go here. |
 | [`prds/`](prds/) | Problem/requirements specs: the 2 Leg 1/Leg 2 rebuild PRDs (`ahau-v2-repo-foundation.prd.md`, `ahau-v2-frontend-rebuild.prd.md`), plus 2 migrated from `ahau-monorepo` (`ahau-monorepo-consolidation.prd.md`, `root-dev-commands.prd.md` — about that repo's own consolidation work, kept for reference). |
 | [`plans/`](plans/) | Milestone/execution plans: 5 for the Leg 1/Leg 2 rebuild, plus 7 migrated from `ahau-monorepo`'s own consolidation and tooling work. |
 | [`agents/`](agents/) | How agent skills should consume this repo: `issue-tracker.md` (GitHub Issues via `gh`), `domain.md` (where `CONTEXT.md`/`docs/adr/` live). Read alongside the root [`CLAUDE.md`](../CLAUDE.md), which carries the project's kaupapa principles. |
@@ -37,7 +37,7 @@ never depended on. There's no other copy to keep in sync with.
 | Location | Contents |
 |---|---|
 | [`history/knowledge-base/`](history/knowledge-base/) | ~40 files, one per legacy pre-monorepo repo (`ahau`, `pataka`, the `ssb-*` plugins), each documenting that repo's own history including old GitLab MRs. A separate project done outside the monorepo; kept as its own subtree, not restructured. Start at `history/knowledge-base/INDEX.md` or `cross_cutting.md`. |
-| [`history/handoffs/`](history/handoffs/) | PR handoff docs written mid-work in `ahau-monorepo` (e.g. `pr-3-6-7-handoff.md`). References to files that only exist on unmerged `ahau-monorepo` branches are noted inline where found, not fixed — see [Decide how to handle 3 open/unmerged ahau-monorepo PRs' PRDs and plans](https://github.com/ahau01/ahau-v2/issues/12). |
+| [`history/handoffs/`](history/handoffs/) | PR handoff docs written mid-work in `ahau-monorepo` (e.g. `pr-3-6-7-handoff.md`). References to files that only exist on unmerged `ahau-monorepo` branches are noted inline where found, not fixed — those branches' PRDs/plans/learnings docs were deliberately left unmigrated (active in-progress work, not settled history), decided in [Wayfinder ticket #12](https://github.com/ahau01/ahau-v2/issues/12); the concrete evidence they surfaced is instead captured in [ADR-0002](adr/0002-rewrite-instead-of-continuing-to-patch-ssb-architecture.md). |
 | [`history/ahau-monorepo-codebase-map.md`](history/ahau-monorepo-codebase-map.md) | Auto-generated map of `ahau-monorepo`'s own code layout (1549 files, mapped 2026-09-09). Describes that repo's structure, not `ahau-v2`'s — useful for tracing where a piece of history came from, nothing more. |
 
 ## Where things came from
