@@ -157,11 +157,11 @@ future adapter must satisfy. No protocol is wired to it.
 
 | # | Milestone | Outcome | Status | Plan |
 |---|---|---|---|---|
-| 1 | Data-access inventory | Every operation the existing Āhau app performs is catalogued and triaged — the frontend's real requirements are declared and triaged rather than implicit in 18 Apollo-shaped modules | complete | `.claude/plans/ahau-v2-repo-foundation.plan.md` |
-| 2 | Data-access contract v0 | Those requirements are expressed as a typed, backend-agnostic contract — the definition of what any backend must provide | complete | `.claude/plans/ahau-v2-contract-v0.plan.md` |
-| 3 | `ahau-v2` shell runs | A fresh clone boots, routes, and renders in Āhau's visual language on one Node version — there is somewhere to build v2 | complete | `.claude/plans/ahau-v2-shell.plan.md` |
-| 4 | Fixture reference implementation | The contract is satisfied in memory and the shell runs on realistic whakapapa data — the contract is demonstrably implementable | complete | `.claude/plans/ahau-v2-fixtures.plan.md` |
-| 5 | Conformance suite | Adapter correctness becomes executable rather than described — Leg 2 has a target to build against | complete | `.claude/plans/ahau-v2-conformance-suite.plan.md` |
+| 1 | Data-access inventory | Every operation the existing Āhau app performs is catalogued and triaged — the frontend's real requirements are declared and triaged rather than implicit in 18 Apollo-shaped modules | complete | `docs/plans/ahau-v2-repo-foundation.plan.md` |
+| 2 | Data-access contract v0 | Those requirements are expressed as a typed, backend-agnostic contract — the definition of what any backend must provide | complete | `docs/plans/ahau-v2-contract-v0.plan.md` |
+| 3 | `ahau-v2` shell runs | A fresh clone boots, routes, and renders in Āhau's visual language on one Node version — there is somewhere to build v2 | complete | `docs/plans/ahau-v2-shell.plan.md` |
+| 4 | Fixture reference implementation | The contract is satisfied in memory and the shell runs on realistic whakapapa data — the contract is demonstrably implementable | complete | `docs/plans/ahau-v2-fixtures.plan.md` |
+| 5 | Conformance suite | Adapter correctness becomes executable rather than described — Leg 2 has a target to build against | complete | `docs/plans/ahau-v2-conformance-suite.plan.md` |
 
 ## Open Questions
 

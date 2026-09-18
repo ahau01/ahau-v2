@@ -1,6 +1,6 @@
 # Plan: Āhau v2 — Data-Access Inventory
 
-**Source PRD**: `.claude/prds/ahau-v2-repo-foundation.prd.md`
+**Source PRD**: `docs/prds/ahau-v2-repo-foundation.prd.md`
 **Selected Milestone**: 1 — Data-access inventory
 **Complexity**: Medium
 
@@ -37,7 +37,7 @@ into components, `main.js` and a mixin. The inventory's unit is therefore the
 | `scripts/inventory-data-access.sh` | CREATE | Thin wrapper for consistency with `scripts/check-hardcoded-translations.sh` |
 | `plans/data-access-inventory.md` | CREATE | Generated triage tracker — the milestone's human-facing deliverable |
 | `plans/data-access-inventory.json` | CREATE | Machine-readable inventory; the input Milestone 2 consumes |
-| `.claude/prds/ahau-v2-repo-foundation.prd.md` | UPDATE | Milestone 1 row → `in-progress`, `Plan` cell → this plan |
+| `docs/prds/ahau-v2-repo-foundation.prd.md` | UPDATE | Milestone 1 row → `in-progress`, `Plan` cell → this plan |
 
 No files under `ui/src` are modified. This milestone is read-only with respect
 to the application.

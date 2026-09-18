@@ -1,6 +1,6 @@
 # Plan: Āhau v2 — Data-Access Contract v0
 
-**Source PRD**: `.claude/prds/ahau-v2-repo-foundation.prd.md`
+**Source PRD**: `docs/prds/ahau-v2-repo-foundation.prd.md`
 **Selected Milestone**: 2 — Data-access contract v0
 **Complexity**: Large
 
@@ -53,7 +53,7 @@ Spans two repositories.
 
 | File | Action | Why |
 |---|---|---|
-| `.claude/prds/ahau-v2-repo-foundation.prd.md` | UPDATE | Milestone 2 → `in-progress`, `Plan` cell → this plan |
+| `docs/prds/ahau-v2-repo-foundation.prd.md` | UPDATE | Milestone 2 → `in-progress`, `Plan` cell → this plan |
 
 Nothing under `ui/src` is modified.
 

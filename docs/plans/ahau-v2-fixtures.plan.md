@@ -1,6 +1,6 @@
 # Plan: Āhau v2 — Fixture Reference Implementation
 
-**Source PRD**: `.claude/prds/ahau-v2-repo-foundation.prd.md`
+**Source PRD**: `docs/prds/ahau-v2-repo-foundation.prd.md`
 **Selected Milestone**: 4 — Fixture reference implementation
 **Complexity**: Medium
 
@@ -47,7 +47,7 @@ Milestone 3 inherits the "shell runs on fixtures" half.
 
 | File | Action | Why |
 |---|---|---|
-| `.claude/prds/ahau-v2-repo-foundation.prd.md` | UPDATE | Milestone 4 → `in-progress`, `Plan` cell → this plan |
+| `docs/prds/ahau-v2-repo-foundation.prd.md` | UPDATE | Milestone 4 → `in-progress`, `Plan` cell → this plan |
 
 ## Tasks
 

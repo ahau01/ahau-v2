@@ -1,0 +1,231 @@
+# Cross-cutting gotchas & landmines
+
+Every MR/issue across all 61 repos flagged (by keyword or LLM summary) as a workaround, known limitation, breaking change, or hack. Check this before assuming odd-looking legacy behavior is accidental.
+
+- [ahau-ahau](repos/ahau-ahau.md) !984 — fix outdated Node/npm version requirements and add missing setup notes — ⚠ the desktop/ folder requires a separate npm install beyond the root install, or you'll hit a missing cross-env error.
+- [ahau-lib-graphql-ssb-graphql-whakapapa](repos/ahau-lib-graphql-ssb-graphql-whakapapa.md) #3 — Adopt legal and custom partner relationship types + widen relationshipType fields in schema — ⚠ Patch is pinned to v6.0.0 and silently skipped on a version bump to ^7.0.0; the mobile app has no equivalent patch, so it rejects legal/custom values.
+- [ahau-ahau](repos/ahau-ahau.md) #52 — fix: resolve pre-existing static-check CI failures (brace-style, camelcase, no-undef) — ⚠ npm run lint passes but npm run static-check fails, since static-check ignores inline eslint-disable comments.
+- [ahau-ahau](repos/ahau-ahau.md) #51 — Add timeout/fallback for Cordova theme bridge during startup — ⚠ unbounded await on the Cordova theme bridge response can hang app startup indefinitely with no timeout.
+- [ahau-ahau](repos/ahau-ahau.md) !981 — feat(theme): tribal identity customization - bundled theming system — ⚠ the static-check CI job was changed from advisory (allow_failure) to blocking as part of this MR.
+- [ahau-pataka](repos/ahau-pataka.md) #2 — Vue multiword components set to fail after 2025-05-01 — ⚠ eslintrc.js has a hardcoded date-based flag that breaks `npm run dev` after 2025-05-01 unless manually bumped.
+- [ahau-ahau](repos/ahau-ahau.md) !974 — update packages for sdk v6 — ⚠ requires an SDK patch to work around mediation issues; verified-credential smoke testing was left unchecked when the MR was closed.
+- [ahau-ahau](repos/ahau-ahau.md) !973 — fix bug with registration form not passing custom fields properly — ⚠ may conflict with commit 24c32bcb, the change that originally introduced the bug being fixed here.
+- [ahau-lib-ssb-plugins-ssb-atala-prism](repos/ahau-lib-ssb-plugins-ssb-atala-prism.md) !12 — Docker — ⚠ Unresolved: localhost addresses may break DID/connections; missing API_KEY handling; unclear leveldb/SDK 5.1.1 compatibility.
+- [ahau-lib-ssb-plugins-ssb-atala-prism](repos/ahau-lib-ssb-plugins-ssb-atala-prism.md) !9 — Draft: Docker — ⚠ Unresolved: localhost addresses may break DID/connections; missing API_KEY handling; unclear leveldb/SDK 5.1.1 compatibility.
+- [ahau-lib-ssb-plugins-ssb-profile](repos/ahau-lib-ssb-plugins-ssb-profile.md) !73 — Draft: Search2 find — flagged: todo
+- [ahau-lib-ssb-plugins-ssb-story](repos/ahau-lib-ssb-plugins-ssb-story.md) !13 — Draft: Test group encryption — ⚠ Marked as draft, not yet ready to merge.
+- [ahau-lib-ssb-plugins-ssb-pataka](repos/ahau-lib-ssb-plugins-ssb-pataka.md) !16 — temporarily hide files from the web reg form — ⚠ Change is explicitly described as temporary, implying the files field will need to be restored or properly fixed later.
+- [ahau-lib-ssb-plugins-ssb-pataka](repos/ahau-lib-ssb-plugins-ssb-pataka.md) #1 — dev pataka code throwing error in dev ahau — ⚠ Error breaks the ahau instance and reappears immediately even after dismissing it.
+- [ahau-lib-ssb-plugins-ssb-atala-prism](repos/ahau-lib-ssb-plugins-ssb-atala-prism.md) #2 — AutoIssuance being triggered twice — ⚠ Suspected cause is a timing issue around invites and joining a new group plus rebuild, but not confirmed.
+- [ahau-lib-ssb-plugins-ssb-pataka](repos/ahau-lib-ssb-plugins-ssb-pataka.md) !13 — Update custom field order — ⚠ Untested on custom field type 'files', does not support profile images, only tested against the WPH tribe, and array/checkbox fields were forced to 12 columns as a design compromise.
+- [ahau-lib-artefact-store](repos/ahau-lib-artefact-store.md) !29 — wip: add hyper-sdk — ⚠ Code is explicitly unworking/WIP; author intends to clean it up in further commits.
+- [ahau-lib-artefact-store](repos/ahau-lib-artefact-store.md) #1 — refactor code to use latest version of hyper* — ⚠ Legacy bootstrap nodes were retired and recreating them is undocumented and difficult.
+- [ahau-ahau](repos/ahau-ahau.md) !956 — Draft: Gallery Icon implemented in sideNavMenu.vue — ⚠ draft/WIP MR with the template unfilled, so scope and testing status are undocumented.
+- [ahau-ahau](repos/ahau-ahau.md) !953 — Upgrade to db2 and migrate from db1 — ⚠ automatic db1->db2 migration is effectively one-way in practice; back up your db first if you might need db1 again.
+- [ahau-ahau](repos/ahau-ahau.md) !952 — Draft: Resolve "Upgrading ahau to db2" — ⚠ Automatic migration from db1 to db2 was deliberately left out and deferred to another MR.
+- [ahau-lib-ssb-plugins-ssb-profile](repos/ahau-lib-ssb-plugins-ssb-profile.md) !71 — Optimize Find — ⚠ Author is unsure this MR is optimization enough; a custom db plugin might still be needed.
+- [ahau-ahau](repos/ahau-ahau.md) !950 — Draft: Custom Field Ordering (Drag and drop) — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !947 — Registration form files — ⚠ upload file types are limited to whatever the kaitiaki configured per field; some descriptive text was still pending at MR time.
+- [ahau-ahau](repos/ahau-ahau.md) !946 — allow kaitiaki to define a new custom field of type file — ⚠ audio/video attachments disabled, fields are view-only (not yet editable), and visibility is forced kaitiaki-only in this first pass.
+- [ahau-ahau](repos/ahau-ahau.md) !945 — Toggle beta features — ⚠ Beta toggle auto-disables on dialog close unless one of the two nested VC settings is enabled, and can't be turned off while a nested setting is active.
+- [ahau-lib-ssb-crut](repos/ahau-lib-ssb-crut.md) !39 — refactor defaultPublish (BREAKING) — flagged: breaking
+- [ahau-lib-ssb-plugins-ssb-whakapapa](repos/ahau-lib-ssb-plugins-ssb-whakapapa.md) #1 — We don't seem to be testing encryption to groups — ⚠ Group encryption path appears to have no test coverage despite being documented as supported.
+- [ahau-ahau](repos/ahau-ahau.md) !934 — toggle accepts vc setting — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !931 — Draft: move search bar into its own component, create new readonly profile form — ⚠ WIP draft — only the readonly form path is finished; the edit form has not been built yet.
+- [ahau-ahau](repos/ahau-ahau.md) !930 — get mobile building — ⚠ node-gyp version pinned to 9 specifically to fix the mobile build.
+- [ahau-ahau](repos/ahau-ahau.md) !918 — bugfix: initial sync via ssb-friends hack — flagged: hack
+- [ahau-ahau](repos/ahau-ahau.md) !913 — change the tool used for notarizing from altool to notarytool — flagged: todo
+- [ahau-lib-ssb-keyring](repos/ahau-lib-ssb-keyring.md) #2 — "Usage" section in readme might be incorrect — ⚠ signing.add can't be used as documented; workaround creates an empty object reference and Object.assign's the API into it after init.
+- [ahau-ahau](repos/ahau-ahau.md) !898 — D3 latest — flagged: breaking
+- [ahau-ahau](repos/ahau-ahau.md) !889 — Submit existing parent — ⚠ Adding a parent to the focus profile is intentionally disabled (TODO), and duplicate-link handling for existing parents/partners is not yet covered.
+- [ahau-lib-graphql-ssb-graphql-submissions](repos/ahau-lib-graphql-ssb-graphql-submissions.md) !27 — fix bug rendering link updates, fix bug with tests — ⚠ Root cause of the targetRecord format mismatch was unclear; fixed by reusing the target-profile renderUpdate method rather than addressing the underlying format issue.
+- [ahau-ahau](repos/ahau-ahau.md) !870 — Web form ui — ⚠ Select-all checkbox and key/value label styling are not yet implemented (checklist items unchecked).
+- [ahau-ahau](repos/ahau-ahau.md) !869 — update modules for source and joining questions for web registrations — flagged: breaking
+- [ahau-lib-ssb-plugins-ssb-submissions](repos/ahau-lib-ssb-plugins-ssb-submissions.md) !20 — add source to submissions, update ssb-profile — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !868 — Kaitiaki can review new profile submissions — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !864 — updated addperson to end — flagged: hack
+- [ahau-ahau](repos/ahau-ahau.md) !853 — Add a child submission — ⚠ Advanced cases (ignored profiles, important links, duplicate links) still need special handling in follow-up work.
+- [ahau-ahau](repos/ahau-ahau.md) !850 — change how submissions are approved — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !847 — change csv dividers *within* a field to "|" — ⚠ Multi-value fields (e.g. altNames) use "|" instead of "," as an internal delimiter to avoid clashing with the CSV column separator.
+- [ahau-lib-ssb-plugins-ssb-submissions](repos/ahau-lib-ssb-plugins-ssb-submissions.md) #1 — Linked submissions! — ⚠ Placeholder references like $dependency may fail schema validation; proposed workarounds are swapping in a dummy id for validation then restoring it, or ignoring validation errors tied to the placeholder.
+- [ahau-lib-graphql-ssb-graphql-profile](repos/ahau-lib-graphql-ssb-graphql-profile.md) !82 — Tombstone Person — ⚠ Deletion cascades differently by role: members leave linked admin profiles intact, but kaitiaki deletions cascade to linked profiles.
+- [ahau-lib-graphql-ssb-graphql-profile](repos/ahau-lib-graphql-ssb-graphql-profile.md) !81 — Create Admin Profile — ⚠ savePerson needs the admin group's parent group to correctly resolve custom field definitions for groupDetails vs adminDetails.
+- [ahau-lib-ssb-keyring](repos/ahau-lib-ssb-keyring.md) !22 — Multiple keys per group — flagged: breaking
+- [ahau-ahau](repos/ahau-ahau.md) !831 — New csv import/export — ⚠ Reintroduces code that was lost when an earlier MR (#800) was reverted incorrectly.
+- [ahau-lib-ssb-plugins-ssb-ahau](repos/ahau-lib-ssb-plugins-ssb-ahau.md) !73 — Custom fields — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !825 — uninstall storybook — ⚠ Some Storybook-only dependencies may remain unremoved since dependency-check tooling couldn't reliably analyze the project.
+- [ahau-ahau](repos/ahau-ahau.md) !814 — Custom Field - VisibleBy — ⚠ This PR does not cover checks for updating custom fields on existing profiles and ensuring they save to the correct profile.
+- [ahau-lib-ssb-keyring](repos/ahau-lib-ssb-keyring.md) !16 — remove sodium-universal as dependency — ⚠ Buffer-size constants are now hardcoded and only verified against na.crypto_secretbox_KEYBYTES in tests, not derived at runtime.
+- [ahau-ahau](repos/ahau-ahau.md) !812 — simplify svg — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !806 — updated canBeImported to have default value — ⚠ Type handling for auto-created custom fields from CSV import is undecided (TODO: default to string, or prompt the user to specify a type or ignore the field).
+- [ahau-ahau](repos/ahau-ahau.md) !804 — Dob required + sideNodeDialog editing — ⚠ adminProfile can show stale/out-of-date data when a user updates their own profile; author flagged this for further investigation as a separate task.
+- [ahau-ahau](repos/ahau-ahau.md) !803 — Added permissions to whakapapa — ⚠ Requires coordinated publishing/updating of ssb-whakapapa, @ssb-graphql/whakapapa, and ssb-ahau; tests and smoke tests were not yet passing at time of PR.
+- [ahau-ahau](repos/ahau-ahau.md) !800 — Custom Fields - CSV Import/Export — ⚠ Type handling for auto-created custom fields from CSV import is undecided (TODO: default to string, or prompt the user to specify a type or ignore the field).
+- [ahau-ahau](repos/ahau-ahau.md) !773 — Mobile 1.5.0 — ⚠ Mobile only supports Node 12 or earlier, so the build had to be specially adapted to work with packages requiring Node 12+.
+- [ahau-ahau](repos/ahau-ahau.md) !772 — SVG printing of shown whakapapa — ⚠ SVG export may not be suitable for professional printing (not CMYK-friendly); how to split large drawings into a printable format (e.g. PDF) is unresolved.
+- [ahau-lib-ssb-keyring](repos/ahau-lib-ssb-keyring.md) !12 — group.add does not enforce info.root — ⚠ Depends on merge request 11 landing first; after this, ssb-keyring no longer validates that info.root actually belongs to the group.
+- [ahau-ahau](repos/ahau-ahau.md) !769 — Handling Graphql errors — ⚠ Errors are still also console.logged for debugging since not all possible GraphQL error shapes are fully parsed for display yet.
+- [ahau-ahau](repos/ahau-ahau.md) !761 — Create custom fields — ⚠ initGroup does not yet save customFields, and adding a 'multiple' field type with options is not yet implemented.
+- [ahau-lib-graphql-ssb-graphql-profile](repos/ahau-lib-graphql-ssb-graphql-profile.md) !68 — Split saveProfile — flagged: breaking
+- [ahau-lib-graphql-ssb-graphql-profile](repos/ahau-lib-graphql-ssb-graphql-profile.md) !66 — Update Profile typeDefs — flagged: breaking
+- [ahau-ahau](repos/ahau-ahau.md) !750 — finished table toggling columns and added isLoadingWhakapapa label to... — ⚠ Bundles many unrelated features and fixes into one large 'mini-mega branch'; several smoke test checklist items were left unchecked.
+- [ahau-ahau](repos/ahau-ahau.md) !735 — move access options to vuex — ⚠ TODO noted: users should be barred from joining a group whose kaitiaki has deleted their profile, but this isn't implemented yet.
+- [ahau-ahau](repos/ahau-ahau.md) !720 — List profiles — ⚠ Turning auto-collapse off wipes existing collapse state and only affects nodes added after the change, to handle graphs still mid-load.
+- [ahau-ahau](repos/ahau-ahau.md) !715 — upgrade ahoy — ⚠ electron-builder config excludes most modules by design except those with native (C) bindings and ssb-ahau migrations — easy to break the build by missing an exception.
+- [ahau-ahau](repos/ahau-ahau.md) !709 — include ignored children in raw childLinks etc — ⚠ Author is uncertain whether this fix is the correct approach and explicitly asks for review before relying on it.
+- [ahau-ahau](repos/ahau-ahau.md) !689 — Bug: Updating profile in SideNodeDialog — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !688 — Load more down — ⚠ loadDescendants was previously firing twice (now fixed); a linked hackmd doc tracks further known bugs for this PR.
+- [ahau-ahau](repos/ahau-ahau.md) !682 — change focus to partners on click — ⚠ Only loads 3 generations of ancestors above a focused partner, and the graph re-centers on the new focus rather than keeping it under the cursor.
+- [ahau-ahau](repos/ahau-ahau.md) !679 — prioritise partner positioning on birth relationships — ⚠ Positioning now considers only birth children, which may need further tuning for families with many adopted/whangai relationships.
+- [ahau-ahau](repos/ahau-ahau.md) !675 — delete links connected to a person when the person is deleted — ⚠ Author is unsure whether this cascade delete should also apply when a user closes their Ahau account.
+- [ahau-lib-ssb-crut](repos/ahau-lib-ssb-crut.md) #5 — tombstone merge conflict — ⚠ crut.tombstone can fail when a tangle is in an unresolved branched conflict state.
+- [ahau-lib-ssb-crut](repos/ahau-lib-ssb-crut.md) !21 — Read state — flagged: breaking
+- [ahau-ahau](repos/ahau-ahau.md) !633 — MEGA BRANCH - smaller-data — ⚠ Uses stale-while-revalidate caching, so nodes may briefly display stale cached data before the latest data loads.
+- [ahau-lib-graphql-ssb-graphql-whakapapa](repos/ahau-lib-graphql-ssb-graphql-whakapapa.md) !31 — resolve type Relationship on ImportantRelationships. TODO: need to get the link — flagged: todo
+- [ahau-lib-ssb-plugins-ssb-profile](repos/ahau-lib-ssb-plugins-ssb-profile.md) !49 — add opts to findFeedsByProfileId - selfLinkOnly — flagged: breaking
+- [ahau-ahau](repos/ahau-ahau.md) !610 — allow editing for admin profiles — flagged: todo
+- [ahau-lib-ssb-plugins-ssb-ahau](repos/ahau-lib-ssb-plugins-ssb-ahau.md) !58 — Migrate/move applications to registrations — flagged: gotcha
+- [ahau-lib-ssb-crut](repos/ahau-lib-ssb-crut.md) !13 — Use equal instead of slowEqual for db2 — ⚠ bipf is used but not declared as a package.json dependency, since it's only needed for db2 — flagged by the author as 'a bit sneaky'.
+- [ahau-lib-graphql-ssb-graphql-tribes](repos/ahau-lib-graphql-ssb-graphql-tribes.md) !12 — Kaitiaki applications — ⚠ Removed GraphQL fields make this likely a major version bump; the new applicant link only shows up in findByFeedId if selfLinkOnly is set to false, and auto-private-profile still needs a follow-up fix to copy that link.
+- [ahau-lib-graphql-ssb-graphql-profile](repos/ahau-lib-graphql-ssb-graphql-profile.md) !49 — WIP: Admin profile — flagged: todo
+- [ahau-lib-graphql-ssb-graphql-main](repos/ahau-lib-graphql-ssb-graphql-main.md) !20 — Profile migration — ⚠ Email, phone, and address are not copied over during migration and will be lost; confirmed acceptable by Ben.
+- [ahau-ahau](repos/ahau-ahau.md) #27 — BUG - Unexpected replication of artefacts upon restarting the app — ⚠ root cause not isolated; reproduction tests at two different layers both fail to trigger the reported behavior.
+- [ahau-lib-graphql-ssb-graphql-whakapapa](repos/ahau-lib-graphql-ssb-graphql-whakapapa.md) !27 — fix bug where you cant query partner links using whakapapaLink — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !589 — ON-HOLD: Edit partner links — flagged: todo
+- [ahau-lib-ssb-crut](repos/ahau-lib-ssb-crut.md) !11 — Db2 — ⚠ db2 doesn't strip undefined values (e.g. recps) via JSON stringify/decode the way db1 does, requiring test changes.
+- [ahau-ahau](repos/ahau-ahau.md) !574 — tidy config, logging of karakia and startup info — ⚠ Fix relies on persisting less data to `config`; reverting that could reintroduce the startup bugs.
+- [ahau-lib-ssb-plugins-ssb-hyper-blobs](repos/ahau-lib-ssb-plugins-ssb-hyper-blobs.md) !10 — Draft: Add a test to demonstrate intendend behaviour with 'sparse replication' — ⚠ Draft test meant to reveal a suspected sparse-replication bug where unrequested data may replicate after reconnect.
+- [ahau-pataka](repos/ahau-pataka.md) !7 — update avatar image picker / dialogs — ⚠ Updating the upload client version alone did not fix the issue; root cause likely lies in ssb-pataka's middleware.
+- [ahau-lib-ssb-plugins-ssb-profile](repos/ahau-lib-ssb-plugins-ssb-profile.md) !36 — modify link.create API (patch), allow linking on behalf of others — flagged: breaking
+- [ahau-lib-ssb-plugins-ssb-profile](repos/ahau-lib-ssb-plugins-ssb-profile.md) !35 — add profile/pataka, fix bugs — flagged: breaking
+- [ahau-ahau](repos/ahau-ahau.md) !541 — Record permissions — ⚠ Permission settings are disabled/non-functional in the UI until the corresponding backend work is completed.
+- [ahau-ahau](repos/ahau-ahau.md) !540 — Groups ui — ⚠ Group creation UI is present but disabled until the groups backend is enabled; changelog was intentionally not updated since this is front-end only.
+- [ahau-ahau](repos/ahau-ahau.md) !539 — Upgrade mobile — ⚠ Storage settings are hidden on mobile because that feature isn't supported on the mobile platform yet.
+- [ahau-lib-ssb-plugins-ssb-profile](repos/ahau-lib-ssb-plugins-ssb-profile.md) !34 — Profile split — ⚠ Breaking change: the generic profile type is removed, so any code relying on arbitrary profile types will break.
+- [ahau-ahau](repos/ahau-ahau.md) !536 — Group permission — ⚠ The new permission select control is disabled until backend support for it is plugged in.
+- [ahau-ahau](repos/ahau-ahau.md) !533 — Right click context menu — ⚠ A known bug (tracked separately in Asana) currently prevents the node context menu from opening in the whakapapa table view.
+- [ahau-ahau](repos/ahau-ahau.md) !521 — mobile: fix upload of common pictures — ⚠ Root cause was a mobile plugin silently overwriting the global `File` object.
+- [ahau-ahau](repos/ahau-ahau.md) !518 — New tribe bug — ⚠ The kaitiaki tab in NewCommunityDialog had to be disabled as part of the fix, so kaitiaki can't be managed there for now.
+- [ahau-lib-ssb-plugins-ssb-hyper-blobs](repos/ahau-lib-ssb-plugins-ssb-hyper-blobs.md) !7 — Pataka friends — ⚠ Major breaking version change: drive registration flow inverted, changing how peers are asked for and register drive addresses.
+- [ahau-ahau](repos/ahau-ahau.md) !515 — Tiaki members — ⚠ At least one kaitiaki must always remain — deleting all kaitiaki is blocked.
+- [ahau-ahau](repos/ahau-ahau.md) !514 — Multiple kaitiaki — ⚠ Kaitiaki management tab was still marked WIP and automated tests were not passing at merge time.
+- [ahau-ahau](repos/ahau-ahau.md) !511 — Draft: Invite members to join tribe — ⚠ Left as an unfinished draft — invite API and notification handling were never completed; MR closed unmerged.
+- [ahau-ahau](repos/ahau-ahau.md) !498 — Storage Management — ⚠ Testing auto-pruning requires configuring custom hyperBlobs.autoPrune delay/interval in desktop/ssb.config.js, having remote peers with hyperBlobs, and possibly manually lowering ssb-ahau's MAX_AHAU_SIZE constant.
+- [ahau-ahau](repos/ahau-ahau.md) !491 — update ssb-ahau, add ssb-settings, revert electron change — ⚠ Includes a revert of an earlier electron change bundled in with the dependency updates.
+- [ahau-ahau](repos/ahau-ahau.md) !485 — changes — ⚠ Some translation JSON files had been created but never wired into their index.js — a source of silently missing translations.
+- [ahau-lib-graphql-ssb-graphql-settings](repos/ahau-lib-graphql-ssb-graphql-settings.md) !1 — Init — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !484 — WIP: Add mention to story when name has a macron — ⚠ Closed without a working fix — macron-containing names may still fail to match in search/mention.
+- [ahau-lib-artefact-store](repos/ahau-lib-artefact-store.md) !19 — Get All Files By Drive — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !478 — WIP: Electron upgrade — ⚠ Windows installer build was not yet verified; an unexplained console warning appears on startup but doesn't seem to break anything.
+- [ahau-ahau](repos/ahau-ahau.md) !463 — small archive refactor — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !460 — final translations for view-archive.json — ⚠ Author left the 'your personal archive' translation unresolved; MR closed without merging.
+- [ahau-ahau](repos/ahau-ahau.md) !405 — I18n initial — ⚠ Some title-translation functionality was not working yet at merge time; needed follow-up pairing to resolve.
+- [ahau-ahau](repos/ahau-ahau.md) !401 — Date Picker Interval: DoB and DoB are the same — flagged: hack
+- [ahau-ahau](repos/ahau-ahau.md) !397 — Accept two digit years in CSVs — ⚠ Two-digit years are auto-formatted as 19YY (not 20YY) — a hardcoded century assumption.
+- [ahau-lib-graphql-ssb-graphql-whakapapa](repos/ahau-lib-graphql-ssb-graphql-whakapapa.md) !25 — Whakapapa Links - siblings, partners — ⚠ Adding children to two parents in a single mutation is left unimplemented, noted as needing more design.
+- [ahau-lib-graphql-ssb-graphql-main](repos/ahau-lib-graphql-ssb-graphql-main.md) !12 — Dup upload hack — flagged: hack
+- [ahau-ahau](repos/ahau-ahau.md) !387 — upgrade mobile dependencies — ⚠ Hyperblobs upload is not yet supported (serving only); intended to be merged only after testing mobile release 1.1.0.
+- [ahau-ahau](repos/ahau-ahau.md) !386 — improve archive scroll perf — ⚠ Root cause of the performance gain from swapping in a static PNG icon is not understood/documented.
+- [ahau-ahau](repos/ahau-ahau.md) !375 — Partners — ⚠ Sibling and birth-order calculation moved from frontend to backend as part of this refactor — a behavioral dependency shift for anything relying on the old frontend logic.
+- [ahau-lib-ssb-plugins-ssb-ahau](repos/ahau-lib-ssb-plugins-ssb-ahau.md) !17 — WIP: Add authentication — ⚠ Explicitly a proof-of-concept; the author notes several parts probably need to be moved outside of this module.
+- [ahau-ahau](repos/ahau-ahau.md) !369 — WIP: Add viewer server — ⚠ Closed as an incomplete proof-of-concept; per-query authorization, docker-compose deployment, and the publishedStatus review workflow were never implemented.
+- [ahau-ahau](repos/ahau-ahau.md) !367 — DRAFT: Whakapapa Show Refactor — flagged: todo
+- [ahau-lib-artefact-server](repos/ahau-lib-artefact-server.md) !3 — API tweaks — ⚠ Author notes filename collisions are still only partly mitigated and says they're still thinking about how best to avoid them.
+- [ahau-lib-artefact-store](repos/ahau-lib-artefact-store.md) !15 — Offer more information about connected peers — ⚠ Exposes raw peer connection data (IPs, noise keys) rather than a simplified, purpose-built object.
+- [ahau-lib-artefact-store](repos/ahau-lib-artefact-store.md) !14 — uncomment parts which speed up making connections — ⚠ Merge deliberately held back until behavior is verified, to isolate whether this change causes or merely reveals existing breakage.
+- [ahau-ahau](repos/ahau-ahau.md) !349 — WIP: speed up changes TODO: add version of ssb-graphql-story to ssb-ahau — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !345 — Dob date picker update — ⚠ date.month.text now shows the full month name while date.month.value stays numeric — a display/value mismatch to watch for.
+- [ahau-lib-graphql-ssb-graphql-tribes](repos/ahau-lib-graphql-ssb-graphql-tribes.md) !6 — Application API Update — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !338 — HACK: Pataka bug hack — flagged: hack
+- [ahau-lib-graphql-ssb-graphql-story](repos/ahau-lib-graphql-ssb-graphql-story.md) !9 — Draft: Test query and mutation helpers — ⚠ Closed without being completed; the TODO list (fragment composition, author field support, exporting helpers, replacing whakapapa-ora's existing ones) was left unfinished.
+- [ahau-ahau](repos/ahau-ahau.md) !330 — can edit a community details TODO: edit collection stories from dialog — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !327 — Table focus — ⚠ Scroll centering uses a hardcoded 400px offset; author is unsure if it will work well at other screen resolutions.
+- [ahau-ahau](repos/ahau-ahau.md) !325 — Upload file limit — ⚠ TODO items left undone: broader error-handling messaging and success alerts on submission are not yet implemented.
+- [ahau-ahau](repos/ahau-ahau.md) #25 — App page refresh — ⚠ a known fix (changing the base href) was reverted because it broke production builds; reapplying it needs an accompanying file-path fix.
+- [ahau-ahau](repos/ahau-ahau.md) !312 — Whakapapa Table Scrollbar — ⚠ The new horizontal scrollbar renders much thicker than the vertical one; author is unsure how to fix this.
+- [ahau-ahau](repos/ahau-ahau.md) !308 — Collections — ⚠ Creating records on this branch and then switching to another branch with older ssb modules may cause issues.
+- [ahau-ahau](repos/ahau-ahau.md) !306 — update ssb-ahau — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !297 — get ui unit tests passing, export initialised apolloProvider for easy consumption — ⚠ Some ui unit tests still fail after this change, and it has only been verified on Linux, not Windows.
+- [ahau-ahau](repos/ahau-ahau.md) !285 — Improved navigation — ⚠ Back buttons are described as a temporary measure; author expects this to be much improved once a proper router system exists.
+- [ahau-ahau](repos/ahau-ahau.md) #22 — NewRecordDialog -> Related records -> ComboBox doesn't scroll — ⚠ allow-overflow and overflow-y:scroll style overrides do not fix the non-scrolling combobox menu.
+- [ahau-ahau](repos/ahau-ahau.md) !281 — fix artefact upload with hack — flagged: hack
+- [ahau-ahau](repos/ahau-ahau.md) !277 — seperated whakapapa into groups and gave them titles — ⚠ Depends on the not-yet-available ability to getGroupProfiles/TribeFaces from a cloaked groupId.
+- [ahau-ahau](repos/ahau-ahau.md) !275 — update modules needed for getConnectedPeers — ⚠ The syncing progress bar is driven by a timeout rather than an actual completion signal.
+- [ahau-ahau](repos/ahau-ahau.md) !272 — fix problem with mimeType failing avatarImage.set, temporary hackgit — flagged: hack, temporary
+- [ahau-ahau](repos/ahau-ahau.md) !270 — Update your private profiles — flagged: todo
+- [ahau-lib-graphql-ssb-graphql-main](repos/ahau-lib-graphql-ssb-graphql-main.md) !9 — pataka profiles for loadContext — ⚠ The pataka setup itself still needs to be modified after this is merged and published to actually take advantage of the new options.
+- [ahau-ahau](repos/ahau-ahau.md) #9 — Seeing peer changes to whakapapa — ⚠ stale UI after peer edits can prompt users to create duplicate records before the update is visible.
+- [ahau-ahau](repos/ahau-ahau.md) #5 — Bug - wrong access on archives — ⚠ changing an archive's access group after creation leaves stale mention/contributor references pointing at the original private group.
+- [ahau-ahau](repos/ahau-ahau.md) !253 — patch editing a partner by disabling editing of relationships — ⚠ Workaround only allows editing relationships when creating a new profile, not on existing ones; author explicitly calls this inadequate and the MR was closed rather than merged.
+- [ahau-ahau](repos/ahau-ahau.md) #3 — BUG - can delete a profile and break other whakapapa records — ⚠ no referential-integrity check before tombstoning a profile shared across multiple whakapapa records; can silently corrupt other trees.
+- [ahau-ahau](repos/ahau-ahau.md) !249 — seperate caps for each NODE_ENV, and new "staging" env — ⚠ Launching with the NODE_ENV variable is expected to differ on Mac and Windows from the documented Linux/AppImage example.
+- [ahau-ahau](repos/ahau-ahau.md) !238 — Tribe records — ⚠ Access on tribe records can be viewed once set but cannot be edited afterward.
+- [ahau-ahau](repos/ahau-ahau.md) !234 — Fix CSV import bug — ⚠ Author flags that commit 1563558d describes minor unresolved problems that should be addressed before merging.
+- [ahau-ahau](repos/ahau-ahau.md) !231 — Community frontend — ⚠ Adding yourself to a community is not yet implemented; author also questions whether deleted-community filtering should move server-side to the GraphQL layer.
+- [ahau-lib-graphql-ssb-graphql-whakapapa](repos/ahau-lib-graphql-ssb-graphql-whakapapa.md) !20 — Fix prune function multiplying duplicates — ⚠ Rewritten from scratch; the author isn't fully certain no subtle behavior from the original implementation was lost.
+- [ahau-lib-graphql-ssb-graphql-profile](repos/ahau-lib-graphql-ssb-graphql-profile.md) !15 — Profile links + Tribes — ⚠ Breaking change requiring a major version bump; removes the communities and persons queries.
+- [ahau-lib-graphql-ssb-graphql-artefact](repos/ahau-lib-graphql-ssb-graphql-artefact.md) !8 — rm blob type — flagged: breaking, temporary
+- [ahau-ahau](repos/ahau-ahau.md) !213 — Archiving bugs — ⚠ Date-input UX issues with v-autocomplete and the date picker remain unresolved; attempted fix code was left in place and deferred to a separate task.
+- [ahau-ahau](repos/ahau-ahau.md) !211 — Record ui fixes — ⚠ Access, creator, and cultural narrative fields are hidden because backend support for them doesn't exist yet.
+- [ahau-lib-ssb-plugins-ssb-profile](repos/ahau-lib-ssb-plugins-ssb-profile.md) !13 — Find profiles — ⚠ Breaking API change requiring a major version bump, affecting @ssb-graphql/profile and main.
+- [ahau-ahau](repos/ahau-ahau.md) !202 — update ssb deps for private groups — ⚠ Several TODO items were left unresolved, including how best to link a profile to a feed (message vs. field vs. both) and further changes to where the app publishes data.
+- [ahau-ahau](repos/ahau-ahau.md) !198 — fixed whakapapaShow top margin height issue caused by fixing appbar — ⚠ The whakapapaTable button was removed from mobile because it behaves oddly there and would need more work to support properly.
+- [ahau-lib-ssb-plugins-ssb-whakapapa](repos/ahau-lib-ssb-plugins-ssb-whakapapa.md) !7 — Schema refactors — flagged: breaking
+- [ahau-lib-ssb-plugins-ssb-profile](repos/ahau-lib-ssb-plugins-ssb-profile.md) !12 — Dates change — flagged: breaking
+- [ahau-ahau](repos/ahau-ahau.md) !187 — Profile pr — ⚠ Review checklist (responsive desktop/tablet/mobile UI, viewing own vs. others' profiles, go-back navigation) was still unchecked at time of MR.
+- [ahau-lib-ssb-plugins-ssb-whakapapa](repos/ahau-lib-ssb-plugins-ssb-whakapapa.md) !6 — Links refactor — ⚠ Renaming link.get to link.getLinksOfType is a breaking change that requires a corresponding update in @ssb-graphql/whakapapa.
+- [ahau-ahau](repos/ahau-ahau.md) !177 — Vuex profile 1 — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !175 — Go back — ⚠ Author considered caching nestedWhakapapa/relationshipsLinks in the store to avoid rebuilding the whakapapa on back-navigation, but deferred it as it required more work around managing currentFocus and loadDescendants.
+- [ahau-ahau](repos/ahau-ahau.md) !173 — EPIC: Vuex profile — ⚠ The 'new collection form' item was left unchecked/unimplemented at the end of this epic.
+- [ahau-ahau](repos/ahau-ahau.md) !172 — WIP: Csv chunks — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !169 — Refactor load descendants — ⚠ Two known issues remain: updating a partner's preferredName doesn't reflect in the tree, and siblings don't load correctly because lib/tree-helpers.js (line 100) overwrites any previously loaded siblings with an empty array.
+- [ahau-ahau](repos/ahau-ahau.md) !165 — Partners parents2 — ⚠ Adding parents on partners works but lacks the collapsing/centering behavior present elsewhere; author notes it was hard to locate the right places to fix and hopes Vuex will make this easier going forward.
+- [ahau-ahau](repos/ahau-ahau.md) !160 — Add deceased inputs — ⚠ Author flags ViewEditDialog as very large and notes there are 3 separate NewNodeDialog.vue files, both cited as needing cleanup.
+- [ahau-ahau](repos/ahau-ahau.md) !152 — Dialogs update — ⚠ Not yet tested on mobile.
+- [ahau-lib-graphql-ssb-graphql-artefact](repos/ahau-lib-graphql-ssb-graphql-artefact.md) !2 — Artefacs — ⚠ Depends on ssb-artefact's update function, which was still awaiting review at the time of this MR.
+- [ahau-ahau](repos/ahau-ahau.md) !145 — mobile: fix back button behavior in dialogs — ⚠ Author notes other dialog corner cases may still be unfixed despite testing all changed dialogs.
+- [ahau-ahau](repos/ahau-ahau.md) !140 — Click to center — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !133 — New datepicker — ⚠ Typing a date directly is not yet supported (blocked on handling the read-only v-text-field property), and month/day may not display in the dob field when unselected.
+- [ahau-ahau](repos/ahau-ahau.md) !129 — WIP: Change Whakapapa focus to selected partner — ⚠ Position-preserving logic when changing focus is fragile/imperfect, built through trial and error rather than a principled approach.
+- [ahau-ahau](repos/ahau-ahau.md) !123 — Mobile release 1.0.1 — ⚠ Mobile version numbering diverges from the 0.x history because Google Play already has a published 1.0.0 build.
+- [ahau-ahau](repos/ahau-ahau.md) !120 — Refactor scripts and gitignore — ⚠ Previously .gitignore used weak (non-rooted) paths that could unintentionally match unrelated nested directories.
+- [ahau-ahau](repos/ahau-ahau.md) !118 — Fix date hack — flagged: hack
+- [ahau-lib-graphql-ssb-graphql-profile](repos/ahau-lib-graphql-ssb-graphql-profile.md) !5 — added function to convert Int to Date — flagged: hack
+- [ahau-ahau](repos/ahau-ahau.md) !113 — fix mobile nodejs-project installations — ⚠ Without a package-lock.json, dependency versions in the nodejs-project package.json must be pinned to avoid breaking automatic updates.
+- [ahau-ahau](repos/ahau-ahau.md) !104 — fix spacing in the appbar around the logo, on mobile — ⚠ A separate known regression where the appbar covers body content is still unfixed and not reliably reproducible.
+- [ahau-lib-graphql-ssb-graphql-profile](repos/ahau-lib-graphql-ssb-graphql-profile.md) !4 — Search by name — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !99 — Search profile by name — ⚠ Depends on a separate ssb-graphql-profile MR; suggesting profiles through existing relations and suggesting parents of siblings are not yet implemented.
+- [ahau-ahau](repos/ahau-ahau.md) !98 — Edit whakapapa — ⚠ Requires running npm install again due to updated dependencies; the WhakapapaEdit UI is intentionally sparse/empty with extra white space for now.
+- [ahau-ahau](repos/ahau-ahau.md) !92 — Isolate electron — ⚠ Must be merged after MRs #95, #94, and #93 in that specific order.
+- [ahau-whakapapa-mobile](repos/ahau-whakapapa-mobile.md) !11 — WIP: Merging desktop and mobile apps — ⚠ Marked WIP with most checklist items still incomplete; testing requires checking package.json scripts to run web, Electron, or Android builds.
+- [ahau-ahau](repos/ahau-ahau.md) !88 — Order Of Birth — ⚠ Persons with no orderOfBirth are placed at the top of the order; requires linking or merging companion ssb-profile and ssb-graphql-profile MRs first.
+- [ahau-ahau](repos/ahau-ahau.md) !85 — Alt names in view/edit dialog — ⚠ Existing alt names cannot be edited, only deleted; there is also a bug where the avatar image container overlaps an alt name's delete icon, making it unclickable.
+- [ahau-lib-graphql-ssb-graphql-main](repos/ahau-lib-graphql-ssb-graphql-main.md) !1 — Context fix — flagged: breaking
+- [ahau-ahau](repos/ahau-ahau.md) !81 — Deceased icon — ⚠ AvatarGroup does not correctly pass diedAt into Avatar, so the deceased color does not show correctly in the view-dialog; author is okay merging as-is with a follow-up card if not quickly fixable.
+- [ahau-ahau](repos/ahau-ahau.md) !71 — allow deletion of ancestor — ⚠ Allowing deletion when there's one other partner and reassigning focus to that partner could cause problems in some cases, per the author.
+- [ahau-ahau](repos/ahau-ahau.md) !69 — New node form mods — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !66 — Whakapapa image from branch — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !64 — graphql refactor (different person type) — ⚠ Unresolved: where relationshipType and legallyAdopted fields should live in the restructured schema.
+- [ahau-ahau](repos/ahau-ahau.md) !63 — Date picker updated — ⚠ Existing databases with null bornAt values caused problems and required wiping the local db to test the change.
+- [ahau-ahau](repos/ahau-ahau.md) !60 — Node edit profile — ⚠ The bornAt field may show up blank since it isn't yet incorporated everywhere in the app.
+- [ahau-ahau](repos/ahau-ahau.md) !54 — WIP: Node view profile — ⚠ Title, dob, and living values are hardcoded placeholders; adding a child/parent updates the tree but not the dialog itself yet.
+- [ahau-ahau](repos/ahau-ahau.md) !49 — Storybook + component refactor — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !48 — Node separation — ⚠ Node separation applies the same value to every node (no per-node separation yet) and is not fully reactive.
+- [ahau-ahau](repos/ahau-ahau.md) !40 — Public profiles discovery + styling — ⚠ Removing the container padding introduced a new minor visual bug: zoomed content is now cut off slightly after the edge instead of before it.
+- [ahau-ahau](repos/ahau-ahau.md) !38 — change partner loading + make partners clickable — ⚠ Right-click-to-open-context-menu on partners is an interim solution the author isn't happy with and expects to need rework if an icon-based context-menu trigger is added.
+- [ahau-ahau](repos/ahau-ahau.md) !33 — Node parents — ⚠ Partner data hasn't been added yet, and the context menu still opens on right-click of a partner, which needs to be changed.
+- [ahau-ahau](repos/ahau-ahau.md) !32 — Fetch views — ⚠ recps feedId fix is untested; routing to the correct place after creating a view, WhakapapaShow reading viewId from route params, and private view creation are all not yet done or verified.
+- [ahau-ahau](repos/ahau-ahau.md) !30 — Node collapse — flagged: todo
+- [ahau-ahau](repos/ahau-ahau.md) !27 — expand whakapapa routes — ⚠ The /whakapapa/:id route does not yet use the id parameter; the Appbar currently links to placeholder dummy data.
+- [ahau-lib-ssb-plugins-ssb-whakapapa](repos/ahau-lib-ssb-plugins-ssb-whakapapa.md) !1 — Saved view — ⚠ Delete is not yet implemented for views, and the author flags server.whakapapa.child.update as a confusing name since it updates a relationship/child link rather than the child itself.
+- [ahau-lib-ssb-plugins-ssb-profile](repos/ahau-lib-ssb-plugins-ssb-profile.md) !1 — Private profiles — ⚠ Users are currently blocked from publicly linking a private profile to their feed.
+- [ahau-ahau](repos/ahau-ahau.md) !23 — Add child — ⚠ Add Parent in the context menu is currently a no-op, and the image picker has not yet been added to the NewNodeDialog form.
+- [ahau-ahau](repos/ahau-ahau.md) !21 — D3 trim — ⚠ History was rewritten (PNG-commit removal plus interactive rebase squash) — described by the author as "dangerous" and not to be attempted casually.
+- [ahau-ahau](repos/ahau-ahau.md) !20 — WIP: Improve image cropping — ⚠ Header image size would need to follow a fixed ratio if adopted; MR was closed rather than merged.
+- [ahau-ahau](repos/ahau-ahau.md) !17 — Offline-first material design icons — ⚠ Marked incomplete at time of writing; Roboto font still needs a local import to replace the removed CDN link.
+- [ahau-ahau](repos/ahau-ahau.md) !16 — WIP: Alt Names — ⚠ Left as a WIP/closed MR; the altNames state restructuring and edit-any-entry behavior were not completed.
+- [ahau-ahau](repos/ahau-ahau.md) !13 — WIP: D3 tree — ⚠ Context menu options are non-functional placeholders and the tree does not yet reactively reposition when the window is resized.
+- [ahau-prototypes-p2pStories](repos/ahau-prototypes-p2pStories.md) !9 — Audio mix — ⚠ Names are fetched for feed messages but not yet displayed in the UI; author notes the code 'is not tidy'.
+- [ahau-prototypes-p2pStories](repos/ahau-prototypes-p2pStories.md) !7 — connecting the api to views — ⚠ Replication between devices isn't working yet (only mutual discovery/follow); calling ssb-about seemed to trigger crashes; the ad hoc state pattern may not scale.
+- [ahau-prototypes-p2pStories](repos/ahau-prototypes-p2pStories.md) !6 — WIP: New master — ⚠ Audio-recording/playing features are disabled pending a more careful install/setup.
+- [ahau-prototypes-p2pStories](repos/ahau-prototypes-p2pStories.md) !3 — WIP: react hooks (for profile page) — ⚠ Hit unresolved 'update on unmounted component' warnings when using hooks; MR was closed without merging.

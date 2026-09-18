@@ -1,6 +1,6 @@
 # Plan: Āhau v2 — Conformance Suite
 
-**Source PRD**: `.claude/prds/ahau-v2-repo-foundation.prd.md`
+**Source PRD**: `docs/prds/ahau-v2-repo-foundation.prd.md`
 **Selected Milestone**: 5 — Conformance suite
 **Complexity**: Medium
 
@@ -44,7 +44,7 @@ anyone who did not write the contract.
 
 | File | Action | Why |
 |---|---|---|
-| `.claude/prds/ahau-v2-repo-foundation.prd.md` | UPDATE | Milestone 5 → `in-progress`, `Plan` cell → this plan |
+| `docs/prds/ahau-v2-repo-foundation.prd.md` | UPDATE | Milestone 5 → `in-progress`, `Plan` cell → this plan |
 
 ## Tasks
 

@@ -41,7 +41,7 @@ here, the disagreement is evidence, not an error in this document.
   writeups turned up project-management, messaging, video, publishing and
   reputation hApps (Acorn, Vines, Presence, HummHive, Sacred Capital) but no
   genealogy or family-tree hApp, published or discussed. This repo's own PRD
-  history (`.claude/prds/ahau-v2-repo-foundation.prd.md`) references a
+  history (`docs/prds/ahau-v2-repo-foundation.prd.md`) references a
   `~/projects/Holochain/ahau_holo` **tutorial exercise**, explicitly flagged
   there as "not a starting point. Ignore." — i.e. prior Āhau work touched
   Holochain only as a learning exercise, not as a genealogy-hApp attempt worth

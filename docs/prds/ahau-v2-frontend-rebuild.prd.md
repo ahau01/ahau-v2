@@ -1,7 +1,7 @@
 # Āhau v2 — Protocol Adapters and the Agnosticism Proof
 
 > **Leg 2** of the Āhau v2 rebuild. Begins where
-> `.claude/prds/ahau-v2-repo-foundation.prd.md` ends — with a runnable,
+> `docs/prds/ahau-v2-repo-foundation.prd.md` ends — with a runnable,
 > backend-free `ahau-v2` — and attaches real protocols to it.
 
 ## Preconditions
