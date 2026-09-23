@@ -186,8 +186,11 @@ future adapter must satisfy. No protocol is wired to it.
 - [ ] **When is the contract revisited against reality?** It will be written
       without a real screen consuming it or a real backend implementing it.
       Naming the checkpoint now prevents it from calcifying.
-- [ ] **Is abandoning existing users' SSB data acceptable?** Recorded as out of
-      scope. Needs explicit confirmation, as it is effectively irreversible.
+- [x] **Is abandoning existing users' SSB data acceptable?** Resolved
+      2026-09-23: [ADR-0005](../adr/0005-clean-slate-ssb-data-migration-stance.md)
+      — clean-slate for MVP, old app stays frozen and available, no automatic
+      import. A real, previously-requested GEDCOM need (2023 issue #32) is
+      acknowledged but not committed to a shape.
 - [ ] **Licence and repo home for `ahau-v2`?** Current repo is AGPL-3.0 under
       Āhau Ltd. on GitLab. Ownership and licensing of a rebuild are unsettled.
 

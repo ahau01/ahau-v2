@@ -4,6 +4,21 @@
 > `docs/prds/ahau-v2-repo-foundation.prd.md` ends — with a runnable,
 > backend-free `ahau-v2` — and attaches real protocols to it.
 
+> **Revised 2026-09-23 — scope narrowed, not just re-planned.** This PRD's
+> title and original Hypothesis describe proving backend-agnosticism via
+> two independent adapters (Holochain and nostr) converging on one contract.
+> Capacity constraints made that two-adapter comparison unaffordable; see
+> [ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md) for the
+> full reasoning. The plan below now targets a single Holochain adapter
+> against a capability-specific exit criterion instead. **This is a weaker
+> claim than the one this document's title still describes** — read
+> ADR-0003's Consequences section before treating anything below as proof of
+> genuine agnosticism, because it isn't. Sections below are updated in
+> place; superseded content is marked, not deleted, so the original plan
+> stays legible. [ADR-0004](../adr/0004-continue-with-svelte-shell-defer-gramps-js.md)
+> and [ADR-0005](../adr/0005-clean-slate-ssb-data-migration-stance.md) cover
+> the frontend-framework and data-migration decisions made in the same pass.
+
 ## Preconditions
 
 This PRD assumes Leg 1 has delivered all of the following. None of it is in
@@ -88,106 +103,174 @@ We'll know we're right when **one whakapapa feature — exercising group
 permissions and record revision — runs end-to-end against both a Holochain
 conductor and a nostr relay, with zero changes to frontend code between them**.
 
+**Superseded 2026-09-23 ([ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)).**
+The above was the original hypothesis and stays the honest target for
+genuine agnosticism-proving — kept here, not deleted, because it's what a
+future two-adapter pass would still be testing. The hypothesis this leg
+actually validates now: **group permissions can be built on Holochain, with
+enforcement genuinely delivered by the protocol's capability-grant system
+rather than by patching Holochain the way SSB had to be patched (ADR-0002)**.
+We'll know we're right when the group-permissions capability checkpoint
+(ADR-0003) passes without protocol-level workarounds — not when a second
+adapter confirms the contract wasn't shaped around the first.
+
 ## Constraints
 
 | Constraint | Decision |
 |---|---|
-| Frontend stack | Svelte 5 + TypeScript, as built in Leg 1 |
+| Frontend stack | Svelte 5 + TypeScript, as built in Leg 1 — reconfirmed by [ADR-0004](../adr/0004-continue-with-svelte-shell-defer-gramps-js.md); Gramps.js researched and deliberately deferred, not adopted |
 | Repository | `ahau-v2`, as created in Leg 1 |
-| Experiment set | Holochain and nostr |
-| Production backend | **Deliberately undecided.** This leg produces the evidence; it does not make the call. |
+| Experiment set | ~~Holochain and nostr~~ **Holochain only**, per [ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md) — nostr dropped from active build on capacity grounds, not technical merit; its structural gap (no record-level access control) is documented in `docs/decentralized-backend-research.md` regardless |
+| Production backend | Holochain is the leading candidate, pending the capability-specific exit criterion in ADR-0003 — no longer "undecided pending a two-adapter comparison" (there is no second adapter to compare against), but not yet locked either |
+| SSB data migration | **Clean-slate for MVP**, per [ADR-0005](../adr/0005-clean-slate-ssb-data-migration-stance.md) — no automatic import from the frozen old app; a future GEDCOM path is acknowledged as a real need, not committed to a shape |
 | Existing SSB repo | Continues to ship; untouched by this work |
 | Visual + interaction design | Parity with current Āhau — no redesign |
 | `~/projects/Holochain/ahau_holo` | A tutorial exercise. Not a starting point. Ignore. |
 
-**Experiment backends are not automatically production candidates.** nostr's
+**Experiment backends are not automatically production candidates.** ~~nostr's
 role here is to stress the contract with a protocol whose identity, permission
-and persistence models differ sharply from Holochain's. Whether it could ever
-host whakapapa in production is a separate question, raised below, and the
-answer does not affect its usefulness as a test adapter.
+and persistence models differ sharply from Holochain's.~~ This reasoning
+applied when nostr was still an active build target; it no longer is
+(ADR-0003). Whether nostr could ever host whakapapa in production is now
+moot rather than open — it isn't being pursued as a candidate, tested or
+otherwise.
 
 ## Success Metrics
 
+**Superseded 2026-09-23 ([ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)).**
+The comparison-based rows below (backends running the slice, adapter #2
+revisions, effort ratio) can no longer be measured — there is no adapter #2.
+They're kept, struck through, as a record of what genuine agnosticism-proving
+would have measured. The rows that still apply to a single adapter are kept
+live. The real test this leg now runs is the capability-specific exit
+criterion in ADR-0003 (does Holochain deliver *enforced* group-permissions
+without protocol-level workarounds) — not a metric on this table, since it's
+a pass/fail design question, not a count.
+
 | Metric | Target | How measured |
 |---|---|---|
-| Backends running the slice behind one contract | 2 | End-to-end run against each |
-| Frontend files changed when swapping adapters | **0** | Diff between the two configurations |
-| Contract revisions forced by adapter #1 | Recorded, whatever it is | Contract revision history during Milestone 1 |
-| Contract revisions forced by adapter #2 | Materially fewer than adapter #1 | Contract revision history during Milestone 2 |
-| Conformance-suite changes forced by real adapters | Recorded — the measure of how well Leg 1's blind contract held | Suite revision history |
-| Effort ratio, adapter #2 : adapter #1 | Substantially below 1:1 | Elapsed build time per adapter |
-| Capabilities a backend declines rather than fakes | Every gap explicit | Capability negotiation records |
-| Design parity on ported screens | TBD — needs a parity definition | TBD — comparison method not yet chosen |
+| ~~Backends running the slice behind one contract~~ | ~~2~~ | Not pursued — one adapter only (ADR-0003) |
+| ~~Frontend files changed when swapping adapters~~ | ~~0~~ | Not measurable without a second adapter to swap to |
+| Contract revisions forced by the Holochain adapter | Recorded, whatever it is — flag any revision that reads as "make this fit Holochain" rather than "this was underspecified for any backend" | Contract revision history during the Holochain build |
+| ~~Contract revisions forced by adapter #2~~ | ~~Materially fewer than adapter #1~~ | Not measurable — no adapter #2 |
+| Conformance-suite changes forced by the real adapter | Recorded — the measure of how well Leg 1's blind contract held, even single-handedly | Suite revision history |
+| ~~Effort ratio, adapter #2 : adapter #1~~ | ~~Substantially below 1:1~~ | Not measurable — no adapter #2 |
+| Capabilities the Holochain adapter declines rather than fakes | Every gap explicit | Capability negotiation records |
+| Group-permissions capability checkpoint | Enforced, without protocol-level workarounds | Manual evaluation against ADR-0003's exit criterion |
+| Design parity on ported screens | TBD — needs a parity definition | Method defined in `docs/design-parity.md`; not yet applied |
 
-Rows two and four are the real test. Everything else can pass while the
-abstraction is still secretly shaped by whichever backend was built first.
+The struck-through rows were "the real test" in the original plan — this is
+exactly the gap ADR-0003's Consequences section names as a materially weaker
+claim, not a hidden one.
 
 ## Scope
 
-**MVP** — One whakapapa feature working end-to-end against **both** a Holochain
-conductor and a nostr relay, through Leg 1's contract, with no frontend code
-differing between the two.
+**Superseded 2026-09-23 ([ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)).**
 
-The feature chosen must exercise group permissions and record revision, not a
+**MVP** (revised) — Group permissions (kaitiaki/member removal, at least one
+enforced per-content-type permission — full functional shape in `docs/plans/
+group-permissions.md`) working end-to-end on a real Holochain adapter through
+the existing Svelte shell. Narrow and deep: this one slice working for real
+on real infrastructure, not a broader set of features half-working. Everything
+else in the 14-domain contract stays contract-only/stubbed until after this
+MVP ships. Chosen because it's the feature this rewrite's own justifying
+narrative (ADR-0002) is built on — explicitly *not* claimed as the most
+kaupapa-critical risk area (that's the relationship-assertion/non-canonical-
+data model in `CLAUDE.md`, which this feature doesn't exercise) — worth not
+conflating the two later.
+
+~~One whakapapa feature working end-to-end against **both** a Holochain
+conductor and a nostr relay, through Leg 1's contract, with no frontend code
+differing between the two.~~
+
+~~The feature chosen must exercise group permissions and record revision, not a
 trivial public read. Those are where the two protocols diverge most, and a
-slice that avoids them would pass on both while proving nothing.
+slice that avoids them would pass on both while proving nothing.~~ Still true
+for the group-permissions capability checkpoint itself (ADR-0003) — but note
+Prototype 1 on the roadmap below is deliberately a trivial read, run *before*
+the checkpoint to prove the pipeline wires up at all. It is not a substitute
+for the checkpoint and must not be reported as if it were.
 
 **Out of scope**
 
 - **Everything Leg 1 delivers** — the repo, shell, contract, fixtures and
   conformance suite are inputs here, not work. If they need revision, that is a
   finding to record, not a milestone to absorb.
-- **Choosing the production backend** — this leg produces the evidence for that
-  decision. Making it is downstream.
+- **Choosing the production backend** — Holochain is the leading candidate
+  pending its exit criterion (ADR-0003), not a locked choice, but there is no
+  longer a downstream comparison step that makes the call either.
 - **SSB data migration** — existing users' whakapapa is not carried over.
-  *Significant commitment; flagged in Open Questions.*
+  Resolved, not just flagged: [ADR-0005](../adr/0005-clean-slate-ssb-data-migration-stance.md).
 - **Desktop and mobile shells** — no Electron, no Cordova. Web-first only.
 - **Design or UX changes** — no redesign smuggled in alongside the re-platform.
-- **Adapters beyond Holochain and nostr** — atproto, a conventional server and
-  a reference SSB adapter are plausible later, and the contract should not
-  preclude them, but none are built here.
+- **A second adapter (nostr or otherwise)** — ~~atproto, a conventional server
+  and a reference SSB adapter are plausible later, and the contract should not
+  preclude them, but none are built here~~. Still true, but now also includes
+  nostr itself, previously in scope as adapter #2 (ADR-0003).
+- **Feature cut list / broader feature porting** — the original Milestones 3–4
+  below (deciding which features survive into v2, porting that full set) are
+  deferred beyond this MVP entirely, not just resequenced. Broadening comes
+  after this one flagship slice proves the pipeline, not alongside it.
 
 ## Delivery Milestones
 
-<!-- Business outcomes, not engineering tasks. /plan turns each into a plan. -->
-<!-- Status: pending | in-progress | complete -->
+**Superseded 2026-09-23 ([ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)/[ADR-0004](../adr/0004-continue-with-svelte-shell-defer-gramps-js.md)).**
+Original four-milestone table (two-adapter comparison, then broad feature
+porting) kept below for record, replaced by the milestone-level roadmap that
+follows it. This is phase-level sequencing, deliberately not committed to a
+sprint calendar — sprint planning stays a separate, living activity.
 
-| # | Milestone | Outcome | Status | Plan |
-|---|---|---|---|---|
-| 1 | Adapter #1 — Holochain | The slice reads and writes through a real conductor, including permissions and revision — the contract meets a real protocol for the first time | pending | — |
-| 2 | Adapter #2 — nostr | The same slice runs through relays with zero frontend changes — **the hypothesis is tested here, and this is the milestone that must not be dropped** | pending | — |
-| 3 | Feature cut list | A decided, written list of which Āhau features survive into v2 — made with real porting cost known rather than estimated | pending | — |
-| 4 | Surviving feature set ported | The cut list is complete on a chosen production backend — v2 is a usable application | pending | — |
+~~| # | Milestone | Outcome | Status | Plan |~~
+~~|---|---|---|---|---|~~
+~~| 1 | Adapter #1 — Holochain | The slice reads and writes through a real conductor, including permissions and revision — the contract meets a real protocol for the first time | pending | — |~~
+~~| 2 | Adapter #2 — nostr | The same slice runs through relays with zero frontend changes — the hypothesis is tested here, and this is the milestone that must not be dropped | pending | — |~~
+~~| 3 | Feature cut list | A decided, written list of which Āhau features survive into v2 — made with real porting cost known rather than estimated | pending | — |~~
+~~| 4 | Surviving feature set ported | The cut list is complete on a chosen production backend — v2 is a usable application | pending | — |~~
 
-Milestone 3 sits after the adapters deliberately. Leg 1 deferred the cut list
-on the grounds that the cost of porting a real feature area should inform it;
-Milestones 1 and 2 are what produce that cost.
+### Current roadmap (milestone-level)
+
+| # | Milestone | Outcome | Status | Depends on | Plan/spec |
+|---|---|---|---|---|---|
+| 0 | Contract fixes | Friction findings #12 (a refused write has no representation) and #13 (no "current group" concept) resolved — both load-bearing for group permissions | pending | — | `docs/contract-friction.md` |
+| 1 | Prototype — pipeline proof | One trivial read-only operation runs through a real Holochain adapter into the existing Svelte shell — first time this repo's pipeline touches a real protocol; the tangible near-term demo for stakeholders | pending | — | — |
+| 2 | Holochain capability checkpoint | A real group-permissions capability attempt on Holochain, evaluated against ADR-0003's exit criterion (enforced permissions, no protocol-level workarounds) | pending | Milestone 0 | ADR-0003 |
+| 3 | Flagship feature — group permissions | Kaitiaki/member removal and at least one enforced per-content-type permission, built for real end-to-end, only once Milestone 2 passes | pending | Milestone 2 | `docs/plans/group-permissions.md` |
+| 4 | MVP | Milestone 3's slice working end-to-end on real infrastructure. Everything else in the 14-domain contract stays stubbed until after | pending | Milestone 3 | — |
+
+Sync/offline-then-conflict validation (CLAUDE.md's high-risk-area rule) is
+explicitly deferred to a second pass after Milestone 2 passes — a deliberate
+scope cut recorded in ADR-0003, not an oversight. Broader feature-cut-list
+work (the original Milestones 3–4 above) is deferred beyond Milestone 4,
+not resequenced within it.
 
 ## Open Questions
 
-- [ ] **Can one contract serve both protocols without flattening to their
-      intersection?** Holochain enforces validation and capability grants in the
-      conductor; nostr has none. If the contract can only express what both
-      support, Āhau loses its permission model. It likely needs capability
-      negotiation — backends declaring what they cannot do — rather than a
-      common denominator. This is the central design question of the project.
-- [ ] **Could nostr ever host whakapapa in production?** Public-by-default
-      storage on third-party relays, application-level encryption, and deletion
-      requests relays may ignore sit badly with tribal data sovereignty. If the
-      answer is no, that is acceptable — its role here is to stress the
-      contract — but the answer should be written down before anyone mistakes
-      it for a candidate.
+- [x] **Can one contract serve both protocols without flattening to their
+      intersection?** Moot as originally posed — narrowed 2026-09-23 to one
+      protocol (ADR-0003), so there's no second protocol to flatten against.
+      The underlying risk (a contract secretly shaped by its one adapter)
+      is *not* resolved, just unmitigated by a different mechanism — see
+      ADR-0003's Consequences and Risks sections.
+- [x] **Could nostr ever host whakapapa in production?** Moot, not answered
+      — nostr isn't being pursued as a candidate at all (ADR-0003), so the
+      question doesn't currently need an answer either way.
 - [ ] **Does the whakapapa data model survive protocol change at all?** Āhau's
       graph is built on SSB CRUT / append-only feed semantics. Which guarantees
-      are essential versus incidental to SSB is still unknown; Milestone 1 is
-      the first place it gets answered with evidence.
+      are essential versus incidental to SSB is still unknown; the Holochain
+      capability checkpoint (Milestone 2 in the current roadmap) is the first
+      place it gets answered with evidence.
 - [ ] **How much contract revision is acceptable before "agnostic" is
-      disproven?** Some revision under a real adapter is healthy. A rewrite is
-      not. The threshold should be named before Milestone 1, not argued about
-      during it.
-- [ ] **What decides the production backend, and on what evidence?** This leg
-      exists to inform that call. Naming the deciding evidence in advance stops
-      deferral from becoming indecision.
+      disproven?** Still open, and arguably sharper now: with no second
+      adapter to cross-check against, this threshold is the only remaining
+      check against the contract quietly becoming Holochain-shaped. Should be
+      named before Milestone 2, not argued about during it.
+- [x] **What decides the production backend, and on what evidence?** Resolved
+      2026-09-23: the capability-specific exit criterion in
+      [ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md) — does
+      Holochain's capability-grant system deliver enforced group-permissions
+      without protocol-level workarounds. Not a two-adapter comparison, as
+      originally planned; see that ADR's Consequences for what's weaker about
+      this answer.
 - [x] **What replaces Vuetify 2?** Settled during Leg 1: a hybrid — headless
       primitives for the handful of components where accessibility is expensive
       to get right, hand-built and token-driven for the rest. Proven on one
@@ -197,21 +280,31 @@ Milestones 1 and 2 are what produce that cost.
       The cost is also smaller than this PRD assumed. 869 of the old UI's 1,871
       Vuetify tags are grid primitives that CSS replaces natively, so the real
       surface is roughly 37 components, not 76.
-- [ ] **Is abandoning existing users' SSB data acceptable?** Recorded as out of
-      scope. Needs explicit confirmation, as it is effectively irreversible.
+- [x] **Is abandoning existing users' SSB data acceptable?** Resolved
+      2026-09-23: [ADR-0005](../adr/0005-clean-slate-ssb-data-migration-stance.md)
+      — clean-slate for MVP, old app stays frozen and available, no automatic
+      import. A real, previously-requested GEDCOM need is acknowledged but not
+      committed to a shape, pending someone proving SSB group-decryption is
+      usable outside the app that built it.
 
 ## Risks
 
+**Superseded 2026-09-23 ([ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)).**
+Rows that depended on a second adapter are updated in place, not removed —
+several describe risks that are now *certainties*, which is itself worth
+seeing plainly rather than quietly dropping the row.
+
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Contract flattens to the weakest backend, silently discarding Āhau's permission and sovereignty model | High | Very High | Treat capability negotiation as a contract requirement, not an optimisation. The slice must exercise permissions so the gap appears in Milestone 1–2, not after porting. |
-| Leg 1's twice-blind contract proves substantially wrong at Milestone 1, and this leg absorbs a contract rewrite it did not budget for | Medium–High | High | Name the acceptable revision threshold before starting. Exceeding it is a finding that sends work back to Leg 1, not a task to quietly swallow here. |
-| Wrong abstraction — a contract shaped by whichever adapter was built first, agnostic in name only | High | High | Build adapter #2 immediately after #1, before any feature porting. The revision-count metrics exist to detect this. |
-| Adapter #2 gets dropped under time pressure, leaving agnosticism permanently unvalidated | Medium–High | High | Milestone 2 is the hypothesis test, not a nice-to-have. If it is cut, this PRD's central claim is unproven and should be restated as an assumption. |
-| The slice is chosen for ease and avoids permissions or revision, so both adapters pass and nothing is learned | Medium | Very High | Slice selection is a gate on Milestone 1, not an implementation detail. A slice both protocols handle trivially is the wrong slice. |
-| Framework rewrite scope exceeds solo capacity at Milestone 4 — 47k LOC of Vue reimplemented in Svelte, by one person | High | High | Milestone 3's cut list is the primary control, and it now has real cost data behind it. Treat the feature set as the budget, not the deadline. |
-| Two adapters double the integration surface before any feature ships to anyone | Medium | Medium | Both adapters serve one slice, not a growing set, until Milestone 4. |
-| "Design parity" is unfalsifiable without a parity definition, so Milestone 4 never feels done | Medium | Medium | Method now defined in `docs/design-parity.md`: screenshot comparison against the Vue app in `ahau-monorepo`, captured once and kept. Not yet applied — no screens ported. Note that `ahau-styles` proved unreliable during Leg 1 (life-status colours attributed backwards), so tokens are verified against the application source, not adopted. |
+| Contract flattens to the weakest backend, silently discarding Āhau's permission and sovereignty model | High | Very High | Treat capability negotiation as a contract requirement, not an optimisation. The group-permissions capability checkpoint must exercise real permissions so the gap appears there, not after porting. |
+| Leg 1's twice-blind contract proves substantially wrong at the Holochain checkpoint, and this leg absorbs a contract rewrite it did not budget for | Medium–High | High | Name the acceptable revision threshold before starting (still open — see Open Questions). Exceeding it is a finding that sends work back to Leg 1, not a task to quietly swallow here. |
+| Wrong abstraction — a contract shaped by whichever adapter was built first, agnostic in name only | High | High | **No longer mitigated by a second adapter** (ADR-0003 dropped it). Reduced mitigation: track every contract revision forced by the Holochain build and flag any that read as "make this fit Holochain" rather than "this was underspecified" — a real but weaker check than the original. |
+| ~~Adapter #2 gets dropped under time pressure, leaving agnosticism permanently unvalidated~~ | ~~Medium–High~~ | ~~High~~ | **This has happened, deliberately, not under silent time pressure.** ADR-0003 records it as a considered trade, not a risk to mitigate going forward — see that ADR's Consequences (Negative) for the resulting weaker claim, stated explicitly rather than discovered later. |
+| The slice is chosen for ease and avoids permissions or revision, so nothing is learned | Medium | Very High | Slice selection is a gate on the capability checkpoint (Milestone 2), not an implementation detail. Note: Milestone 1 (the pipeline-proof prototype) is deliberately an easy slice — that's fine, because it isn't the checkpoint. Don't let the prototype's success be reported as if it cleared this bar; it doesn't. |
+| Framework rewrite scope exceeds solo capacity once broader feature porting starts — 47k LOC of Vue with no direct equivalent in Svelte, by a capacity-constrained team | High | High | The narrow/deep MVP (one flagship feature, everything else stubbed) is the control now, not a future cut-list milestone. Broader porting stays explicitly out of scope until after MVP ships. |
+| ~~Two adapters double the integration surface before any feature ships to anyone~~ | — | — | No longer applicable — one adapter only. |
+| "Design parity" is unfalsifiable without a parity definition, so it never feels done | Medium | Medium | Method defined in `docs/design-parity.md`: screenshot comparison against the Vue app in `ahau-monorepo`, captured once and kept. Not yet applied — no screens ported. `ahau-styles` proved unreliable during Leg 1 (life-status colours attributed backwards) and is reconfirmed in ADR-0004 as needing verification against the shell's own tokens, not assumed correct. |
 
 ---
-*Status: DRAFT — requirements only. Implementation planning pending via /plan.*
+*Status: DRAFT — requirements only, revised 2026-09-23 per ADR-0003/0004/0005.
+Implementation planning for Milestone 0 pending via /plan.*

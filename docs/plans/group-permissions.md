@@ -1,5 +1,18 @@
 # Group Permissions (Kaitiaki Role Management)
 
+> **2026-09-23 — this is the functional spec for `ahau-v2`'s Leg 2 flagship
+> feature** (Milestone 3 in `docs/prds/ahau-v2-frontend-rebuild.prd.md`'s
+> current roadmap, gated on the Holochain capability checkpoint —
+> [ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)). The
+> **Evidence and functional requirements below remain the target shape**
+> (kaitiaki/member removal, at least one enforced per-content-type
+> permission). The **technical approach implied throughout — `ssb-tribes`,
+> Vue components, GitLab MRs — is superseded**: this now gets built against
+> the `ahau-v2` typed contract and a Holochain adapter, not the SSB stack
+> described here. Several Open Questions below (GitLab MR access,
+> `ssb-tribes`/`ssb-profile` version drift) are accordingly moot for the
+> `ahau-v2` build, though still accurate history of the old app.
+
 ## Problem
 Groups ("tribes") in Āhau only support a single binary role — kaitiaki (admin) vs. member — enforced ad hoc via a Vuex getter (`isKaitiaki`) scattered across a dozen components. Multiple past attempts at a finer-grained group-permissions model and proper kaitiaki-management UI were started and abandoned, leaving dead/stubbed UI and a real functional gap: there is no way anywhere in the codebase to remove a kaitiaki or member from a group. Kaitiaki (group admins) cannot safely delegate or revoke access without engineering intervention, and the UI actively misleads users about what's possible.
 
