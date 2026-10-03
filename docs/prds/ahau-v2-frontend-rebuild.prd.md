@@ -1,5 +1,9 @@
 # Āhau v2 — Protocol Adapters and the Agnosticism Proof
 
+> **Superseded by [ADR-0006](../adr/0006-capability-driven-redesign-not-behaviour-replication.md).** v2 now builds directly on
+> Holochain; the adapter layer and agnosticism proof described here are no
+> longer pursued. Kept as record.
+
 > **Leg 2** of the Āhau v2 rebuild. Begins where
 > `docs/prds/ahau-v2-repo-foundation.prd.md` ends — with a runnable,
 > backend-free `ahau-v2` — and attaches real protocols to it.

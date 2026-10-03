@@ -1,5 +1,8 @@
 # Contract friction
 
+> **Historical.** The contract is frozen as reference
+> ([ADR-0006](adr/0006-capability-driven-redesign-not-behaviour-replication.md)); these findings won't be resolved further.
+
 What implementing the contract actually surfaced.
 
 The contract was written twice-blind: nothing consumed it and nothing satisfied
