@@ -1,7 +1,7 @@
 # ADR-0006: Redesign around user capabilities on Holochain; freeze the Leg 1 contract as SSB-era reference
 
 **Date**: 2026-10-03
-**Status**: proposed
+**Status**: accepted
 **Deciders**: taiao.kawiti.wbhs@gmail.com
 
 ## Context

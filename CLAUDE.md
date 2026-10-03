@@ -20,8 +20,7 @@ which review and demos don't catch.
 
 This repo is a rebuild of Āhau directly on Holochain, designed around what
 people need to do rather than how the SSB-era app did it
-([ADR-0006](docs/adr/0006-capability-driven-redesign-not-behaviour-replication.md),
-proposed). The spec is a capability inventory (#13). The Leg 1 typed
+([ADR-0006](docs/adr/0006-capability-driven-redesign-not-behaviour-replication.md)). The spec is a capability inventory (#13). The Leg 1 typed
 contract in `src/contract/` is **frozen reference** — a record of what the
 old app's data layer could do, used as a checklist so nothing is dropped —
 not an interface new code must implement. No Holochain code exists yet; the

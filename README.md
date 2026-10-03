@@ -7,8 +7,7 @@ maintained, and small features had started needing big fixes underneath
 ([ADR-0002](docs/adr/0002-rewrite-instead-of-continuing-to-patch-ssb-architecture.md)).
 Āhau v2 rebuilds the app so it does what people need, in the way that suits
 Holochain, rather than copying how the old app did things
-([ADR-0006](docs/adr/0006-capability-driven-redesign-not-behaviour-replication.md),
-proposed).
+([ADR-0006](docs/adr/0006-capability-driven-redesign-not-behaviour-replication.md)).
 
 ## Status
 
