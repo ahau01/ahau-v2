@@ -24,8 +24,8 @@ repo is now confirmed stale and out of scope for this migration, so those
 paths won't resolve here and aren't being fixed retroactively; they're a
 record of where the inventory work actually happened. The equivalents this
 repo actually reads are vendored under `contract-source/`, which is what the
-manifest derivation and coverage gate use. Refresh them with
-`npm run refresh:source`.
+manifest derivation and coverage gate use. They're a frozen snapshot
+(ADR-0006).
 
 `ahau-v2` is now the canonical home for this reasoning — `ahau` was a mirror
 of the pre-monorepo repo and is superseded, `ahau-monorepo` is a separate,

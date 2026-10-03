@@ -11,7 +11,6 @@
     "check:coverage": "npm run build && node scripts/check-contract-coverage.mjs --ci",
     "derive:manifest": "node scripts/derive-manifest.mjs",
     "check:manifest": "node scripts/derive-manifest.mjs --check",
-    "refresh:source": "cp ../ahau/plans/data-access-triage.json ../ahau/plans/data-access-inventory.json contract-source/ && npm run derive:manifest",
     "check:conformance": "npm run build && node scripts/check-conformance-coverage.mjs --ci",
     "dev": "vite",
     "build:app": "vite build",

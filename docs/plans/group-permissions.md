@@ -1,56 +1,71 @@
 # Group Permissions (Kaitiaki Role Management)
 
-> **2026-09-23 — this is the functional spec for `ahau-v2`'s Leg 2 flagship
-> feature** (Milestone 3 in `docs/prds/ahau-v2-frontend-rebuild.prd.md`'s
-> current roadmap, gated on the Holochain capability checkpoint —
-> [ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)). The
-> **Evidence and functional requirements below remain the target shape**
-> (kaitiaki/member removal, at least one enforced per-content-type
-> permission). The **technical approach implied throughout — `ssb-tribes`,
-> Vue components, GitLab MRs — is superseded**: this now gets built against
-> the `ahau-v2` typed contract and a Holochain adapter, not the SSB stack
-> described here. Several Open Questions below (GitLab MR access,
-> `ssb-tribes`/`ssb-profile` version drift) are accordingly moot for the
-> `ahau-v2` build, though still accurate history of the old app.
+> **Functional spec for the first Holochain slice** — the feature
+> [ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)'s exit
+> criterion is tested against, built directly on Holochain per
+> [ADR-0006](../adr/0006-capability-driven-redesign-not-behaviour-replication.md).
+> The evidence below describes the old SSB-based app. It is kept as the
+> reason this feature matters, not as a design to copy.
 
 ## Problem
-Groups ("tribes") in Āhau only support a single binary role — kaitiaki (admin) vs. member — enforced ad hoc via a Vuex getter (`isKaitiaki`) scattered across a dozen components. Multiple past attempts at a finer-grained group-permissions model and proper kaitiaki-management UI were started and abandoned, leaving dead/stubbed UI and a real functional gap: there is no way anywhere in the codebase to remove a kaitiaki or member from a group. Kaitiaki (group admins) cannot safely delegate or revoke access without engineering intervention, and the UI actively misleads users about what's possible.
+Groups ("tribes") in Āhau have a single binary role — kaitiaki (admin) vs.
+member — and in the old app it was enforced only in the UI. There is no way
+to remove a kaitiaki or member from a group. A finer-grained, per-content-type
+permission model was designed and partly built, but never wired up, so the UI
+shows permissions that don't exist. Kaitiaki cannot safely delegate or revoke
+access without engineering intervention, and the UI misleads them about what's
+possible.
 
-## Evidence
-- `apps/ahau/ui/src/components/dialog/community/Permissions.vue` renders a disabled per-content-type permission matrix (whakapapa/collections/stories × "Kaitiaki only"/"All members") behind a "coming soon" tooltip. Its `data()` hardcodes default values that are never read from or written to real tribe/profile settings — no `$emit`, no Vuex action, nothing persisted. Appears to originate from GitLab MRs !536/!540 (2021).
-- `SubGroup.vue`'s entire add/remove-kaitiaki and member-list UI (lines 18-64, 106-145) is commented out; the stub handlers (`deleteKaitiaki`, `addKaitiaki`, `addMember`, `deleteMember`) just `console.error('TODO: ...')`.
-- `GroupsList.vue`'s kaitiaki add/remove only mutates a local in-memory `formData.authors` array — it never calls the `ssb-tribes` backend (`ssb.tribes.invite`/`ssb.tribes.exclude`) directly; persistence relies on a roundtrip through `ssb-profile`'s `authors` field, not actual group membership.
-- A repo-wide search found **zero usages of `ssb.tribes.exclude`** — there is no code path anywhere that removes a kaitiaki or member from a group.
-- `apps/ahau/ui/src/translations/en_NZ/groups.json` states outright: *"Kaitiaki are tribal administrators... Please note you cannot remove kaitiaki yet."*
-- Related verified-credentials toggles (`issuesVerifiedCredentials`/`acceptsVerifiedCredentials`, GitLab MR !934) are wired into the tribe-settings UI but gated behind a beta-features switch and hardcoded to `false` in `TribeSettings.vue`, pending the separately unfinished `ssb-atala-prism` package (its own TODO.md lists unresolved kaitiaki-permission state-machine rules).
-- `ssb-tribes`/`ssb-profile` package versions are split between newer (`packages/*`: `ssb-tribes ^4.0.0`, `ssb-profile ^7.0.x`) and older (`apps/ahau/desktop`, mobile, `apps/pataka`, `packages/ssb-pataka`: `ssb-tribes ^3.1.x`, `ssb-profile ^5.15.0/^6.0.1`) — new permission logic built on the group-membership API risks behaving inconsistently depending on which version resolves at runtime.
-- Original design rationale is not currently available: GitLab MRs !536, !540, !541, !934 returned HTTP 403 (private instance, no local credentials) when investigated for this PRD.
+## Evidence (old SSB app)
+- The community **Permissions** dialog renders a per-content-type matrix
+  (whakapapa / collections / stories × "Kaitiaki only" / "All members") that is
+  disabled behind a "coming soon" tooltip. Its values are hardcoded and never
+  read from or saved to real group settings.
+- The sub-group add/remove-kaitiaki and member-list UI is commented out; its
+  handlers only log `TODO`.
+- Where kaitiaki can be edited, the change only updates an in-memory list and
+  never touches actual group membership.
+- No code path anywhere removes a kaitiaki or member from a group.
+- The app's own copy says so: *"Kaitiaki are tribal administrators... Please
+  note you cannot remove kaitiaki yet."*
 
 ## Users
-- **Primary**: Kaitiaki (group/tribe admins) who need to manage membership and roles within their group without engineering intervention.
-- **Secondary**: Members subject to those permissions (e.g. submit-only vs. edit access to whakapapa records, collections, stories).
-- **Not for**: Verified-credentials/DID issuance flows — tracked separately, blocked on `ssb-atala-prism` completion, not part of this PRD's scope.
+- **Primary**: Kaitiaki (group admins) who need to manage membership and roles
+  within their group without engineering intervention.
+- **Secondary**: Members subject to those permissions (e.g. submit-only vs.
+  edit access to whakapapa records, collections, stories).
+- **Not for**: Verified-credentials / DID issuance flows — tracked separately.
 
 ## Hypothesis
-We believe **finishing kaitiaki/member removal and wiring at least one real, enforced per-content-type permission** will **let kaitiaki safely delegate and revoke group access without engineering intervention** for **kaitiaki/group admins**.
-We'll know we're right when a kaitiaki can remove another kaitiaki or member from the UI with the change actually persisted via `ssb-tribes`, and when at least one permission from `Permissions.vue`'s matrix (e.g. who can create whakapapa records) is read from and enforced against a real, persisted setting rather than a hardcoded UI value.
+We believe **kaitiaki/member removal plus at least one enforced
+per-content-type permission** will **let kaitiaki safely delegate and revoke
+group access without engineering intervention** for **kaitiaki/group admins**.
+
+We'll know we're right when a kaitiaki can remove another kaitiaki or member
+from the UI and the removed agent can no longer write to the group, and when at
+least one permission from the matrix (e.g. who can create whakapapa records) is
+enforced by the backend rather than only hidden in the UI.
 
 ## Success Metrics
 | Metric | Target | How measured |
 |---|---|---|
-| Kaitiaki/member removal works end-to-end | Yes | Manual QA: remove a kaitiaki via UI, confirm `ssb.tribes.exclude` (or equivalent) fires and group membership updates for all members |
-| At least one real per-content-type permission enforced | Yes | Manual QA + test: a non-kaitiaki member is blocked from a restricted action when that permission is set to "Kaitiaki only" |
-| No stubbed permission UI ships without either being finished or explicitly labeled "not implemented" | Yes | Code review confirms no silent hardcoded/disabled UI remains unlabeled |
+| Kaitiaki/member removal is enforced | Yes | Holochain test against a real conductor: after removal, the removed agent's writes to the group are rejected by validation |
+| One per-content-type permission is enforced | Yes | Holochain test: with whakapapa record creation set to "Kaitiaki only", a member's create is rejected by validation — not just hidden in the UI |
+| No unfinished permission UI ships unlabelled | Yes | Code review: anything not wired to real enforcement is labelled "not implemented" |
+| No protocol workarounds | Yes | Per ADR-0003: nothing above requires patching Holochain or relying on undocumented conductor behaviour. If it does, the slice fails regardless of how close it feels |
 
 ## Scope
-**MVP** — TBD pending the product decision in Open Questions. Leading candidates, in likely priority order:
-1. Kaitiaki/member removal (`SubGroup.vue` + backend `ssb.tribes.exclude` wiring) — the most concrete, already-acknowledged gap.
-2. Wiring `Permissions.vue` to one real, persisted per-content-type permission (starting with whakapapa, since kaitiaki-only access is already partially supported there per `AccessButton.vue`'s TODOs).
+**MVP** — pending the product decisions in Open Questions:
+1. Kaitiaki/member removal.
+2. One enforced per-content-type permission, starting with whakapapa record
+   creation.
 
 **Out of scope**
-- Verified-credentials/DID issuance and acceptance flows — blocked on the separately unfinished `ssb-atala-prism` package.
-- Resolving `ssb-tribes`/`ssb-profile` version drift across apps/packages as a deliverable — tracked as a prerequisite risk; only in scope here if it directly blocks implementation.
-- New permission concepts beyond the existing `Permissions.vue` matrix (e.g. custom roles) unless a stakeholder explicitly asks for them.
+- Verified credentials / DID issuance and acceptance.
+- Permission concepts beyond the existing matrix (e.g. custom roles), unless a
+  stakeholder explicitly asks for them.
+- Two-devices-offline-then-sync validation — deferred to the second validation
+  pass per ADR-0003 (see Open Questions).
 
 ## Delivery Milestones
 <!-- Business outcomes, not engineering tasks. /plan turns each into a plan. -->
@@ -58,22 +73,34 @@ We'll know we're right when a kaitiaki can remove another kaitiaki or member fro
 
 | # | Milestone | Outcome | Status | Plan |
 |---|---|---|---|---|
-| 1 | Kaitiaki/member removal | Kaitiaki can remove another kaitiaki or member from a group via the UI, persisted through `ssb-tribes` | pending | |
-| 2 | One enforced per-content permission | At least one `Permissions.vue` matrix setting (e.g. whakapapa record creation) is read from and enforced against real, persisted tribe settings | pending | |
+| 1 | Kaitiaki/member removal | A kaitiaki can remove another kaitiaki or member from a group via the UI, and the removal is enforced for every member | pending | |
+| 2 | One enforced per-content permission | At least one matrix setting (e.g. whakapapa record creation) is stored with the group and enforced by validation | pending | |
 
 ## Open Questions
-- [ ] Is the target model the `Permissions.vue` per-content-type matrix (whakapapa/collections/stories × kaitiaki-only/all-members), or a simpler kaitiaki-vs-member toggle? Original MRs (!536/!540) may hold the answer but are currently inaccessible.
-- [ ] What's the intended UX for removal — can a kaitiaki remove themselves? Is there a "last kaitiaki" protection so a group can't be orphaned?
-- [ ] Can we get GitLab access (or MR exports) for !536, !540, !541, !934 to confirm original design intent before building?
-- [ ] Should the `ssb-tribes`/`ssb-profile` version drift between apps and packages be resolved before this work starts, or is it safe to build against the newer `packages/*` versions only?
+- [ ] Is the target model the per-content-type matrix (whakapapa / collections /
+  stories × kaitiaki-only / all-members), or a simpler kaitiaki-vs-member
+  toggle?
+- [ ] Can a kaitiaki remove themselves? Is there "last kaitiaki" protection so
+  a group can't be orphaned?
+- [ ] The original design intent (GitLab MRs !536, !540, !541, !934) hasn't been
+  recovered. Get it, or make an explicit stakeholder decision before
+  Milestone 2.
+- [ ] What happens to a removed member's **already-synced** data? Removal stops
+  future writes; it doesn't make their copy disappear. Decide what the group
+  expects, and say so plainly in the UI (see CLAUDE.md, Access control).
+- [ ] What if two kaitiaki remove each other while both are offline? This is a
+  sync conflict: it must not be settled by last-write-wins without a
+  deliberate decision (CLAUDE.md rule 1). Deferred to the second validation
+  pass, but the data model shouldn't rule out a good answer.
 
 ## Risks
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Building on drifted `ssb-tribes`/`ssb-profile` versions | Medium | High — inconsistent behavior across apps/mobile/pataka | Verify/resolve versions before backend work begins; test against whichever version each target app actually resolves |
-| No safeguard against removing the last kaitiaki of a group | Medium | High — could orphan a group with no admin | Make this an explicit requirement in the implementation plan for Milestone 1 |
-| Original MR design intent unavailable | Low-Medium | Medium — risk of rebuilding the wrong model | Get GitLab access or an explicit stakeholder decision before Milestone 2 |
-| Removal logic touches `ssb-profile` `authors` field as well as `ssb-tribes` membership (per `GroupsList.vue`'s current partial implementation) | Medium | Medium — inconsistent state if only one is updated | Design removal as a single atomic operation covering both, verified with a test |
+| No safeguard against removing the last kaitiaki | Medium | High — orphans a group with no admin | Explicit requirement in Milestone 1's plan |
+| Original design intent unavailable | Low-Medium | Medium — rebuilding the wrong model | Recover the MRs or get a stakeholder decision before Milestone 2 |
+| Membership and role stored separately drift apart | Medium | Medium — inconsistent state if only one is updated | Model removal as one action, covered by a test |
+| A permission enforced only in the UI gets counted as a pass | Medium | High — the sovereignty guarantee becomes social, not technical | Success metrics require rejection at validation, tested against a real conductor |
 
 ---
-*Status: Draft — no milestone started. Awaiting product decision on scope (see Open Questions) before running `/plan` against Milestone 1.*
+*Status: Draft — no milestone started. Awaiting product decisions (see Open
+Questions) before planning Milestone 1.*
