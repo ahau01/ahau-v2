@@ -15,14 +15,14 @@ hasn't happened yet.
 
 Separately, `~/projects/ahau-styles` holds a framework-independent
 extraction of Āhau's colours, typography tokens, fonts and icons, already
-flagged in `docs/prds/ahau-v2-repo-foundation.prd.md` as "a starting point,
+flagged in `docs/history/leg1/ahau-v2-repo-foundation.prd.md` as "a starting point,
 not a source of truth" — its values need verification against the shell's
 existing tokens before anything further is built on them.
 
 During planning for this ADR, forking Gramps.js (the web/Lit-based frontend
 for Gramps Web, not desktop Gramps) as the frontend shell was raised as an
 option, on the strength of it being the closest existing genealogy-software
-precedent for a contract-then-frontend architecture. `docs/
+precedent for a contract-then-frontend architecture. `docs/history/leg1/
 decentralized-backend-research.md` confirms that precedent is real but
 narrower than it first sounds: Gramps.js is Lit web components wired to a
 REST API in front of one Gramps database — "the abstraction stops at 'REST
@@ -105,7 +105,7 @@ alongside the Holochain adapter work.
 ### Negative
 - Building out real UI in Svelte means the ~47k LOC of Vue screens in the
   existing app still have no directly reusable equivalent to port from
-  (this was already true before this ADR — `docs/prds/
+  (this was already true before this ADR — `docs/history/leg1/
   ahau-v2-repo-foundation.prd.md`'s Open Questions flags "What replaces
   Vuetify 2?" as settled via a headless-primitives/hand-built hybrid, but
   the porting volume itself is unchanged by this decision)

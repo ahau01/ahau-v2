@@ -6,7 +6,7 @@
 
 ## Context
 
-`docs/prds/ahau-v2-frontend-rebuild.prd.md` ("Protocol Adapters and the
+`docs/history/leg1/ahau-v2-frontend-rebuild.prd.md` ("Protocol Adapters and the
 Agnosticism Proof") currently defines Leg 2's hypothesis as: one whakapapa
 feature, exercising group permissions and record revision, running
 end-to-end against **both** a Holochain conductor and a nostr relay, with
@@ -24,7 +24,7 @@ partly on a specific story (the 2021/2026 group-permissions saga documented
 in ADR-0002), and funders/stakeholders need to see forward motion on it
 sooner than a full two-adapter comparison can deliver.
 
-`docs/decentralized-backend-research.md` independently ranks Holochain first
+`docs/history/leg1/decentralized-backend-research.md` independently ranks Holochain first
 among four candidates "if forced to rank" — enforced (not merely advisory)
 capability grants, fully offline-first — while noting no genealogy hApp
 exists anywhere as prior art, and Holochain's zome logic is Rust-only. nostr
@@ -40,7 +40,7 @@ Build a single Holochain adapter, evaluated against a capability-specific
 exit criterion, in place of the two-adapter comparison the frontend-rebuild
 PRD currently specifies. nostr is dropped from active build/comparison —
 not because the research disqualifies it, but on capacity grounds; this is
-recorded as a deliberate scope cut, not a silent one, and `docs/prds/
+recorded as a deliberate scope cut, not a silent one, and `docs/history/leg1/
 ahau-v2-frontend-rebuild.prd.md` is being revised in the same change that
 introduces this ADR to reflect it (see that PRD's updated Hypothesis,
 Constraints, Scope, Delivery Milestones, Success Metrics, and Open
@@ -108,7 +108,7 @@ undecided. See Consequences.
   candidates researched and no per-record permissions either
 - **Why not**: both are structurally weaker fits for the specific feature
   (group permissions) this rewrite is being justified by — this is recorded
-  in `docs/decentralized-backend-research.md`, not re-litigated here
+  in `docs/history/leg1/decentralized-backend-research.md`, not re-litigated here
 
 ### Alternative 4: Fold sync/offline-then-conflict validation into this same checkpoint
 - **Pros**: catches a second class of protocol risk in the same pass,
@@ -135,7 +135,7 @@ undecided. See Consequences.
 
 ### Negative
 - **This materially narrows the claim `ahau-v2` can make about itself.**
-  `docs/prds/ahau-v2-frontend-rebuild.prd.md` is titled "Protocol Adapters
+  `docs/history/leg1/ahau-v2-frontend-rebuild.prd.md` is titled "Protocol Adapters
   and the Agnosticism Proof" and its whole hypothesis is that the contract's
   genuine backend-agnosticism gets proven by two independent adapters
   converging on it. Building one adapter proves, at best, that the contract
