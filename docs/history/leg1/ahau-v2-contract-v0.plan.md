@@ -1,6 +1,6 @@
 # Plan: Āhau v2 — Data-Access Contract v0
 
-**Source PRD**: `docs/prds/ahau-v2-repo-foundation.prd.md`
+**Source PRD**: `docs/history/leg1/ahau-v2-repo-foundation.prd.md`
 **Selected Milestone**: 2 — Data-access contract v0
 **Complexity**: Large
 

@@ -157,11 +157,11 @@ future adapter must satisfy. No protocol is wired to it.
 
 | # | Milestone | Outcome | Status | Plan |
 |---|---|---|---|---|
-| 1 | Data-access inventory | Every operation the existing Āhau app performs is catalogued and triaged — the frontend's real requirements are declared and triaged rather than implicit in 18 Apollo-shaped modules | complete | `docs/plans/ahau-v2-repo-foundation.plan.md` |
-| 2 | Data-access contract v0 | Those requirements are expressed as a typed, backend-agnostic contract — the definition of what any backend must provide | complete | `docs/plans/ahau-v2-contract-v0.plan.md` |
-| 3 | `ahau-v2` shell runs | A fresh clone boots, routes, and renders in Āhau's visual language on one Node version — there is somewhere to build v2 | complete | `docs/plans/ahau-v2-shell.plan.md` |
-| 4 | Fixture reference implementation | The contract is satisfied in memory and the shell runs on realistic whakapapa data — the contract is demonstrably implementable | complete | `docs/plans/ahau-v2-fixtures.plan.md` |
-| 5 | Conformance suite | Adapter correctness becomes executable rather than described — Leg 2 has a target to build against | complete | `docs/plans/ahau-v2-conformance-suite.plan.md` |
+| 1 | Data-access inventory | Every operation the existing Āhau app performs is catalogued and triaged — the frontend's real requirements are declared and triaged rather than implicit in 18 Apollo-shaped modules | complete | `docs/history/leg1/ahau-v2-repo-foundation.plan.md` |
+| 2 | Data-access contract v0 | Those requirements are expressed as a typed, backend-agnostic contract — the definition of what any backend must provide | complete | `docs/history/leg1/ahau-v2-contract-v0.plan.md` |
+| 3 | `ahau-v2` shell runs | A fresh clone boots, routes, and renders in Āhau's visual language on one Node version — there is somewhere to build v2 | complete | `docs/history/leg1/ahau-v2-shell.plan.md` |
+| 4 | Fixture reference implementation | The contract is satisfied in memory and the shell runs on realistic whakapapa data — the contract is demonstrably implementable | complete | `docs/history/leg1/ahau-v2-fixtures.plan.md` |
+| 5 | Conformance suite | Adapter correctness becomes executable rather than described — Leg 2 has a target to build against | complete | `docs/history/leg1/ahau-v2-conformance-suite.plan.md` |
 
 ## Open Questions
 
@@ -187,7 +187,7 @@ future adapter must satisfy. No protocol is wired to it.
       without a real screen consuming it or a real backend implementing it.
       Naming the checkpoint now prevents it from calcifying.
 - [x] **Is abandoning existing users' SSB data acceptable?** Resolved
-      2026-09-23: [ADR-0005](../adr/0005-clean-slate-ssb-data-migration-stance.md)
+      2026-09-23: [ADR-0005](../../adr/0005-clean-slate-ssb-data-migration-stance.md)
       — clean-slate for MVP, old app stays frozen and available, no automatic
       import. A real, previously-requested GEDCOM need (2023 issue #32) is
       acknowledged but not committed to a shape.
@@ -210,7 +210,7 @@ future adapter must satisfy. No protocol is wired to it.
 *Status: COMPLETE. All five milestones delivered in https://github.com/ahau01/ahau-v2*
 
 Leg 2 continues in `ahau-v2-frontend-rebuild.prd.md`. Thirteen contract findings
-are recorded in `docs/contract-friction.md` in the `ahau-v2` repository; eleven
+are recorded in `docs/history/leg1/contract-friction.md` in the `ahau-v2` repository; eleven
 are resolved, and two remain open - a refused write has no representation, and
 the contract has no notion of the group you are currently in. Both were found by
 the first UI consumer.

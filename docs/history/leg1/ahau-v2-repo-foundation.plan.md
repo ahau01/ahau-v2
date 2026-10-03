@@ -1,6 +1,6 @@
 # Plan: Āhau v2 — Data-Access Inventory
 
-**Source PRD**: `docs/prds/ahau-v2-repo-foundation.prd.md`
+**Source PRD**: `docs/history/leg1/ahau-v2-repo-foundation.prd.md`
 **Selected Milestone**: 1 — Data-access inventory
 **Complexity**: Medium
 
