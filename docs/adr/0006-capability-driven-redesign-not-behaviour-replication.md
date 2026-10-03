@@ -38,7 +38,7 @@ Three things have since changed:
 The contract is still valuable — just not as the thing Holochain is built
 against. It is the most complete written record of what the SSB-era app
 could do, and its design docs (`docs/contract-decisions.md`,
-`docs/contract-friction.md`) capture reasoning about whakapapa data that
+`docs/history/leg1/contract-friction.md`) capture reasoning about whakapapa data that
 holds on any backend.
 
 ## Decision
@@ -165,9 +165,9 @@ criterion is unchanged.
     Leg 2) and the "Adapter boundaries" high-risk area, which assumes
     swappable adapters
   - `README.md` — describes the repo as a backend-agnostic contract
-  - `docs/prds/ahau-v2-frontend-rebuild.prd.md` — "Protocol Adapters and the
+  - `docs/history/leg1/ahau-v2-frontend-rebuild.prd.md` — "Protocol Adapters and the
     Agnosticism Proof"
-  - `docs/writing-an-adapter.md` — no longer applies
+  - `docs/history/leg1/writing-an-adapter.md` — no longer applies
 - Amends ADR-0002's "no change to Leg 1/Leg 2 scope follows from this ADR".
   ADR-0002's decision (rewrite rather than keep patching SSB) stands; this
   ADR changes what the rewrite builds against

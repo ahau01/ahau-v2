@@ -72,4 +72,4 @@ Other commands:
 
 Not yet decided. The original Āhau is AGPL-3.0 under Āhau Ltd.; ownership and
 licensing of this rebuild are still open (see
-`docs/prds/ahau-v2-repo-foundation.prd.md`).
+`docs/history/leg1/ahau-v2-repo-foundation.prd.md`).

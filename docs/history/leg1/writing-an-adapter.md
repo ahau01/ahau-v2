@@ -1,7 +1,7 @@
 # Writing an adapter
 
 > **No longer applies.** There are no swappable adapters after
-> [ADR-0006](adr/0006-capability-driven-redesign-not-behaviour-replication.md). Kept as record.
+> [ADR-0006](../../adr/0006-capability-driven-redesign-not-behaviour-replication.md). Kept as record.
 
 How to connect a backend to Āhau v2, and how to know whether you have.
 

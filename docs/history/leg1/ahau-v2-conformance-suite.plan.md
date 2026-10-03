@@ -1,6 +1,6 @@
 # Plan: Āhau v2 — Conformance Suite
 
-**Source PRD**: `docs/prds/ahau-v2-repo-foundation.prd.md`
+**Source PRD**: `docs/history/leg1/ahau-v2-repo-foundation.prd.md`
 **Selected Milestone**: 5 — Conformance suite
 **Complexity**: Medium
 

@@ -1,26 +1,26 @@
 # Āhau v2 — Protocol Adapters and the Agnosticism Proof
 
-> **Superseded by [ADR-0006](../adr/0006-capability-driven-redesign-not-behaviour-replication.md).** v2 now builds directly on
+> **Superseded by [ADR-0006](../../adr/0006-capability-driven-redesign-not-behaviour-replication.md).** v2 now builds directly on
 > Holochain; the adapter layer and agnosticism proof described here are no
 > longer pursued. Kept as record.
 
 > **Leg 2** of the Āhau v2 rebuild. Begins where
-> `docs/prds/ahau-v2-repo-foundation.prd.md` ends — with a runnable,
+> `docs/history/leg1/ahau-v2-repo-foundation.prd.md` ends — with a runnable,
 > backend-free `ahau-v2` — and attaches real protocols to it.
 
 > **Revised 2026-09-23 — scope narrowed, not just re-planned.** This PRD's
 > title and original Hypothesis describe proving backend-agnosticism via
 > two independent adapters (Holochain and nostr) converging on one contract.
 > Capacity constraints made that two-adapter comparison unaffordable; see
-> [ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md) for the
+> [ADR-0003](../../adr/0003-holochain-as-leg-2-protocol-candidate.md) for the
 > full reasoning. The plan below now targets a single Holochain adapter
 > against a capability-specific exit criterion instead. **This is a weaker
 > claim than the one this document's title still describes** — read
 > ADR-0003's Consequences section before treating anything below as proof of
 > genuine agnosticism, because it isn't. Sections below are updated in
 > place; superseded content is marked, not deleted, so the original plan
-> stays legible. [ADR-0004](../adr/0004-continue-with-svelte-shell-defer-gramps-js.md)
-> and [ADR-0005](../adr/0005-clean-slate-ssb-data-migration-stance.md) cover
+> stays legible. [ADR-0004](../../adr/0004-continue-with-svelte-shell-defer-gramps-js.md)
+> and [ADR-0005](../../adr/0005-clean-slate-ssb-data-migration-stance.md) cover
 > the frontend-framework and data-migration decisions made in the same pass.
 
 ## Preconditions
@@ -107,7 +107,7 @@ We'll know we're right when **one whakapapa feature — exercising group
 permissions and record revision — runs end-to-end against both a Holochain
 conductor and a nostr relay, with zero changes to frontend code between them**.
 
-**Superseded 2026-09-23 ([ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)).**
+**Superseded 2026-09-23 ([ADR-0003](../../adr/0003-holochain-as-leg-2-protocol-candidate.md)).**
 The above was the original hypothesis and stays the honest target for
 genuine agnosticism-proving — kept here, not deleted, because it's what a
 future two-adapter pass would still be testing. The hypothesis this leg
@@ -122,11 +122,11 @@ adapter confirms the contract wasn't shaped around the first.
 
 | Constraint | Decision |
 |---|---|
-| Frontend stack | Svelte 5 + TypeScript, as built in Leg 1 — reconfirmed by [ADR-0004](../adr/0004-continue-with-svelte-shell-defer-gramps-js.md); Gramps.js researched and deliberately deferred, not adopted |
+| Frontend stack | Svelte 5 + TypeScript, as built in Leg 1 — reconfirmed by [ADR-0004](../../adr/0004-continue-with-svelte-shell-defer-gramps-js.md); Gramps.js researched and deliberately deferred, not adopted |
 | Repository | `ahau-v2`, as created in Leg 1 |
-| Experiment set | ~~Holochain and nostr~~ **Holochain only**, per [ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md) — nostr dropped from active build on capacity grounds, not technical merit; its structural gap (no record-level access control) is documented in `docs/decentralized-backend-research.md` regardless |
+| Experiment set | ~~Holochain and nostr~~ **Holochain only**, per [ADR-0003](../../adr/0003-holochain-as-leg-2-protocol-candidate.md) — nostr dropped from active build on capacity grounds, not technical merit; its structural gap (no record-level access control) is documented in `docs/history/leg1/decentralized-backend-research.md` regardless |
 | Production backend | Holochain is the leading candidate, pending the capability-specific exit criterion in ADR-0003 — no longer "undecided pending a two-adapter comparison" (there is no second adapter to compare against), but not yet locked either |
-| SSB data migration | **Clean-slate for MVP**, per [ADR-0005](../adr/0005-clean-slate-ssb-data-migration-stance.md) — no automatic import from the frozen old app; a future GEDCOM path is acknowledged as a real need, not committed to a shape |
+| SSB data migration | **Clean-slate for MVP**, per [ADR-0005](../../adr/0005-clean-slate-ssb-data-migration-stance.md) — no automatic import from the frozen old app; a future GEDCOM path is acknowledged as a real need, not committed to a shape |
 | Existing SSB repo | Continues to ship; untouched by this work |
 | Visual + interaction design | Parity with current Āhau — no redesign |
 | `~/projects/Holochain/ahau_holo` | A tutorial exercise. Not a starting point. Ignore. |
@@ -141,7 +141,7 @@ otherwise.
 
 ## Success Metrics
 
-**Superseded 2026-09-23 ([ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)).**
+**Superseded 2026-09-23 ([ADR-0003](../../adr/0003-holochain-as-leg-2-protocol-candidate.md)).**
 The comparison-based rows below (backends running the slice, adapter #2
 revisions, effort ratio) can no longer be measured — there is no adapter #2.
 They're kept, struck through, as a record of what genuine agnosticism-proving
@@ -169,7 +169,7 @@ claim, not a hidden one.
 
 ## Scope
 
-**Superseded 2026-09-23 ([ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)).**
+**Superseded 2026-09-23 ([ADR-0003](../../adr/0003-holochain-as-leg-2-protocol-candidate.md)).**
 
 **MVP** (revised) — Group permissions (kaitiaki/member removal, at least one
 enforced per-content-type permission — full functional shape in `docs/plans/
@@ -204,7 +204,7 @@ for the checkpoint and must not be reported as if it were.
   pending its exit criterion (ADR-0003), not a locked choice, but there is no
   longer a downstream comparison step that makes the call either.
 - **SSB data migration** — existing users' whakapapa is not carried over.
-  Resolved, not just flagged: [ADR-0005](../adr/0005-clean-slate-ssb-data-migration-stance.md).
+  Resolved, not just flagged: [ADR-0005](../../adr/0005-clean-slate-ssb-data-migration-stance.md).
 - **Desktop and mobile shells** — no Electron, no Cordova. Web-first only.
 - **Design or UX changes** — no redesign smuggled in alongside the re-platform.
 - **A second adapter (nostr or otherwise)** — ~~atproto, a conventional server
@@ -218,7 +218,7 @@ for the checkpoint and must not be reported as if it were.
 
 ## Delivery Milestones
 
-**Superseded 2026-09-23 ([ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)/[ADR-0004](../adr/0004-continue-with-svelte-shell-defer-gramps-js.md)).**
+**Superseded 2026-09-23 ([ADR-0003](../../adr/0003-holochain-as-leg-2-protocol-candidate.md)/[ADR-0004](../../adr/0004-continue-with-svelte-shell-defer-gramps-js.md)).**
 Original four-milestone table (two-adapter comparison, then broad feature
 porting) kept below for record, replaced by the milestone-level roadmap that
 follows it. This is phase-level sequencing, deliberately not committed to a
@@ -235,7 +235,7 @@ sprint calendar — sprint planning stays a separate, living activity.
 
 | # | Milestone | Outcome | Status | Depends on | Plan/spec |
 |---|---|---|---|---|---|
-| 0 | Contract fixes | Friction findings #12 (a refused write has no representation) and #13 (no "current group" concept) resolved — both load-bearing for group permissions | pending | — | `docs/contract-friction.md` |
+| 0 | Contract fixes | Friction findings #12 (a refused write has no representation) and #13 (no "current group" concept) resolved — both load-bearing for group permissions | pending | — | `docs/history/leg1/contract-friction.md` |
 | 1 | Prototype — pipeline proof | One trivial read-only operation runs through a real Holochain adapter into the existing Svelte shell — first time this repo's pipeline touches a real protocol; the tangible near-term demo for stakeholders | pending | — | — |
 | 2 | Holochain capability checkpoint | A real group-permissions capability attempt on Holochain, evaluated against ADR-0003's exit criterion (enforced permissions, no protocol-level workarounds) | pending | Milestone 0 | ADR-0003 |
 | 3 | Flagship feature — group permissions | Kaitiaki/member removal and at least one enforced per-content-type permission, built for real end-to-end, only once Milestone 2 passes | pending | Milestone 2 | `docs/plans/group-permissions.md` |
@@ -270,7 +270,7 @@ not resequenced within it.
       named before Milestone 2, not argued about during it.
 - [x] **What decides the production backend, and on what evidence?** Resolved
       2026-09-23: the capability-specific exit criterion in
-      [ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md) — does
+      [ADR-0003](../../adr/0003-holochain-as-leg-2-protocol-candidate.md) — does
       Holochain's capability-grant system deliver enforced group-permissions
       without protocol-level workarounds. Not a two-adapter comparison, as
       originally planned; see that ADR's Consequences for what's weaker about
@@ -285,7 +285,7 @@ not resequenced within it.
       Vuetify tags are grid primitives that CSS replaces natively, so the real
       surface is roughly 37 components, not 76.
 - [x] **Is abandoning existing users' SSB data acceptable?** Resolved
-      2026-09-23: [ADR-0005](../adr/0005-clean-slate-ssb-data-migration-stance.md)
+      2026-09-23: [ADR-0005](../../adr/0005-clean-slate-ssb-data-migration-stance.md)
       — clean-slate for MVP, old app stays frozen and available, no automatic
       import. A real, previously-requested GEDCOM need is acknowledged but not
       committed to a shape, pending someone proving SSB group-decryption is
@@ -293,7 +293,7 @@ not resequenced within it.
 
 ## Risks
 
-**Superseded 2026-09-23 ([ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)).**
+**Superseded 2026-09-23 ([ADR-0003](../../adr/0003-holochain-as-leg-2-protocol-candidate.md)).**
 Rows that depended on a second adapter are updated in place, not removed —
 several describe risks that are now *certainties*, which is itself worth
 seeing plainly rather than quietly dropping the row.

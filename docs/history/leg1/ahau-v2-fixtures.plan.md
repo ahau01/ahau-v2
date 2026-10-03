@@ -1,6 +1,6 @@
 # Plan: Āhau v2 — Fixture Reference Implementation
 
-**Source PRD**: `docs/prds/ahau-v2-repo-foundation.prd.md`
+**Source PRD**: `docs/history/leg1/ahau-v2-repo-foundation.prd.md`
 **Selected Milestone**: 4 — Fixture reference implementation
 **Complexity**: Medium
 

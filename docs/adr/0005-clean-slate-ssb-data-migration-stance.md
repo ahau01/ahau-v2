@@ -7,8 +7,8 @@
 ## Context
 
 Both existing Leg 1/Leg 2 PRDs already flag this as unresolved and
-"effectively irreversible": `docs/prds/ahau-v2-repo-foundation.prd.md` and
-`docs/prds/ahau-v2-frontend-rebuild.prd.md` each list "Is abandoning
+"effectively irreversible": `docs/history/leg1/ahau-v2-repo-foundation.prd.md` and
+`docs/history/leg1/ahau-v2-frontend-rebuild.prd.md` each list "Is abandoning
 existing users' SSB data acceptable?" as an open question, recorded as out
 of scope but needing explicit confirmation. Separately, the broader
 maintenance-direction decision (this rewrite's own justification) commits
