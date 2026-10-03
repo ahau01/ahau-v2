@@ -24,13 +24,31 @@ export type Readiness =
   | { status: 'ready' }
   | { status: 'failed', reason: string }
 
+/**
+ * A person's own account of themselves. Not the canonical record of that
+ * person: others' whakapapa records about them are kept separately.
+ */
+export interface Profile {
+  name: string
+}
+
+export type MyProfile =
+  | { status: 'found', profile: Profile }
+  | { status: 'none' }
+  | { status: 'failed', reason: string }
+
 export interface ProfileClient {
   /** Wait until Holochain is reachable, or report that it failed to start. */
   waitUntilReady (): Promise<Readiness>
+  /** My own profile, or none if I haven't created one yet. */
+  getMyProfile (): Promise<MyProfile>
   /** Release the connection to Holochain. */
   close (): Promise<void>
 }
 
+const ROLE = 'ahau'
+const ZOME = 'profiles'
+const NOT_READY = 'Not connected to Holochain yet: call waitUntilReady first'
 const DEFAULT_TIMEOUT_MS = 30_000
 const RETRY_MS = 250
 
@@ -74,6 +92,21 @@ export function createProfileClient (options: ProfileClientOptions = {}): Profil
           }
         }
         await new Promise(resolve => setTimeout(resolve, RETRY_MS))
+      }
+    },
+
+    async getMyProfile () {
+      if (!connection) return { status: 'failed', reason: NOT_READY }
+      try {
+        const profile = await connection.callZome<Profile | null>({
+          role_name: ROLE,
+          zome_name: ZOME,
+          fn_name: 'get_my_profile',
+          payload: null
+        })
+        return profile ? { status: 'found', profile } : { status: 'none' }
+      } catch (err) {
+        return { status: 'failed', reason: errorMessage(err) }
       }
     },
 

@@ -3,9 +3,9 @@ import assert from 'node:assert/strict'
 import { createServer, type Socket } from 'node:net'
 import { fileURLToPath } from 'node:url'
 
-import { runScenario } from '@holochain/tryorama'
+import { runScenario, type PlayerApp } from '@holochain/tryorama'
 
-import { createProfileClient } from './client.js'
+import { createProfileClient, type ProfileClient } from './client.js'
 
 /**
  * Real-conductor tests for the profile client module. They need the
@@ -178,6 +178,32 @@ test('promise: waitUntilReady reports failed within timeoutMs when the port acce
     await new Promise(resolve => silent.close(resolve))
   }
 })
+
+test('promise: get my profile returns none before I have created one', async () => {
+  await runScenario(async scenario => {
+    const player = await scenario.addPlayerWithApp({
+      appBundleSource: { type: 'path', value: happ }
+    })
+    const client = await readyClientFor(player)
+
+    assert.deepEqual(await client.getMyProfile(), { status: 'none' })
+    await client.close()
+  })
+})
+
+/** A profile client connected to this player's app, ready to use. */
+async function readyClientFor (player: PlayerApp): Promise<ProfileClient> {
+  const port = await player.conductor.attachAppInterface({ port: 0, allowed_origins: 'ahau-test' })
+  const { token } = await player.conductor.adminWs()
+    .issueAppAuthenticationToken({ installed_app_id: player.appId })
+  const client = createProfileClient({
+    url: new URL(`ws://127.0.0.1:${port}`),
+    appToken: token,
+    origin: 'ahau-test'
+  })
+  assert.deepEqual(await client.waitUntilReady(), { status: 'ready' })
+  return client
+}
 
 /** A local port nothing is listening on right now. */
 async function freePort (): Promise<number> {
