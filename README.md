@@ -1,36 +1,76 @@
 # Āhau v2
 
-Backend-agnostic data-access contract for Āhau.
+A rebuild of Āhau, the whakapapa app, on [Holochain](https://www.holochain.org/).
 
-It defines what any backend must provide for the whakapapa application, without depending on a specific protocol.
+The original Āhau runs on Secure Scuttlebutt (SSB). Its plugins are no longer
+maintained, and small features had started needing big fixes underneath
+([ADR-0002](docs/adr/0002-rewrite-instead-of-continuing-to-patch-ssb-architecture.md)).
+Āhau v2 rebuilds the app so it does what people need, in the way that suits
+Holochain, rather than copying how the old app did things
+([ADR-0006](docs/adr/0006-capability-driven-redesign-not-behaviour-replication.md),
+proposed).
 
-**Status: Leg 1 complete.**
+## Status
 
-The repo currently contains:
-- A typed contract with 69 operations across 14 domains
-- An in-memory reference implementation
-- A conformance test suite
-- A Svelte app shell using the contract
+- **Done:** a Svelte app shell, plus a typed record of everything the old app's
+  data layer could do (see "What's in this repo").
+- **Next:** list what people actually do with Āhau ([#13](https://github.com/ahau01/ahau-v2/issues/13)),
+  and build the first feature on Holochain — group permissions
+  ([ADR-0003](docs/adr/0003-holochain-as-leg-2-protocol-candidate.md)).
+- **Not started:** any Holochain code.
 
-No Holochain, Nostr, or other protocol adapter exists yet. That is Leg 2.
+## What stays the same
 
-## Why this exists
+Whatever the backend, Āhau keeps these rules (full detail in [CLAUDE.md](CLAUDE.md)):
 
-The existing Āhau frontend has 77 exported data-access functions. These work, but they are tied to GraphQL over SSB.
+1. **No single "true" version.** People can hold different accounts of the same
+   relationship. All are kept; none wins automatically.
+2. **Relationships come from someone.** Each one is recorded as "this person
+   says this relationship exists", not as a plain line between two people.
+3. **No central server.** No one machine holds the master copy.
+4. **Identity is a key, not a login.** No email/password or sessions.
 
-This means replacing SSB would require changing the frontend as well.
+## What's in this repo
 
-Milestone 1 catalogued and reviewed all 77 accessors in the `ahau` repository. 68 were kept and are now represented as a typed contract here.
-
-The goal is to give future backends a clear target to implement and test against.
-
-Requirements source: `plans/data-access-triage.json` in the `ahau` repository.
+| Path | What it is |
+|---|---|
+| `src/app/` | The Svelte app shell. Runs today against fake in-memory data. |
+| `src/contract/` | **Reference only.** A typed list of the 69 actions the old SSB app's data layer supported. Used as a checklist so nothing gets lost in the rebuild; new code doesn't have to match it. |
+| `src/fixtures/` | The fake in-memory backend the shell runs on for now. |
+| `src/conformance/` | Tests written against the contract. The ones about the rules above will move to Holochain tests. |
+| `contract-source/` | The review of the old app's data functions the contract was built from. |
+| `docs/` | Decisions, plans and history. Start at [docs/INDEX.md](docs/INDEX.md). |
 
 ## Setup
 
-Requires Node 20 (`.nvmrc`).
+Requires Node 20 (see `.nvmrc`).
 
 ```bash
 npm install
-npm run typecheck
-not settle them.
+npm run dev     # serve the app shell at http://localhost:5173
+npm test        # build and run all tests
+```
+
+Other commands:
+
+| Command | What it does |
+|---|---|
+| `npm run typecheck` | Typecheck the TypeScript |
+| `npm run check:app` | Typecheck the Svelte app |
+| `npm run build` | Compile to `dist/` |
+| `npm run build:app` | Build the app shell for production |
+| `npm run check:coverage` | Check the contract still matches the old app review |
+| `npm run check:manifest` | Check the contract's generated manifest is up to date |
+
+## Where to start reading
+
+- [CLAUDE.md](CLAUDE.md) — the rules above, and how to work in this repo (including with AI tools)
+- [docs/adr/](docs/adr/) — the decisions that got us here, in order
+- [docs/contract-decisions.md](docs/contract-decisions.md) — lessons from the contract that still apply on Holochain (e.g. removing something is a "retraction", not a delete)
+- [docs/history/](docs/history/) — background on the original Āhau
+
+## Licence
+
+Not yet decided. The original Āhau is AGPL-3.0 under Āhau Ltd.; ownership and
+licensing of this rebuild are still open (see
+`docs/prds/ahau-v2-repo-foundation.prd.md`).
