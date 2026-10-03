@@ -95,6 +95,22 @@ below; `npm test` and `npm run dev` work without it.
 | `npm run test:conductor` | Run the tests against a real Holochain conductor |
 | `npm run conductor` | Run a local dev conductor with the hApp; apps connect on port 8888 |
 
+4. To connect to the dev conductor from your own code, you need an app
+   authentication token. It lets a local process reach the hApp. It is not a
+   login, and identity stays the agent key. Keep `npm run conductor` running.
+   Its last line shows the admin port, for example
+   `Conductor launched #!0 {"admin_port":38647,"app_ports":[8888]}`. In a
+   second terminal:
+
+   ```bash
+   node scripts/issue-app-token.mjs 38647   # prints the token as a JSON byte array
+   ```
+
+   Then pass it to the profile client:
+   `createProfileClient({ url: new URL('ws://localhost:8888'), appToken, origin: 'ahau-dev' })`.
+   The token is dev-only: it can be reused and doesn't expire. Restarting
+   `npm run conductor` creates a new sandbox, so you need a new token.
+
 ## Where to start reading
 
 - [CLAUDE.md](CLAUDE.md) — the rules above, and how to work in this repo (including with AI tools)
