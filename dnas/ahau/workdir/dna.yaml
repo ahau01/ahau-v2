@@ -1,0 +1,12 @@
+manifest_version: '0'
+name: ahau
+integrity:
+  # Set per network when the app is installed, not baked in here.
+  network_seed: null
+  properties: null
+  # Empty for now. The profile zome lands here next (#14), as an
+  # integrity/coordinator pair named profiles_integrity / profiles, which is
+  # how holochain-open-dev/profiles expects to be included.
+  zomes: []
+coordinator:
+  zomes: []
