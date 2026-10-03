@@ -8,6 +8,9 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc",
     "test": "npm run check:manifest && npm run build && node --test dist && node scripts/check-contract-coverage.mjs --ci && node scripts/check-conformance-coverage.mjs --ci",
+    "build:happ": "hc dna pack dnas/ahau/workdir && hc app pack workdir",
+    "test:conductor": "npm run build:happ && rm -rf dist && npm run build && files=$(find dist -name '*.conductor.js') && { [ -n \"$files\" ] || { echo 'no conductor tests found in dist' >&2; exit 1; }; } && node --test $files",
+    "conductor": "npm run build:happ && hc sandbox clean && echo pass | hc sandbox --piped generate workdir/ahau.happ --app-id ahau --run=8888 network mem",
     "check:coverage": "npm run build && node scripts/check-contract-coverage.mjs --ci",
     "derive:manifest": "node scripts/derive-manifest.mjs",
     "check:manifest": "node scripts/derive-manifest.mjs --check",
@@ -20,6 +23,8 @@
     "node": ">=20 <21"
   },
   "devDependencies": {
+    "@holochain/client": "0.20.8",
+    "@holochain/tryorama": "0.19.2",
     "@sveltejs/vite-plugin-svelte": "^5.1.1",
     "@types/node": "^20.19.43",
     "bits-ui": "^2.19.2",
