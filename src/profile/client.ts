@@ -37,11 +37,17 @@ export type MyProfile =
   | { status: 'none' }
   | { status: 'failed', reason: string }
 
+export type SavedProfile =
+  | { status: 'saved', profile: Profile }
+  | { status: 'failed', reason: string }
+
 export interface ProfileClient {
   /** Wait until Holochain is reachable, or report that it failed to start. */
   waitUntilReady (): Promise<Readiness>
   /** My own profile, or none if I haven't created one yet. */
   getMyProfile (): Promise<MyProfile>
+  /** Create my own profile. I can only ever have one. */
+  createMyProfile (profile: Profile): Promise<SavedProfile>
   /** Release the connection to Holochain. */
   close (): Promise<void>
 }
@@ -105,6 +111,21 @@ export function createProfileClient (options: ProfileClientOptions = {}): Profil
           payload: null
         })
         return profile ? { status: 'found', profile } : { status: 'none' }
+      } catch (err) {
+        return { status: 'failed', reason: errorMessage(err) }
+      }
+    },
+
+    async createMyProfile (profile) {
+      if (!connection) return { status: 'failed', reason: NOT_READY }
+      try {
+        const saved = await connection.callZome<Profile>({
+          role_name: ROLE,
+          zome_name: ZOME,
+          fn_name: 'create_my_profile',
+          payload: profile
+        })
+        return { status: 'saved', profile: saved }
       } catch (err) {
         return { status: 'failed', reason: errorMessage(err) }
       }

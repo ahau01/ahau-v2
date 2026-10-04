@@ -1,5 +1,5 @@
 [workspace]
-members = ["dnas/*/zomes/*/*"]
+members = ["dnas/*/zomes/*/*", "dnas/*/test/zomes/*"]
 resolver = "2"
 
 # Matches the Holochain pinned in flake.lock (0.6.3).

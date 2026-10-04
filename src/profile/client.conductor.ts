@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { createServer, type Socket } from 'node:net'
 import { fileURLToPath } from 'node:url'
 
-import { runScenario, type PlayerApp } from '@holochain/tryorama'
+import { dhtSync, runScenario, type PlayerApp } from '@holochain/tryorama'
 
 import { createProfileClient, type ProfileClient } from './client.js'
 
@@ -14,6 +14,8 @@ import { createProfileClient, type ProfileClient } from './client.js'
  */
 
 const happ = fileURLToPath(new URL('../../workdir/ahau.happ', import.meta.url))
+/** The same DNA plus a test-only coordinator that writes without the client module. */
+const bypassHapp = fileURLToPath(new URL('../../workdir/test/ahau-test.happ', import.meta.url))
 
 test('promise: waitUntilReady resolves ready when the conductor is running the app', async () => {
   await runScenario(async scenario => {
@@ -191,11 +193,120 @@ test('promise: get my profile returns none before I have created one', async () 
   })
 })
 
-/** A profile client connected to this player's app, ready to use. */
+test('promise: create my profile returns it, and get my profile then returns the same profile', async () => {
+  await runScenario(async scenario => {
+    const player = await scenario.addPlayerWithApp({
+      appBundleSource: { type: 'path', value: happ }
+    })
+    const client = await readyClientFor(player)
+
+    assert.deepEqual(await client.createMyProfile({ name: 'Aroha Te Whata' }),
+      { status: 'saved', profile: { name: 'Aroha Te Whata' } })
+    assert.deepEqual(await client.getMyProfile(),
+      { status: 'found', profile: { name: 'Aroha Te Whata' } })
+    await client.close()
+  })
+})
+
+test('promise: my profile is still there after the conductor restarts with the same agent', async () => {
+  await runScenario(async scenario => {
+    const player = await scenario.addPlayerWithApp({
+      appBundleSource: { type: 'path', value: happ }
+    })
+    const before = await readyClientFor(player)
+    await before.createMyProfile({ name: 'Aroha Te Whata' })
+    await before.close()
+
+    await player.conductor.shutDown()
+    await player.conductor.startUp()
+
+    const after = await readyClientFor(player)
+    assert.deepEqual(await after.getMyProfile(),
+      { status: 'found', profile: { name: 'Aroha Te Whata' } })
+    await after.close()
+  })
+})
+
+test('promise: creating a second profile for the same agent fails and leaves the first one as it was', async () => {
+  await runScenario(async scenario => {
+    const player = await scenario.addPlayerWithApp({
+      appBundleSource: { type: 'path', value: happ }
+    })
+    const client = await readyClientFor(player)
+    await client.createMyProfile({ name: 'Aroha Te Whata' })
+
+    const second = await client.createMyProfile({ name: 'Aroha' })
+    assert.equal(second.status, 'failed')
+    assert.match(second.status === 'failed' ? second.reason : '', /already has a profile/)
+    assert.deepEqual(await client.getMyProfile(),
+      { status: 'found', profile: { name: 'Aroha Te Whata' } })
+    await client.close()
+  })
+})
+
+test('promise: another agent cannot overwrite my profile, even by bypassing the client module', async () => {
+  await runScenario(async scenario => {
+    const [aroha, other] = await scenario.addPlayersWithApps([
+      { appBundleSource: { type: 'path', value: happ } },
+      { appBundleSource: { type: 'path', value: bypassHapp } }
+    ])
+    if (!aroha || !other) throw new Error('players not added')
+    const dnaHash = aroha.cells[0]!.cell_id[0]
+    assert.deepEqual(other.cells[0]!.cell_id[0], dnaHash, 'both agents are on the same network')
+    const client = await readyClientFor(aroha)
+    await client.createMyProfile({ name: 'Aroha Te Whata' })
+    await dhtSync([aroha, other], dnaHash)
+
+    await assert.rejects(
+      other.cells[0]!.callZome({
+        zome_name: 'profiles_bypass',
+        fn_name: 'update_profile_of',
+        payload: { agent: aroha.agentPubKey, profile: { name: 'Someone else' } }
+      }),
+      /only the agent who created a profile can change it/i
+    )
+    assert.deepEqual(await client.getMyProfile(),
+      { status: 'found', profile: { name: 'Aroha Te Whata' } })
+    await client.close()
+  })
+})
+
+test('promise: another agent cannot delete my profile, even by bypassing the client module', async () => {
+  await runScenario(async scenario => {
+    const [aroha, other] = await scenario.addPlayersWithApps([
+      { appBundleSource: { type: 'path', value: happ } },
+      { appBundleSource: { type: 'path', value: bypassHapp } }
+    ])
+    if (!aroha || !other) throw new Error('players not added')
+    const dnaHash = aroha.cells[0]!.cell_id[0]
+    const client = await readyClientFor(aroha)
+    await client.createMyProfile({ name: 'Aroha Te Whata' })
+    await dhtSync([aroha, other], dnaHash)
+
+    await assert.rejects(
+      other.cells[0]!.callZome({
+        zome_name: 'profiles_bypass',
+        fn_name: 'delete_profile_of',
+        payload: aroha.agentPubKey
+      }),
+      /only the agent who created a profile can change it/i
+    )
+    assert.deepEqual(await client.getMyProfile(),
+      { status: 'found', profile: { name: 'Aroha Te Whata' } })
+    await client.close()
+  })
+})
+
+/**
+ * A profile client connected to this player's app, ready to use. Like a
+ * launcher would, it first lets this process sign zome calls for the
+ * player's agent.
+ */
 async function readyClientFor (player: PlayerApp): Promise<ProfileClient> {
+  const admin = player.conductor.adminWs()
+  for (const cell of player.cells) await admin.authorizeSigningCredentials(cell.cell_id)
   const port = await player.conductor.attachAppInterface({ port: 0, allowed_origins: 'ahau-test' })
-  const { token } = await player.conductor.adminWs()
-    .issueAppAuthenticationToken({ installed_app_id: player.appId })
+  const { token } = await admin.issueAppAuthenticationToken({ installed_app_id: player.appId })
   const client = createProfileClient({
     url: new URL(`ws://127.0.0.1:${port}`),
     appToken: token,

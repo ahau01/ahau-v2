@@ -1,0 +1,20 @@
+# Test only: the ahau DNA with the same integrity zome, so it joins the same
+# network, plus a coordinator that bypasses the profile client module.
+manifest_version: '0'
+name: ahau
+integrity:
+  network_seed: null
+  properties: null
+  zomes:
+    - name: profiles_integrity
+      path: ../../../../target/wasm32-unknown-unknown/release/profiles_integrity.wasm
+coordinator:
+  zomes:
+    - name: profiles
+      path: ../../../../target/wasm32-unknown-unknown/release/profiles.wasm
+      dependencies:
+        - name: profiles_integrity
+    - name: profiles_bypass
+      path: ../../../../target/wasm32-unknown-unknown/release/profiles_bypass.wasm
+      dependencies:
+        - name: profiles_integrity

@@ -721,6 +721,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "profiles_bypass"
+version = "0.0.1"
+dependencies = [
+ "hdk",
+ "holochain_serialized_bytes",
+ "profiles_integrity",
+ "serde",
+]
+
+[[package]]
 name = "profiles_integrity"
 version = "0.0.1"
 dependencies = [

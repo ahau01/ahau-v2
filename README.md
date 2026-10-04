@@ -16,8 +16,9 @@ Holochain, rather than copying how the old app did things
 - **Next:** list what people actually do with Āhau ([#13](https://github.com/ahau01/ahau-v2/issues/13)),
   and build the first feature on Holochain — group permissions
   ([ADR-0003](docs/adr/0003-holochain-as-leg-2-protocol-candidate.md)).
-- **Started:** the Holochain dev environment, an empty hApp, and the profile
-  client module ([#15](https://github.com/ahau01/ahau-v2/issues/15)).
+- **Started:** the Holochain dev environment and the profile client module
+  ([#15](https://github.com/ahau01/ahau-v2/issues/15)); storing your own
+  profile, name only ([#16](https://github.com/ahau01/ahau-v2/issues/16)).
 
 ## What stays the same
 
@@ -38,8 +39,8 @@ Whatever the backend, Āhau keeps these rules (full detail in [CLAUDE.md](CLAUDE
 | `src/contract/` | **Reference only.** A typed list of the 69 actions the old SSB app's data layer supported. Used as a checklist so nothing gets lost in the rebuild; new code doesn't have to match it. |
 | `src/fixtures/` | The fake in-memory backend the shell runs on for now. |
 | `src/profile/` | The profile client module: the only code that talks to Holochain about profiles. |
-| `dnas/ahau/` | The Holochain DNA. Empty for now; the profile zome goes here next. |
-| `workdir/` | The hApp manifest that bundles the DNA. |
+| `dnas/ahau/` | The Holochain DNA and its zomes (Rust). `dnas/ahau/test/` is test-only and never bundled in the real hApp. |
+| `workdir/` | The hApp manifest that bundles the DNA. `workdir/test/` is the test-only hApp. |
 | `flake.nix`, `flake.lock` | The pinned Holochain dev environment. |
 | `src/conformance/` | Tests written against the contract. The ones about the rules above will move to Holochain tests. |
 | `contract-source/` | The review of the old app's data functions the contract was built from. |
@@ -91,7 +92,7 @@ below; `npm test` and `npm run dev` work without it.
 
 | Command | What it does |
 |---|---|
-| `npm run build:happ` | Pack the DNA and hApp into `workdir/ahau.happ` |
+| `npm run build:happ` | Build the zomes and pack the DNA and hApp into `workdir/ahau.happ` |
 | `npm run test:conductor` | Run the tests against a real Holochain conductor |
 | `npm run conductor` | Run a local dev conductor with the hApp; apps connect on port 8888 |
 
