@@ -1,0 +1,17 @@
+[workspace]
+members = ["dnas/*/zomes/*/*", "dnas/*/test/zomes/*"]
+resolver = "2"
+
+# Pinned to the Holochain release flake.lock gives us (0.6.3).
+[workspace.dependencies]
+hdi = "=0.7.3"
+hdk = "=0.6.3"
+serde = "1"
+# The entry macros expand to paths in this crate, so zomes depend on it directly.
+holochain_serialized_bytes = "=0.0.57"
+
+[profile.dev]
+opt-level = "z"
+
+[profile.release]
+opt-level = "z"

@@ -1,0 +1,25 @@
+# TEST ONLY. The real ahau DNA's integrity zome with an extra rogue
+# coordinator. Coordinators don't change the DNA hash, so a cell of this DNA
+# joins the same network as the real app.
+manifest_version: '0'
+name: ahau
+integrity:
+  network_seed: null
+  properties: null
+  zomes:
+    - name: profiles_integrity
+      hash: null
+      path: ../../../../target/wasm32-unknown-unknown/release/profiles_integrity.wasm
+      dependencies: null
+coordinator:
+  zomes:
+    - name: profiles
+      hash: null
+      path: ../../../../target/wasm32-unknown-unknown/release/profiles.wasm
+      dependencies:
+        - name: profiles_integrity
+    - name: rogue_profiles
+      hash: null
+      path: ../../../../target/wasm32-unknown-unknown/release/rogue_profiles.wasm
+      dependencies:
+        - name: profiles_integrity

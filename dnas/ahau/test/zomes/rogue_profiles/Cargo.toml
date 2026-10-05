@@ -1,0 +1,14 @@
+[package]
+name = "rogue_profiles"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+hdk = { workspace = true }
+serde = { workspace = true }
+holochain_serialized_bytes = { workspace = true }
+profiles_integrity = { path = "../../../zomes/integrity/profiles" }

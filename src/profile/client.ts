@@ -20,6 +20,15 @@ export interface ProfileClientOptions {
   timeoutMs?: number
 }
 
+/** A person's own account of themselves. Not the canonical record of them. */
+export interface Profile {
+  name: string
+}
+
+export type CreateProfileResult =
+  | { status: 'created', profile: Profile }
+  | { status: 'failed', reason: string }
+
 export type Readiness =
   | { status: 'ready' }
   | { status: 'failed', reason: string }
@@ -27,16 +36,27 @@ export type Readiness =
 export interface ProfileClient {
   /** Wait until Holochain is reachable, or report that it failed to start. */
   waitUntilReady (): Promise<Readiness>
+  /** This agent's profile, or null if they haven't created one yet. */
+  getMyProfile (): Promise<Profile | null>
+  /** Save this agent's profile. Each agent key has one profile. */
+  createMyProfile (profile: Profile): Promise<CreateProfileResult>
   /** Release the connection to Holochain. */
   close (): Promise<void>
 }
 
 const DEFAULT_TIMEOUT_MS = 30_000
 const RETRY_MS = 250
+const ROLE = 'ahau'
+const ZOME = 'profiles'
 
 export function createProfileClient (options: ProfileClientOptions = {}): ProfileClient {
   // Kept once connected: the app token is single-use, so later calls reuse it.
   let connection: AppWebsocket | undefined
+
+  async function callProfiles<T> (fnName: string, payload: unknown): Promise<T> {
+    if (!connection) throw new Error('Not connected to Holochain: call waitUntilReady first')
+    return await connection.callZome({ role_name: ROLE, zome_name: ZOME, fn_name: fnName, payload })
+  }
 
   return {
     async waitUntilReady () {
@@ -77,6 +97,19 @@ export function createProfileClient (options: ProfileClientOptions = {}): Profil
       }
     },
 
+    async getMyProfile () {
+      return await callProfiles<Profile | null>('get_my_profile', null)
+    },
+
+    async createMyProfile (profile) {
+      try {
+        const saved = await callProfiles<Profile>('create_my_profile', profile)
+        return { status: 'created', profile: saved }
+      } catch (err) {
+        return { status: 'failed', reason: plainReason(err) }
+      }
+    },
+
     async close () {
       await connection?.client.close()
       connection = undefined
@@ -100,6 +133,12 @@ async function beforeDeadline<T> (promise: Promise<T>, deadline: number): Promis
 
 function isInvalidToken (err: unknown): boolean {
   return err instanceof Error && err.name === 'InvalidTokenError'
+}
+
+/** A validation rejection's own message, without Holochain's wrapping. */
+function plainReason (err: unknown): string {
+  const message = errorMessage(err)
+  return /Validation failed while committing: (.*)$/s.exec(message)?.[1] ?? message
 }
 
 function errorMessage (err: unknown): string {
