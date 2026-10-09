@@ -7,7 +7,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc",
-    "test": "npm run check:manifest && npm run build && node --test dist && node scripts/check-contract-coverage.mjs --ci && node scripts/check-conformance-coverage.mjs --ci",
+    "test": "npm run check:manifest && npm run build && node --test dist && vitest run && node scripts/check-contract-coverage.mjs --ci && node scripts/check-conformance-coverage.mjs --ci",
     "build:happ": "cargo build --release --target wasm32-unknown-unknown && hc dna pack dnas/ahau/workdir && hc app pack workdir",
     "test:zomes": "cargo test --workspace",
     "test:conductor": "npm run build:happ && hc dna pack dnas/ahau/test/workdir && hc app pack workdir/rogue && rm -rf dist && npm run build && files=$(find dist -name '*.conductor.js') && { [ -n \"$files\" ] || { echo 'no conductor tests found in dist' >&2; exit 1; }; } && node --test --test-concurrency=1 $files",
@@ -18,7 +18,8 @@
     "check:conformance": "npm run build && node scripts/check-conformance-coverage.mjs --ci",
     "dev": "vite",
     "build:app": "vite build",
-    "check:app": "svelte-check --tsconfig ./tsconfig.app.json --threshold error"
+    "check:app": "svelte-check --tsconfig ./tsconfig.app.json --threshold error",
+    "test:app": "vitest run"
   },
   "engines": {
     "node": ">=20 <21"
@@ -27,12 +28,20 @@
     "@holochain/client": "0.20.8",
     "@holochain/tryorama": "0.19.2",
     "@sveltejs/vite-plugin-svelte": "^5.1.1",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/svelte": "^5.4.2",
+    "@testing-library/user-event": "^14.6.7",
     "@types/node": "^20.19.43",
     "bits-ui": "^2.19.2",
+    "jsdom": "^26.1.0",
     "svelte": "^5.57.0",
     "svelte-check": "^4.7.6",
     "typescript": "^5.6.3",
-    "vite": "^6.4.3"
+    "vite": "^6.4.3",
+    "vitest": "^4.1.11"
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@fontsource/roboto": "^5.3.0"
+  }
 }

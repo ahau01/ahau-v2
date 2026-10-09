@@ -7,5 +7,6 @@
 | [0004](0004-continue-with-svelte-shell-defer-gramps-js.md) | Continue building the frontend on the Leg 1 Svelte shell; defer Gramps.js | accepted | 2026-09-23 |
 | [0005](0005-clean-slate-ssb-data-migration-stance.md) | No SSB-to-v2 data migration for MVP; GEDCOM export/import remains an acknowledged, uncommitted future need | accepted | 2026-09-23 |
 | [0006](0006-capability-driven-redesign-not-behaviour-replication.md) | Redesign around user capabilities on Holochain; freeze the Leg 1 contract as SSB-era reference | accepted | 2026-10-03 |
+| [0007](0007-personal-information-is-a-private-entry.md) | A person's contact details are a private entry on their own source chain | accepted | 2026-10-09 |
 
 Numbering starts at 0002: 0001 was `ahau-monorepo`'s own ADR (plugin consolidation) and lives in that repo.

@@ -1,6 +1,11 @@
 /// <reference types="vite/client" />
 import { mount, unmount } from 'svelte'
 
+// The old app bundled Roboto (typeface-roboto, now @fontsource/roboto).
+import '@fontsource/roboto/300.css'
+import '@fontsource/roboto/400.css'
+import '@fontsource/roboto/500.css'
+import '@fontsource/roboto/700.css'
 import './tokens.css'
 import FirstLaunch from './first-launch/FirstLaunch.svelte'
 import type { ProfileClient } from '../profile/client.js'

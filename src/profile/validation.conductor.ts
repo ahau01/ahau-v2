@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 
 import { dhtSync, runScenario, type PlayerApp } from '@holochain/tryorama'
 
+import { BIRTH_ORDER_INVALID, completeProfile } from './client.js'
 import { cellOf, happ, readyClient, rogueHapp } from './conductor-harness.js'
 
 /**
@@ -30,7 +31,7 @@ test('promise: another agent cannot overwrite my profile, even bypassing the app
       }),
       /Only the author of a profile can change it/
     )
-    assert.deepEqual(await ownerClient.getMyProfile(), { name: 'Mere' })
+    assert.deepEqual(await ownerClient.getMyProfile(), completeProfile({ name: 'Mere' }))
     await ownerClient.close()
   })
 })
@@ -50,7 +51,94 @@ test('promise: another agent cannot delete my profile, even bypassing the app', 
       }),
       /Profiles can't be deleted yet/
     )
-    assert.deepEqual(await ownerClient.getMyProfile(), { name: 'Mere' })
+    assert.deepEqual(await ownerClient.getMyProfile(), completeProfile({ name: 'Mere' }))
+    await ownerClient.close()
+  })
+})
+
+test('promise: another agent cannot read my personal information, even bypassing the app', async () => {
+  await runScenario(async scenario => {
+    const [owner, rogue] = await twoAgentsOnOneNetwork(scenario)
+    const ownerClient = await readyClient(owner)
+    await ownerClient.createMyProfile({ name: 'Mere', personal: { email: 'mere@example.com', phone: '021 000 0000' } })
+    await dhtSync([owner, rogue], cellOf(owner).cell_id[0])
+
+    const seen = await cellOf(rogue).callZome({
+      zome_name: 'rogue_profiles',
+      fn_name: 'get_agent_personal_information',
+      payload: owner.agentPubKey
+    })
+    // The rogue finds the entry's action, which is public, but not its contents.
+    assert.deepEqual(seen, { actionFound: true, contents: null })
+    await ownerClient.close()
+  })
+})
+
+test('promise: another agent cannot overwrite my personal information, even bypassing the app', async () => {
+  await runScenario(async scenario => {
+    const [owner, rogue] = await twoAgentsOnOneNetwork(scenario)
+    const ownerClient = await readyClient(owner)
+    await ownerClient.createMyProfile({ name: 'Mere', personal: { email: 'mere@example.com' } })
+    await dhtSync([owner, rogue], cellOf(owner).cell_id[0])
+
+    await assert.rejects(
+      cellOf(rogue).callZome({
+        zome_name: 'rogue_profiles',
+        fn_name: 'update_agent_personal_information',
+        payload: { agent: owner.agentPubKey, personal: { email: 'not-mere@example.com' } }
+      }),
+      /Only the author of a profile can change it/
+    )
+    assert.deepEqual(
+      (await ownerClient.getMyProfile())?.personal,
+      completeProfile({ name: 'Mere', personal: { email: 'mere@example.com' } }).personal
+    )
+    await ownerClient.close()
+  })
+})
+
+test('promise: another agent cannot delete my personal information, even bypassing the app', async () => {
+  await runScenario(async scenario => {
+    const [owner, rogue] = await twoAgentsOnOneNetwork(scenario)
+    const ownerClient = await readyClient(owner)
+    await ownerClient.createMyProfile({ name: 'Mere', personal: { email: 'mere@example.com' } })
+    await dhtSync([owner, rogue], cellOf(owner).cell_id[0])
+
+    await assert.rejects(
+      cellOf(rogue).callZome({
+        zome_name: 'rogue_profiles',
+        fn_name: 'delete_agent_personal_information',
+        payload: owner.agentPubKey
+      }),
+      /Personal information can't be deleted yet/
+    )
+    await ownerClient.close()
+  })
+})
+
+test('promise: personal information cannot be written without a profile, even bypassing the app', async () => {
+  await runScenario(async scenario => {
+    const [owner] = await oneAgentWithTestZome(scenario)
+
+    await assert.rejects(
+      testZome(owner, 'create_personal_information', { email: 'mere@example.com' }),
+      /Personal information needs a profile first/
+    )
+  })
+})
+
+test('promise: an agent cannot hold a second personal information, even bypassing the app', async () => {
+  await runScenario(async scenario => {
+    const [owner] = await oneAgentWithTestZome(scenario)
+    await testZome(owner, 'create_profile', { name: 'Mere' })
+    await testZome(owner, 'create_personal_information', { email: 'mere@example.com' })
+
+    await assert.rejects(
+      testZome(owner, 'create_personal_information', { email: 'other@example.com' }),
+      /This agent already has personal information/
+    )
+    const ownerClient = await readyClient(owner)
+    assert.equal((await ownerClient.getMyProfile())?.personal.email, 'mere@example.com')
     await ownerClient.close()
   })
 })
@@ -62,7 +150,7 @@ test('promise: I can change my own profile', async () => {
 
     await testZome(owner, 'update_my_profile', { name: 'Mere Rangi' })
     const ownerClient = await readyClient(owner)
-    assert.deepEqual(await ownerClient.getMyProfile(), { name: 'Mere Rangi' })
+    assert.deepEqual(await ownerClient.getMyProfile(), completeProfile({ name: 'Mere Rangi' }))
     await ownerClient.close()
   })
 })
@@ -76,7 +164,7 @@ test('promise: a profile cannot be deleted yet, even by its author', async () =>
 
     await assert.rejects(testZome(owner, 'delete_my_profile', null), /Profiles can't be deleted yet/)
     const ownerClient = await readyClient(owner)
-    assert.deepEqual(await ownerClient.getMyProfile(), { name: 'Mere' })
+    assert.deepEqual(await ownerClient.getMyProfile(), completeProfile({ name: 'Mere' }))
     await ownerClient.close()
   })
 })
@@ -92,6 +180,22 @@ test('promise: an agent cannot hold a second profile, even bypassing the app', a
 
     await write('First')
     await assert.rejects(write('Second'), /This agent already has a profile/)
+  })
+})
+
+test('promise: a profile with invalid fields is refused, even bypassing the app', async () => {
+  await runScenario(async scenario => {
+    const [, rogue] = await twoAgentsOnOneNetwork(scenario)
+    const write = (profile: unknown) => cellOf(rogue).callZome({
+      zome_name: 'rogue_profiles',
+      fn_name: 'create_profile',
+      payload: profile
+    })
+
+    await assert.rejects(write({ name: '' }), /A profile needs a name/)
+    await assert.rejects(write({ name: 'Mere', dateOfBirth: '01/01/1990' }), /Date of birth must be a real date/)
+    // The form shows this same message before saving, so the two can't drift.
+    await assert.rejects(write({ name: 'Mere', birthOrder: 0 }), (err: Error) => err.message.includes(BIRTH_ORDER_INVALID))
   })
 })
 

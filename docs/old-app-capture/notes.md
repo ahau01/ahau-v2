@@ -34,7 +34,7 @@
 | Full name | Optional | Text | |
 | Add another name | Optional | Button – adds an "Also known as" box | |
 | Also known as | Optional | Text – hidden until "Add another name" is clicked | Unlimited; each removable (bin icon) |
-| Date of birth | Optional | Dropdowns: Day / Month / Year | Once any part is picked, the rest become required |
+| Date of birth | Optional | Dropdowns: Day / Month / Year | Year alone, or year and month, is accepted; a picked part with a gap before it is not (see note below) |
 | Place of birth | Optional | Text | |
 | About | Optional | Multi-line text | |
 | Profession | Optional | Text | |
@@ -67,6 +67,12 @@
   - Date of birth: message lists whichever parts are missing, e.g.
     - Day + Month picked, no Year: "Please specify a year"
     - Day only picked: "Please specify a year and month"
+  - Note (added for #19): the old app's source shows the full rule. It is
+    `convertDateObjToString` in `apps/ahau/ui/src/lib/date-helpers.mjs`
+    (ahau-monorepo `6e0a66e`). Year only and year + month are valid. A gap
+    gives "Please specify a month" (day + year), "Please specify a year"
+    (day + month, or month only) or "Please specify a year and month" (day
+    only). The dropdowns also offered unknown digits, e.g. `XX` or `192X`.
 
 ## Values typed in for the "filled in" screenshot
 | Field | Value |

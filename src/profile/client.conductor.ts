@@ -4,7 +4,7 @@ import { createServer, type Socket } from 'node:net'
 
 import { runScenario } from '@holochain/tryorama'
 
-import { createProfileClient } from './client.js'
+import { completeProfile, createProfileClient, type Profile } from './client.js'
 import { happ, readyClient } from './conductor-harness.js'
 
 /**
@@ -199,9 +199,70 @@ test('promise: after createMyProfile, getMyProfile returns the saved profile', a
 
     assert.deepEqual(await client.createMyProfile({ name: 'Mere' }), {
       status: 'created',
-      profile: { name: 'Mere' }
+      profile: completeProfile({ name: 'Mere' })
     })
-    assert.deepEqual(await client.getMyProfile(), { name: 'Mere' })
+    assert.deepEqual(await client.getMyProfile(), completeProfile({ name: 'Mere' }))
+    await client.close()
+  })
+})
+
+// The values typed in for the old app's "filled in" capture
+// (docs/old-app-capture/notes.md), so every create-profile field is covered.
+const filledIn: Profile = {
+  name: 'Test',
+  birthOrder: 1,
+  gender: 'other',
+  fullName: 'Test User',
+  altNames: ['Tester'],
+  dateOfBirth: '1990-01-01',
+  placeOfBirth: 'Auckland',
+  description: 'Test profile for screenshots',
+  profession: 'Developer',
+  skills: ['Te reo Māori'],
+  education: ['Test School'],
+  personal: {
+    email: 'test@example.com',
+    phone: '021 000 0000',
+    address: '1 Test Street',
+    postcode: '1010',
+    city: 'Auckland',
+    country: 'Aotearoa'
+  }
+}
+
+test('promise: every create-profile field round-trips, personal information included', async () => {
+  await runScenario(async scenario => {
+    const player = await scenario.addPlayerWithApp({
+      appBundleSource: { type: 'path', value: happ }
+    })
+    const client = await readyClient(player)
+
+    assert.deepEqual(await client.createMyProfile(filledIn), { status: 'created', profile: filledIn })
+    assert.deepEqual(await client.getMyProfile(), filledIn)
+    await client.close()
+  })
+})
+
+test('promise: createMyProfile refuses invalid fields plainly and saves nothing', async () => {
+  await runScenario(async scenario => {
+    const player = await scenario.addPlayerWithApp({
+      appBundleSource: { type: 'path', value: happ }
+    })
+    const client = await readyClient(player)
+
+    assert.deepEqual(await client.createMyProfile({ name: '   ' }), {
+      status: 'failed',
+      reason: 'A profile needs a name'
+    })
+    assert.deepEqual(await client.createMyProfile({ name: 'Mere', dateOfBirth: '1990-02-30' }), {
+      status: 'failed',
+      reason: 'Date of birth must be a real date: a year, a year and month, or a full date'
+    })
+    assert.deepEqual(await client.createMyProfile({ name: 'Mere', birthOrder: 0 }), {
+      status: 'failed',
+      reason: 'Order of birth must be a whole number, from 1'
+    })
+    assert.equal(await client.getMyProfile(), null)
     await client.close()
   })
 })
@@ -219,7 +280,7 @@ test('promise: the profile is still there after the conductor restarts with the 
     await player.conductor.startUp()
 
     const after = await readyClient(player)
-    assert.deepEqual(await after.getMyProfile(), { name: 'Mere' })
+    assert.deepEqual(await after.getMyProfile(), completeProfile({ name: 'Mere' }))
     await after.close()
   })
 })
@@ -236,7 +297,7 @@ test('promise: a second createMyProfile for the same agent fails plainly and kee
     assert.equal(second.status, 'failed')
     const reason = second.status === 'failed' ? second.reason : ''
     assert.equal(reason, 'This agent already has a profile')
-    assert.deepEqual(await client.getMyProfile(), { name: 'Mere' })
+    assert.deepEqual(await client.getMyProfile(), completeProfile({ name: 'Mere' }))
     await client.close()
   })
 })
