@@ -60,7 +60,9 @@ pub enum Gender {
 /// The "Personal information" section: contact details the person keeps to
 /// themselves. A private entry, so it stays on their own source chain and is
 /// never published to the DHT. Sharing it (say, with kaitiaki) is not
-/// designed yet. Free text throughout: the old app checked none of it.
+/// designed yet, and neither is reaching it from another device: a second
+/// device has its own agent key and won't see it (ADR-0007). Free text
+/// throughout: the old app checked none of it.
 #[hdk_entry_helper]
 #[derive(Clone, PartialEq, Default)]
 #[serde(default, rename_all = "camelCase")]
