@@ -49,3 +49,30 @@ fn agent_profile_action(agent: AgentPubKey) -> ExternResult<ActionHash> {
         .map(|(_, hash)| hash.clone())
         .ok_or(wasm_error!(WasmErrorInner::Guest("That agent has no profile".into())))
 }
+
+/// Updates this agent's own profile. There is no app function for this yet;
+/// it shows validation lets an author change their own profile.
+#[hdk_extern]
+pub fn update_my_profile(profile: Profile) -> ExternResult<()> {
+    update_entry(my_profile_action()?, EntryTypes::Profile(profile))?;
+    Ok(())
+}
+
+/// Tries to delete this agent's own profile.
+#[hdk_extern]
+pub fn delete_my_profile() -> ExternResult<()> {
+    delete_entry(my_profile_action()?)?;
+    Ok(())
+}
+
+fn my_profile_action() -> ExternResult<ActionHash> {
+    let records = query(
+        ChainQueryFilter::new()
+            .entry_type(UnitEntryTypes::Profile.try_into()?)
+            .action_type(ActionType::Create),
+    )?;
+    records
+        .first()
+        .map(|record| record.action_address().clone())
+        .ok_or(wasm_error!(WasmErrorInner::Guest("This agent has no profile".into())))
+}

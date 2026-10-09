@@ -26,9 +26,7 @@ export async function readyClient (player: PlayerApp): Promise<ProfileClient> {
   const admin = player.conductor.adminWs()
   const port = await player.conductor.attachAppInterface({ port: 0, allowed_origins: 'ahau-test' })
   const { token } = await admin.issueAppAuthenticationToken({ installed_app_id: player.appId })
-  const [cell] = player.cells
-  if (!cell) throw new Error('the app has no cell')
-  await admin.authorizeSigningCredentials(cell.cell_id, {
+  await admin.authorizeSigningCredentials(cellOf(player).cell_id, {
     type: 'listed',
     value: PROFILE_FUNCTIONS.map(fn => ['profiles', fn])
   })
@@ -41,4 +39,11 @@ export async function readyClient (player: PlayerApp): Promise<ProfileClient> {
   const readiness = await client.waitUntilReady()
   assert.deepEqual(readiness, { status: 'ready' })
   return client
+}
+
+/** The player's one cell. */
+export function cellOf (player: PlayerApp) {
+  const [cell] = player.cells
+  if (!cell) throw new Error('the app has no cell')
+  return cell
 }

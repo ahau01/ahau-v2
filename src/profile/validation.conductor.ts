@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 
 import { dhtSync, runScenario, type PlayerApp } from '@holochain/tryorama'
 
-import { happ, readyClient, rogueHapp } from './conductor-harness.js'
+import { cellOf, happ, readyClient, rogueHapp } from './conductor-harness.js'
 
 /**
  * Profile rules that must hold even when someone bypasses the app. The
@@ -48,8 +48,34 @@ test('promise: another agent cannot delete my profile, even bypassing the app', 
         fn_name: 'delete_agent_profile',
         payload: owner.agentPubKey
       }),
-      /Only the author of a profile can change it/
+      /Profiles can't be deleted yet/
     )
+    assert.deepEqual(await ownerClient.getMyProfile(), { name: 'Mere' })
+    await ownerClient.close()
+  })
+})
+
+test('promise: I can change my own profile', async () => {
+  await runScenario(async scenario => {
+    const [owner] = await oneAgentWithTestZome(scenario)
+    await testZome(owner, 'create_profile', { name: 'Mere' })
+
+    await testZome(owner, 'update_my_profile', { name: 'Mere Rangi' })
+    const ownerClient = await readyClient(owner)
+    assert.deepEqual(await ownerClient.getMyProfile(), { name: 'Mere Rangi' })
+    await ownerClient.close()
+  })
+})
+
+// Deleting would hide a profile the one-profile rule then never lets you
+// replace, so deletes wait until retraction is designed with editing.
+test('promise: a profile cannot be deleted yet, even by its author', async () => {
+  await runScenario(async scenario => {
+    const [owner] = await oneAgentWithTestZome(scenario)
+    await testZome(owner, 'create_profile', { name: 'Mere' })
+
+    await assert.rejects(testZome(owner, 'delete_my_profile', null), /Profiles can't be deleted yet/)
+    const ownerClient = await readyClient(owner)
     assert.deepEqual(await ownerClient.getMyProfile(), { name: 'Mere' })
     await ownerClient.close()
   })
@@ -85,8 +111,17 @@ async function twoAgentsOnOneNetwork (scenario: Scenario): Promise<[PlayerApp, P
   return [owner, rogue]
 }
 
-function cellOf (player: PlayerApp) {
-  const [cell] = player.cells
-  if (!cell) throw new Error('the app has no cell')
-  return cell
+/** One agent whose app has both the real coordinator and the test one. */
+async function oneAgentWithTestZome (scenario: Scenario): Promise<[PlayerApp]> {
+  const player = await scenario.addPlayerWithApp({ appBundleSource: { type: 'path', value: rogueHapp } })
+  return [player]
 }
+
+/**
+ * Calls the test zome as this agent. Call before `readyClient`, whose
+ * signing grant covers only the real profile functions.
+ */
+async function testZome (player: PlayerApp, fnName: string, payload: unknown): Promise<unknown> {
+  return await cellOf(player).callZome({ zome_name: 'rogue_profiles', fn_name: fnName, payload })
+}
+
