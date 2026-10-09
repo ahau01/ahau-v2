@@ -1,0 +1,18 @@
+[package]
+name = "profiles_integrity"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+hdi = { workspace = true }
+serde = { workspace = true }
+holochain_serialized_bytes = { workspace = true }
+
+[dev-dependencies]
+# test_utils gives short-hand constructors for ops, so validate can be
+# called directly with ops a rogue zome can't produce.
+hdi = { workspace = true, features = ["test_utils"] }

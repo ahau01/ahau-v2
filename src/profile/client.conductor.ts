@@ -1,11 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createServer, type Socket } from 'node:net'
-import { fileURLToPath } from 'node:url'
 
 import { runScenario } from '@holochain/tryorama'
 
 import { createProfileClient } from './client.js'
+import { happ, readyClient } from './conductor-harness.js'
 
 /**
  * Real-conductor tests for the profile client module. They need the
@@ -13,7 +13,6 @@ import { createProfileClient } from './client.js'
  * `npm run test:conductor`, not `npm test`.
  */
 
-const happ = fileURLToPath(new URL('../../workdir/ahau.happ', import.meta.url))
 
 test('promise: waitUntilReady resolves ready when the conductor is running the app', async () => {
   await runScenario(async scenario => {
@@ -177,6 +176,69 @@ test('promise: waitUntilReady reports failed within timeoutMs when the port acce
     for (const socket of sockets) socket.destroy()
     await new Promise(resolve => silent.close(resolve))
   }
+})
+
+test('promise: getMyProfile returns null before this agent has created a profile', async () => {
+  await runScenario(async scenario => {
+    const player = await scenario.addPlayerWithApp({
+      appBundleSource: { type: 'path', value: happ }
+    })
+    const client = await readyClient(player)
+
+    assert.equal(await client.getMyProfile(), null)
+    await client.close()
+  })
+})
+
+test('promise: after createMyProfile, getMyProfile returns the saved profile', async () => {
+  await runScenario(async scenario => {
+    const player = await scenario.addPlayerWithApp({
+      appBundleSource: { type: 'path', value: happ }
+    })
+    const client = await readyClient(player)
+
+    assert.deepEqual(await client.createMyProfile({ name: 'Mere' }), {
+      status: 'created',
+      profile: { name: 'Mere' }
+    })
+    assert.deepEqual(await client.getMyProfile(), { name: 'Mere' })
+    await client.close()
+  })
+})
+
+test('promise: the profile is still there after the conductor restarts with the same agent', async () => {
+  await runScenario(async scenario => {
+    const player = await scenario.addPlayerWithApp({
+      appBundleSource: { type: 'path', value: happ }
+    })
+    const before = await readyClient(player)
+    await before.createMyProfile({ name: 'Mere' })
+    await before.close()
+
+    await player.conductor.shutDown()
+    await player.conductor.startUp()
+
+    const after = await readyClient(player)
+    assert.deepEqual(await after.getMyProfile(), { name: 'Mere' })
+    await after.close()
+  })
+})
+
+test('promise: a second createMyProfile for the same agent fails plainly and keeps the first', async () => {
+  await runScenario(async scenario => {
+    const player = await scenario.addPlayerWithApp({
+      appBundleSource: { type: 'path', value: happ }
+    })
+    const client = await readyClient(player)
+    await client.createMyProfile({ name: 'Mere' })
+
+    const second = await client.createMyProfile({ name: 'Someone else' })
+    assert.equal(second.status, 'failed')
+    const reason = second.status === 'failed' ? second.reason : ''
+    assert.equal(reason, 'This agent already has a profile')
+    assert.deepEqual(await client.getMyProfile(), { name: 'Mere' })
+    await client.close()
+  })
 })
 
 /** A local port nothing is listening on right now. */

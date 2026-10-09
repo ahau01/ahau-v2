@@ -1,0 +1,4 @@
+# getrandom 0.3 has no default backend on wasm32-unknown-unknown; the HDK
+# provides one, so tell getrandom to use it.
+[target.wasm32-unknown-unknown]
+rustflags = ['--cfg', 'getrandom_backend="custom"']

@@ -4,9 +4,15 @@ integrity:
   # Set per network when the app is installed, not baked in here.
   network_seed: null
   properties: null
-  # Empty for now. The profile zome lands here next (#14), as an
-  # integrity/coordinator pair named profiles_integrity / profiles, which is
-  # how holochain-open-dev/profiles expects to be included.
-  zomes: []
+  zomes:
+    - name: profiles_integrity
+      hash: null
+      path: ../../../target/wasm32-unknown-unknown/release/profiles_integrity.wasm
+      dependencies: null
 coordinator:
-  zomes: []
+  zomes:
+    - name: profiles
+      hash: null
+      path: ../../../target/wasm32-unknown-unknown/release/profiles.wasm
+      dependencies:
+        - name: profiles_integrity
