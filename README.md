@@ -95,6 +95,12 @@ below; `npm test` and `npm run dev` with `?pretend` work without it.
    holochain --version   # holochain 0.6.x
    ```
 
+   The dev shell loads your `.bashrc`, so your prompt can look exactly as it
+   did before. To check you're in it, run `echo $IN_NIX_SHELL`: it prints
+   `impure` inside the dev shell and nothing outside. You can also skip the
+   interactive shell and run one command in it, for example
+   `nix develop -c npm run conductor`.
+
 3. Inside the dev shell, using Node 20 from `.nvmrc` as above:
 
 | Command | What it does |
