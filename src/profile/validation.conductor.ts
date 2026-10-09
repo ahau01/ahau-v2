@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 
 import { dhtSync, runScenario, type PlayerApp } from '@holochain/tryorama'
 
-import { completeProfile } from './client.js'
+import { BIRTH_ORDER_INVALID, completeProfile } from './client.js'
 import { cellOf, happ, readyClient, rogueHapp } from './conductor-harness.js'
 
 /**
@@ -194,6 +194,8 @@ test('promise: a profile with invalid fields is refused, even bypassing the app'
 
     await assert.rejects(write({ name: '' }), /A profile needs a name/)
     await assert.rejects(write({ name: 'Mere', dateOfBirth: '01/01/1990' }), /Date of birth must be a real date/)
+    // The form shows this same message before saving, so the two can't drift.
+    await assert.rejects(write({ name: 'Mere', birthOrder: 0 }), (err: Error) => err.message.includes(BIRTH_ORDER_INVALID))
   })
 })
 

@@ -66,7 +66,18 @@ export type NewProfile = Partial<Omit<Profile, 'personal'>> & {
   personal?: Partial<PersonalInformation>
 }
 
-/** The profile a NewProfile saves as: unfilled fields empty, as the zome stores them. */
+/**
+ * The zome's refusal of an order of birth below 1 (BIRTH_ORDER_INVALID in
+ * the profiles integrity zome). The form checks the same rule before saving
+ * and shows this same text; a conductor test keeps the two equal.
+ */
+export const BIRTH_ORDER_INVALID = 'Order of birth must be a whole number, from 1'
+
+/**
+ * The profile a NewProfile saves as: unfilled fields empty, as the zome
+ * stores them. Conductor tests compare what the zome reads back with this,
+ * so these defaults can't drift from the zome's `#[serde(default)]`.
+ */
 export function completeProfile (input: NewProfile): Profile {
   return {
     birthOrder: null,

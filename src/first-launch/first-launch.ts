@@ -1,12 +1,12 @@
 /**
  * First launch: which screen a person sees when they open Āhau. Plain
- * TypeScript so it can be tested without Svelte or Holochain; its only
- * dependency is the profile client interface.
+ * TypeScript so it can be tested without Svelte or Holochain; it depends
+ * only on the profile client interface and the zome's own messages.
  *
  * There is no login. "Returning" means this agent key already has a profile.
  */
 
-import type { Gender, NewProfile, PersonalInformation, Profile, ProfileClient } from '../profile/client.js'
+import { BIRTH_ORDER_INVALID, type Gender, type NewProfile, type PersonalInformation, type Profile, type ProfileClient } from '../profile/client.js'
 
 export type FirstLaunchState =
   | { kind: 'starting' }
@@ -180,9 +180,7 @@ function readForm (form: ProfileForm): { profile: NewProfile } | { errors: Profi
   // Every problem at once, so the person isn't sent back field by field.
   const errors: ProfileFormErrors = {}
   if (!name) errors.name = 'Please enter a name.'
-  if (birthOrder && !/^[1-9]\d*$/.test(birthOrder)) {
-    errors.birthOrder = 'Order of birth must be a whole number, from 1'
-  }
+  if (birthOrder && !/^[1-9]\d*$/.test(birthOrder)) errors.birthOrder = BIRTH_ORDER_INVALID
   if ('error' in dateOfBirth) errors.dateOfBirth = dateOfBirth.error
   if (Object.keys(errors).length > 0 || 'error' in dateOfBirth) return { errors }
 
