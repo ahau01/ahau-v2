@@ -8,7 +8,7 @@
  * local conductor (see dev-connection.ts).
  */
 
-import { completeProfile, type Profile, type ProfileClient } from './client.js'
+import { completeProfile, type Gender, type PersonalInformation, type Profile, type ProfileClient } from './client.js'
 
 export interface PretendProfileClientOptions {
   /** Where the pretend agent's profile is kept between reloads. */
@@ -56,15 +56,46 @@ export function createPretendProfileClient (options: PretendProfileClientOptions
   }
 }
 
-/** A stale or hand-edited saved value counts as no profile, not a crash. */
+/**
+ * A stale or hand-edited saved value counts as no profile, not a crash. A
+ * field of the wrong type reads as empty, so what's returned really is a
+ * Profile; missing fields are filled out, so a profile saved before a field
+ * existed still reads.
+ */
 function readSaved (saved: string | null): Profile | null {
   if (saved === null) return null
+  let value: unknown
   try {
-    const value: unknown = JSON.parse(saved)
-    if (typeof value === 'object' && value !== null && 'name' in value && typeof value.name === 'string') {
-      // Filled out, so a profile saved before a field existed still reads.
-      return completeProfile({ ...value, name: value.name })
-    }
-  } catch {}
-  return null
+    value = JSON.parse(saved)
+  } catch {
+    return null
+  }
+  if (!isRecord(value) || typeof value.name !== 'string') return null
+  return completeProfile({
+    name: value.name,
+    ...fieldsThat(value, ['fullName', 'dateOfBirth', 'placeOfBirth', 'description', 'profession'], isText),
+    ...fieldsThat(value, ['altNames', 'skills', 'education'], isTextList),
+    ...fieldsThat(value, ['birthOrder'], isBirthOrder),
+    ...fieldsThat(value, ['gender'], isGender),
+    personal: fieldsThat(isRecord(value.personal) ? value.personal : {}, PERSONAL_FIELDS, isText)
+  })
+}
+
+const PERSONAL_FIELDS: ReadonlyArray<keyof PersonalInformation> = ['email', 'phone', 'address', 'postcode', 'city', 'country']
+const GENDERS: readonly unknown[] = ['male', 'female', 'other', 'unknown'] satisfies Gender[]
+
+const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
+const isText = (v: unknown): v is string => typeof v === 'string'
+const isTextList = (v: unknown): v is string[] => Array.isArray(v) && v.every(isText)
+const isBirthOrder = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 1
+const isGender = (v: unknown): v is Gender => GENDERS.includes(v)
+
+/** The named fields of `from` that pass `check`; the rest are left out. */
+function fieldsThat<K extends string, T> (from: Record<string, unknown>, keys: readonly K[], check: (v: unknown) => v is T): Partial<Record<K, T>> {
+  const kept: Partial<Record<K, T>> = {}
+  for (const key of keys) {
+    const v = from[key]
+    if (check(v)) kept[key] = v
+  }
+  return kept
 }
