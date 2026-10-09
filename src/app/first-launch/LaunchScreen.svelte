@@ -1,11 +1,12 @@
 <script lang="ts">
-  import type { FirstLaunchState } from '../../first-launch/first-launch.js'
+  import type { LaunchState } from '../../first-launch/first-launch.js'
+  import { focusOnMount } from './focus-on-mount.js'
 
-  let { current }: { current: Extract<FirstLaunchState, { kind: 'starting' | 'failed-to-start' }> } = $props()
+  let { current }: { current: LaunchState } = $props()
 </script>
 
 <section aria-labelledby="launch-heading">
-  <h1 id="launch-heading">Āhau</h1>
+  <h1 id="launch-heading" tabindex="-1" use:focusOnMount>Āhau</h1>
   {#if current.kind === 'starting'}
     <p role="status">Starting Āhau…</p>
   {:else}

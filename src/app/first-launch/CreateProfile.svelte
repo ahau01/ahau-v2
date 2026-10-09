@@ -1,10 +1,11 @@
 <script lang="ts">
   import { untrack } from 'svelte'
 
-  import type { FirstLaunchState } from '../../first-launch/first-launch.js'
+  import type { CreateProfileState } from '../../first-launch/first-launch.js'
+  import { focusOnMount } from './focus-on-mount.js'
 
   let { current, onsubmit }: {
-    current: Extract<FirstLaunchState, { kind: 'needs-profile' | 'saving' }>
+    current: CreateProfileState
     onsubmit: (name: string) => void
   } = $props()
 
@@ -16,7 +17,8 @@
   const saving = $derived(current.kind === 'saving')
   const error = $derived(current.kind === 'needs-profile' ? current.error : undefined)
 
-  // Put the person back in the field when there is something to fix.
+  // Put the person back in the field when there is something to fix. Each
+  // refusal is a new error object, so this reruns even for the same message.
   $effect(() => { if (error) input?.focus() })
 
   function submit (event: SubmitEvent) {
@@ -26,7 +28,7 @@
 </script>
 
 <section aria-labelledby="create-heading">
-  <h1 id="create-heading">Create your profile</h1>
+  <h1 id="create-heading" tabindex="-1" use:focusOnMount>Create your profile</h1>
 
   <form onsubmit={submit} novalidate aria-busy={saving}>
     <label for="profile-name">Your name</label>
@@ -41,7 +43,10 @@
       aria-describedby={error ? 'profile-name-error' : undefined}
     />
     {#if error}
-      <p id="profile-name-error" class="error" role="alert">{error}</p>
+      <!-- Re-created per refusal so the alert is announced again. -->
+      {#key error}
+        <p id="profile-name-error" class="error" role="alert">{error.message}</p>
+      {/key}
     {/if}
 
     <!-- Not disabled while saving, so focus stays put; the logic ignores a second save. -->

@@ -1,7 +1,12 @@
 <script lang="ts">
   import { untrack } from 'svelte'
 
-  import { createFirstLaunch, type FirstLaunchState } from '../../first-launch/first-launch.js'
+  import {
+    createFirstLaunch,
+    isCreateProfileState,
+    isLaunchState,
+    type FirstLaunchState
+  } from '../../first-launch/first-launch.js'
   import type { ProfileClient } from '../../profile/client.js'
   import CreateProfile from './CreateProfile.svelte'
   import Home from './Home.svelte'
@@ -20,9 +25,9 @@
 </script>
 
 <main>
-  {#if current.kind === 'starting' || current.kind === 'failed-to-start'}
+  {#if isLaunchState(current)}
     <LaunchScreen {current} />
-  {:else if current.kind === 'needs-profile' || current.kind === 'saving'}
+  {:else if isCreateProfileState(current)}
     <CreateProfile {current} onsubmit={name => firstLaunch.submit(name)} />
   {:else}
     <Home profile={current.profile} />

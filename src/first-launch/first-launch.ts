@@ -11,9 +11,28 @@ import type { Profile, ProfileClient } from '../profile/client.js'
 export type FirstLaunchState =
   | { kind: 'starting' }
   | { kind: 'failed-to-start', reason: string }
-  | { kind: 'needs-profile', name: string, error?: string }
+  | { kind: 'needs-profile', name: string, error?: FirstLaunchError }
   | { kind: 'saving', name: string }
   | { kind: 'ready', profile: Profile }
+
+/** States the launch screen shows: Holochain starting, or failed to. */
+export type LaunchState = Extract<FirstLaunchState, { kind: 'starting' | 'failed-to-start' }>
+/** States the create-profile screen shows: typing a name, or saving it. */
+export type CreateProfileState = Extract<FirstLaunchState, { kind: 'needs-profile' | 'saving' }>
+
+export function isLaunchState (state: FirstLaunchState): state is LaunchState {
+  return state.kind === 'starting' || state.kind === 'failed-to-start'
+}
+
+export function isCreateProfileState (state: FirstLaunchState): state is CreateProfileState {
+  return state.kind === 'needs-profile' || state.kind === 'saving'
+}
+
+/**
+ * Why a save was refused. A new object each time, even for the same message,
+ * so a screen can tell a repeated refusal from no change and react again.
+ */
+export interface FirstLaunchError { message: string }
 
 export interface FirstLaunch {
   readonly state: FirstLaunchState
@@ -31,10 +50,29 @@ export interface FirstLaunch {
 export function createFirstLaunch (client: ProfileClient): FirstLaunch {
   let state: FirstLaunchState = { kind: 'starting' }
   const listeners = new Set<(state: FirstLaunchState) => void>()
+  let launching: Promise<void> | undefined
 
   function set (next: FirstLaunchState): void {
     state = next
     for (const listener of listeners) listener(state)
+  }
+
+  async function launch (): Promise<void> {
+    const readiness = await client.waitUntilReady()
+    if (readiness.status === 'failed') {
+      set({ kind: 'failed-to-start', reason: readiness.reason })
+      return
+    }
+    // Unsure whether a profile exists: asking to create one could wrongly
+    // re-onboard a returning person, so report it as a startup failure.
+    let profile: Profile | null
+    try {
+      profile = await client.getMyProfile()
+    } catch (err) {
+      set({ kind: 'failed-to-start', reason: err instanceof Error ? err.message : String(err) })
+      return
+    }
+    set(profile ? { kind: 'ready', profile } : { kind: 'needs-profile', name: '' })
   }
 
   return {
@@ -46,22 +84,12 @@ export function createFirstLaunch (client: ProfileClient): FirstLaunch {
       return () => { listeners.delete(listener) }
     },
 
-    async start () {
-      const readiness = await client.waitUntilReady()
-      if (readiness.status === 'failed') {
-        set({ kind: 'failed-to-start', reason: readiness.reason })
-        return
-      }
-      // Unsure whether a profile exists: asking to create one could wrongly
-      // re-onboard a returning person, so report it as a startup failure.
-      let profile: Profile | null
-      try {
-        profile = await client.getMyProfile()
-      } catch (err) {
-        set({ kind: 'failed-to-start', reason: err instanceof Error ? err.message : String(err) })
-        return
-      }
-      set(profile ? { kind: 'ready', profile } : { kind: 'needs-profile', name: '' })
+    start () {
+      // Once only: a second run (HMR, a later effect) finishing late would
+      // knock a saving or ready screen backwards. Every caller awaits the
+      // one real launch.
+      launching ??= launch()
+      return launching
     },
 
     async submit (name) {
@@ -71,7 +99,7 @@ export function createFirstLaunch (client: ProfileClient): FirstLaunch {
       // enforce the same rule once it validates names (#19).
       const trimmed = name.trim()
       if (!trimmed) {
-        set({ kind: 'needs-profile', name, error: 'Please enter a name.' })
+        set({ kind: 'needs-profile', name, error: { message: 'Please enter a name.' } })
         return
       }
 
@@ -80,7 +108,7 @@ export function createFirstLaunch (client: ProfileClient): FirstLaunch {
       if (result.status === 'created') {
         set({ kind: 'ready', profile: result.profile })
       } else {
-        set({ kind: 'needs-profile', name, error: result.reason })
+        set({ kind: 'needs-profile', name, error: { message: result.reason } })
       }
     }
   }

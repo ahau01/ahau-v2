@@ -11,9 +11,9 @@ import type { Profile, ProfileClient } from './client.js'
 
 export interface PretendProfileClientOptions {
   /** Where the pretend agent's profile is kept between reloads. */
-  storage?: PretendStorage
-  /** How long "Holochain" takes to start, so the launch screen is visible. */
-  startDelayMs?: number
+  storage: PretendStorage
+  /** How long each "Holochain" call takes, so the launch and saving states are visible. */
+  latencyMs?: number
   /** Act out a failure, to demo how the app handles it. */
   fail?: 'start' | 'save'
 }
@@ -26,35 +26,42 @@ interface PretendStorage {
 
 const KEY = 'ahau:pretend-profile'
 
-export function createPretendProfileClient (options: PretendProfileClientOptions = {}): ProfileClient {
-  let memory: string | null = null
-  const storage = options.storage ?? {
-    getItem: () => memory,
-    setItem: (_key: string, value: string) => { memory = value }
-  }
+export function createPretendProfileClient (options: PretendProfileClientOptions): ProfileClient {
+  const { storage } = options
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
   return {
     async waitUntilReady () {
-      await delay(options.startDelayMs ?? 0)
+      await delay(options.latencyMs ?? 0)
       if (options.fail === 'start') return { status: 'failed', reason: 'Pretend Holochain was told not to start' }
       return { status: 'ready' }
     },
 
     async getMyProfile () {
-      const saved = storage.getItem(KEY)
-      return saved === null ? null : JSON.parse(saved) as Profile
+      return readSaved(storage.getItem(KEY))
     },
 
     async createMyProfile (profile) {
-      await delay(options.startDelayMs ?? 0)
+      await delay(options.latencyMs ?? 0)
       if (options.fail === 'save') return { status: 'failed', reason: 'Pretend Holochain was told not to save' }
       // Like the zome: one profile per agent key.
-      if (storage.getItem(KEY) !== null) return { status: 'failed', reason: 'This agent already has a profile' }
+      if (readSaved(storage.getItem(KEY)) !== null) return { status: 'failed', reason: 'This agent already has a profile' }
       storage.setItem(KEY, JSON.stringify(profile))
       return { status: 'created', profile }
     },
 
     async close () {}
   }
+}
+
+/** A stale or hand-edited saved value counts as no profile, not a crash. */
+function readSaved (saved: string | null): Profile | null {
+  if (saved === null) return null
+  try {
+    const value: unknown = JSON.parse(saved)
+    if (typeof value === 'object' && value !== null && 'name' in value && typeof value.name === 'string') {
+      return { name: value.name }
+    }
+  } catch {}
+  return null
 }

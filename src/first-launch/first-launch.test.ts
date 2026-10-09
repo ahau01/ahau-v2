@@ -21,6 +21,15 @@ function stubClient(overrides: Partial<ProfileClient> = {}): ProfileClient {
 
 const never = <T>() => new Promise<T>(() => {})
 
+/** A createMyProfile that counts how often it is called. */
+function countingCreate (answer: (profile: Profile) => ReturnType<ProfileClient['createMyProfile']>) {
+  const calls = { count: 0 }
+  const createMyProfile: ProfileClient['createMyProfile'] = profile => { calls.count++; return answer(profile) }
+  return { createMyProfile, calls }
+}
+
+const created = async (profile: Profile) => ({ status: 'created', profile }) as const
+
 test('first launch: while Holochain is not ready, it is starting', () => {
   const firstLaunch = createFirstLaunch(stubClient({ waitUntilReady: never }))
 
@@ -40,6 +49,22 @@ test('first launch: when Holochain fails to start, it says why', async () => {
     kind: 'failed-to-start',
     reason: 'Holochain did not start: connection refused'
   })
+})
+
+test('first launch: starting again does not knock the screen backwards', async () => {
+  let lookups = 0
+  const firstLaunch = createFirstLaunch(stubClient({
+    // The second lookup is slow and answers "no profile" after the person has saved.
+    getMyProfile: async () => { lookups++; return lookups === 1 ? null : never() }
+  }))
+
+  const first = firstLaunch.start()
+  void firstLaunch.start()
+  await first
+  await firstLaunch.submit('Mere')
+
+  assert.deepEqual(firstLaunch.state, { kind: 'ready', profile: { name: 'Mere' } })
+  assert.equal(lookups, 1)
 })
 
 test('first launch: an agent with no profile needs to create one', async () => {
@@ -91,49 +116,55 @@ test('first launch: if saving fails, the person can try again without retyping',
   assert.deepEqual(firstLaunch.state, {
     kind: 'needs-profile',
     name: 'Mere',
-    error: 'Holochain did not answer'
+    error: { message: 'Holochain did not answer' }
   })
 })
 
 test('first launch: while saving, it shows saving and pressing save again does not save twice', async () => {
-  let creates = 0
-  const firstLaunch = createFirstLaunch(stubClient({
-    createMyProfile: () => { creates++; return never() }
-  }))
+  const { createMyProfile, calls } = countingCreate(never)
+  const firstLaunch = createFirstLaunch(stubClient({ createMyProfile }))
   await firstLaunch.start()
 
   void firstLaunch.submit('Mere')
   void firstLaunch.submit('Mere')
 
   assert.deepEqual(firstLaunch.state, { kind: 'saving', name: 'Mere' })
-  assert.equal(creates, 1)
+  assert.equal(calls.count, 1)
 })
 
 test('first launch: a profile needs a name before it is saved', async () => {
-  let creates = 0
-  const firstLaunch = createFirstLaunch(stubClient({
-    createMyProfile: async profile => { creates++; return { status: 'created', profile } }
-  }))
+  const { createMyProfile, calls } = countingCreate(created)
+  const firstLaunch = createFirstLaunch(stubClient({ createMyProfile }))
   await firstLaunch.start()
 
   await firstLaunch.submit('')
 
-  assert.equal(firstLaunch.state.kind, 'needs-profile')
-  assert.ok(firstLaunch.state.kind === 'needs-profile' && firstLaunch.state.error, 'Please enter a name.')
-  assert.equal(creates, 0)
+  assert.deepEqual(firstLaunch.state, { kind: 'needs-profile', name: '', error: { message: 'Please enter a name.' } })
+  assert.equal(calls.count, 0)
+})
+
+test('first launch: refusing the same name twice is a new error each time, so the screen can tell', async () => {
+  const firstLaunch = createFirstLaunch(stubClient())
+  await firstLaunch.start()
+  const errors: unknown[] = []
+  firstLaunch.subscribe(state => { if (state.kind === 'needs-profile' && state.error) errors.push(state.error) })
+
+  await firstLaunch.submit('')
+  await firstLaunch.submit('')
+
+  assert.equal(errors.length, 2)
+  assert.notStrictEqual(errors[0], errors[1])
 })
 
 test('first launch: a name of only spaces is no name', async () => {
-  let creates = 0
-  const firstLaunch = createFirstLaunch(stubClient({
-    createMyProfile: async profile => { creates++; return { status: 'created', profile } }
-  }))
+  const { createMyProfile, calls } = countingCreate(created)
+  const firstLaunch = createFirstLaunch(stubClient({ createMyProfile }))
   await firstLaunch.start()
 
   await firstLaunch.submit('   ')
 
   assert.equal(firstLaunch.state.kind, 'needs-profile')
-  assert.equal(creates, 0)
+  assert.equal(calls.count, 0)
 })
 
 test('first launch: a name is saved without surrounding spaces', async () => {
