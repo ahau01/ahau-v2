@@ -14,7 +14,13 @@ in `ahau-monorepo` rather than adopted.
 | primary, secondary, accent, error | `#383838`, `#b12526`, `#a70000`, `#ff0000` | `apps/ahau/ui/vuetify.config.js` — `VUETIFY_THEME_COLORS` |
 | alive, deceased | `#427979`, `#bfbfbf` | `apps/ahau/ui/src/lib/constants.mjs`, imported into `vuetify.config.js` |
 | dark surface | `dark: true` | `apps/ahau/ui/vuetify.config.js` |
-| body font | Roboto | `typeface-roboto`, imported in `src/plugins/vuetify.js` |
+| body font | Roboto | `typeface-roboto`, imported in `src/plugins/vuetify.js`. v2 bundles it from `@fontsource/roboto`, that package's successor (#19) |
+| page-background | `#303030` | `src/App.vue` — `--primary-background`, on `body.page--login` (#19) |
+| welcome-muted, welcome-english | `darkgrey`, `lightgrey` | `src/views/Login.vue` inline styles on "welcome" and "-- who are you?" (#19) |
+| title-maori | `#ba041b` | `src/components/dialog/DialogContainer.vue` — the title's Māori half (#19) |
+| dialog-bar | `#292929` | `DialogContainer.vue` — `v-app-bar color` (#19) |
+| dialog-save | `#2196f3` | `DialogContainer.vue` — `color="blue"`, Vuetify 2's `blue` (#19) |
+| dialog surface, text, outline, divider | white; black at 0.87 / 0.6 / 0.38 / 0.12 | `DialogContainer.vue` renders `:light="!dark"`, so these are Vuetify 2's light-theme defaults, as the dark-theme text values are (#19) |
 
 ## Corrected
 

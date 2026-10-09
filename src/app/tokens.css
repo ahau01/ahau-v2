@@ -57,6 +57,25 @@
   --ahau-text-disabled: rgba(255, 255, 255, 0.38);
   --ahau-divider: rgba(255, 255, 255, 0.12);
 
+  /* First launch. Each from apps/ahau/ui/src as noted; see docs/token-verification.md. */
+  --ahau-page-background: #303030;          /* App.vue --primary-background, body.page--login */
+  --ahau-welcome-muted: darkgrey;           /* views/Login.vue, "welcome" */
+  --ahau-welcome-english: lightgrey;        /* views/Login.vue, "-- who are you?" */
+  --ahau-title-maori: #ba041b;              /* components/dialog/DialogContainer.vue, title's Māori half */
+  --ahau-dialog-bar: #292929;               /* DialogContainer.vue v-app-bar color */
+  --ahau-dialog-save: #2196f3;              /* DialogContainer.vue color="blue": Vuetify 2's blue */
+
+  /*
+   * Dialog body. DialogContainer.vue renders :light="!dark", so the form is
+   * Vuetify 2's light theme. These are that theme's defaults, as the dark-theme
+   * text values above are.
+   */
+  --ahau-dialog-surface: #ffffff;
+  --ahau-dialog-text: rgba(0, 0, 0, 0.87);
+  --ahau-dialog-text-muted: rgba(0, 0, 0, 0.6);
+  --ahau-dialog-outline: rgba(0, 0, 0, 0.38);
+  --ahau-dialog-divider: rgba(0, 0, 0, 0.12);
+
   /* Focus. Not taken from the source: see docs/token-verification.md. */
   --ahau-focus-ring: #5f9ea0;
 
@@ -97,4 +116,9 @@ body {
 :focus-visible {
   outline: 2px solid var(--ahau-focus-ring);
   outline-offset: 2px;
+}
+
+/* Headings take focus only to move screen readers to a new screen. */
+[tabindex='-1']:focus-visible {
+  outline: none;
 }

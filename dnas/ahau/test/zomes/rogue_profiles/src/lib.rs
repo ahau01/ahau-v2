@@ -36,10 +36,36 @@ pub fn delete_agent_profile(agent: AgentPubKey) -> ExternResult<()> {
     Ok(())
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateAgentPersonalInformationInput {
+    pub agent: AgentPubKey,
+    pub personal: PersonalInformation,
+}
+
+/// Tries to overwrite another agent's personal information. The entry is
+/// private, but the action creating it is public, so it can be pointed at.
+#[hdk_extern]
+pub fn update_agent_personal_information(input: UpdateAgentPersonalInformationInput) -> ExternResult<()> {
+    let original = agent_action(input.agent, UnitEntryTypes::PersonalInformation)?;
+    update_entry(original, EntryTypes::PersonalInformation(input.personal))?;
+    Ok(())
+}
+
+/// Tries to delete another agent's personal information.
+#[hdk_extern]
+pub fn delete_agent_personal_information(agent: AgentPubKey) -> ExternResult<()> {
+    delete_entry(agent_action(agent, UnitEntryTypes::PersonalInformation)?)?;
+    Ok(())
+}
+
 fn agent_profile_action(agent: AgentPubKey) -> ExternResult<ActionHash> {
+    agent_action(agent, UnitEntryTypes::Profile)
+}
+
+fn agent_action(agent: AgentPubKey, entry_type: UnitEntryTypes) -> ExternResult<ActionHash> {
     let activity = get_agent_activity(
         agent,
-        ChainQueryFilter::new().entry_type(UnitEntryTypes::Profile.try_into()?),
+        ChainQueryFilter::new().entry_type(entry_type.try_into()?),
         ActivityRequest::Full,
         GetOptions::network(),
     )?;
@@ -75,4 +101,30 @@ fn my_profile_action() -> ExternResult<ActionHash> {
         .first()
         .map(|record| record.action_address().clone())
         .ok_or(wasm_error!(WasmErrorInner::Guest("This agent has no profile".into())))
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SeenPersonalInformation {
+    pub action_found: bool,
+    pub contents: Option<PersonalInformation>,
+}
+
+/// Tries to read another agent's personal information from the network.
+#[hdk_extern]
+pub fn get_agent_personal_information(agent: AgentPubKey) -> ExternResult<SeenPersonalInformation> {
+    let activity = get_agent_activity(
+        agent,
+        ChainQueryFilter::new().entry_type(UnitEntryTypes::PersonalInformation.try_into()?),
+        ActivityRequest::Full,
+        GetOptions::network(),
+    )?;
+    let Some((_, hash)) = activity.valid_activity.first() else {
+        return Ok(SeenPersonalInformation { action_found: false, contents: None });
+    };
+    let contents = match get(hash.clone(), GetOptions::network())? {
+        Some(record) => record.entry().to_app_option::<PersonalInformation>().map_err(|e| wasm_error!(e))?,
+        None => None,
+    };
+    Ok(SeenPersonalInformation { action_found: true, contents })
 }

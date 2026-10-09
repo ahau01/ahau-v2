@@ -21,9 +21,75 @@ export interface ProfileClientOptions {
   timeoutMs?: number
 }
 
-/** A person's own account of themselves. Not the canonical record of them. */
+/**
+ * A person's own account of themselves, as they see it. Not the canonical
+ * record of them. `personal` is stored privately on their own source chain;
+ * everything else is public to the network.
+ */
 export interface Profile {
+  /** First name / known as. */
   name: string
+  /** 1 for the eldest. */
+  birthOrder: number | null
+  gender: Gender | null
+  fullName: string | null
+  /** Also known as. */
+  altNames: string[]
+  /** `YYYY`, `YYYY-MM` or `YYYY-MM-DD`. */
+  dateOfBirth: string | null
+  placeOfBirth: string | null
+  /** About. */
+  description: string | null
+  profession: string | null
+  skills: string[]
+  /** Places of education. */
+  education: string[]
+  personal: PersonalInformation
+}
+
+/** `unknown` is an answer the person chose, unlike `null` (no answer). */
+export type Gender = 'male' | 'female' | 'other' | 'unknown'
+
+/** Contact details kept on the person's own chain, never published. */
+export interface PersonalInformation {
+  email: string | null
+  phone: string | null
+  address: string | null
+  postcode: string | null
+  city: string | null
+  country: string | null
+}
+
+/** What to save: a name, plus whichever other fields the person filled in. */
+export type NewProfile = Partial<Omit<Profile, 'personal'>> & {
+  name: string
+  personal?: Partial<PersonalInformation>
+}
+
+/** The profile a NewProfile saves as: unfilled fields empty, as the zome stores them. */
+export function completeProfile (input: NewProfile): Profile {
+  return {
+    birthOrder: null,
+    gender: null,
+    fullName: null,
+    altNames: [],
+    dateOfBirth: null,
+    placeOfBirth: null,
+    description: null,
+    profession: null,
+    skills: [],
+    education: [],
+    ...input,
+    personal: {
+      email: null,
+      phone: null,
+      address: null,
+      postcode: null,
+      city: null,
+      country: null,
+      ...input.personal
+    }
+  }
 }
 
 export type CreateProfileResult =
@@ -40,7 +106,7 @@ export interface ProfileClient {
   /** This agent's profile, or null if they haven't created one yet. */
   getMyProfile (): Promise<Profile | null>
   /** Save this agent's profile. Each agent key has one profile. */
-  createMyProfile (profile: Profile): Promise<CreateProfileResult>
+  createMyProfile (profile: NewProfile): Promise<CreateProfileResult>
   /** Release the connection to Holochain. */
   close (): Promise<void>
 }

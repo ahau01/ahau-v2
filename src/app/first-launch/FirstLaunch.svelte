@@ -8,6 +8,7 @@
     type FirstLaunchState
   } from '../../first-launch/first-launch.js'
   import type { ProfileClient } from '../../profile/client.js'
+  import niho from '../assets/niho.svg'
   import CreateProfile from './CreateProfile.svelte'
   import Home from './Home.svelte'
   import LaunchScreen from './LaunchScreen.svelte'
@@ -24,11 +25,20 @@
   $effect(() => { void firstLaunch.start() })
 </script>
 
-<main>
+<main class:launch={current.kind !== 'ready'} style:--niho={`url(${niho})`}>
   {#if isLaunchState(current)}
-    <LaunchScreen {current} />
+    <LaunchScreen {current} onbegin={() => firstLaunch.begin()} />
   {:else if isCreateProfileState(current)}
-    <CreateProfile {current} onsubmit={name => firstLaunch.submit(name)} />
+    <!-- As in the old app, the form opens over the welcome. Hidden from
+         assistive tech while the dialog is open, which is modal. -->
+    <div inert>
+      <LaunchScreen current={{ kind: 'welcome' }} onbegin={() => {}} />
+    </div>
+    <CreateProfile
+      {current}
+      onsubmit={form => firstLaunch.submit(form)}
+      oncancel={() => firstLaunch.cancel()}
+    />
   {:else}
     <Home profile={current.profile} />
   {/if}
@@ -40,5 +50,15 @@
     place-items: center;
     min-height: 100vh;
     padding: var(--ahau-space-4);
+  }
+
+  /* The old app's body.page--login (src/App.vue). Its views/Login.vue
+     centred the welcome in the top 90% of the page. */
+  main.launch {
+    padding-bottom: 10vh;
+    background: var(--niho) no-repeat;
+    background-color: var(--ahau-page-background);
+    background-size: cover;
+    background-position-y: 10vh;
   }
 </style>

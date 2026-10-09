@@ -5,7 +5,8 @@ import { runScenario, type PlayerApp } from '@holochain/tryorama'
 
 import { createDevProfileClient, issueDevConnection } from '../profile/dev-connection.js'
 import { happ } from '../profile/conductor-harness.js'
-import { createFirstLaunch } from './first-launch.js'
+import { completeProfile } from '../profile/client.js'
+import { createFirstLaunch, emptyProfileForm } from './first-launch.js'
 
 /**
  * First launch against a real conductor, wired the way `npm run dev` wires
@@ -38,10 +39,11 @@ test('first launch on Holochain: a new agent creates a profile and goes in', asy
     const firstLaunch = createFirstLaunch(client)
 
     await firstLaunch.start()
-    assert.deepEqual(firstLaunch.state, { kind: 'needs-profile', name: '' })
+    assert.deepEqual(firstLaunch.state, { kind: 'welcome' })
+    firstLaunch.begin()
 
-    await firstLaunch.submit('Mere')
-    assert.deepEqual(firstLaunch.state, { kind: 'ready', profile: { name: 'Mere' } })
+    await firstLaunch.submit({ ...emptyProfileForm(), name: 'Mere' })
+    assert.deepEqual(firstLaunch.state, { kind: 'ready', profile: completeProfile({ name: 'Mere' }) })
     await client.close()
   })
 })
@@ -54,14 +56,15 @@ test('first launch on Holochain: opening the app again as the same agent goes st
     const first = await devClient(player)
     const firstOpen = createFirstLaunch(first)
     await firstOpen.start()
-    await firstOpen.submit('Mere')
+    firstOpen.begin()
+    await firstOpen.submit({ ...emptyProfileForm(), name: 'Mere' })
     await first.close()
 
     // A reload: a new page, new connection details, the same agent key.
     const again = await devClient(player)
     const reopened = createFirstLaunch(again)
     await reopened.start()
-    assert.deepEqual(reopened.state, { kind: 'ready', profile: { name: 'Mere' } })
+    assert.deepEqual(reopened.state, { kind: 'ready', profile: completeProfile({ name: 'Mere' }) })
     await again.close()
   })
 })
