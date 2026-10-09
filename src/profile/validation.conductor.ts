@@ -110,7 +110,7 @@ test('promise: another agent cannot delete my personal information, even bypassi
         fn_name: 'delete_agent_personal_information',
         payload: owner.agentPubKey
       }),
-      /Profiles can't be deleted yet/
+      /Personal information can't be deleted yet/
     )
     await ownerClient.close()
   })

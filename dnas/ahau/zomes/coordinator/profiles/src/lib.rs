@@ -57,7 +57,7 @@ where
                 .entry()
                 .to_app_option::<T>()
                 .map_err(|e| wasm_error!(e))?
-                .ok_or(wasm_error!(WasmErrorInner::Guest("Malformed entry".into())))
+                .ok_or(wasm_error!(WasmErrorInner::Guest(format!("Malformed {entry_type:?} entry"))))
         })
         .transpose()
 }

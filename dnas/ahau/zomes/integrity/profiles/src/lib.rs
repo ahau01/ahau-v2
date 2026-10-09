@@ -72,6 +72,7 @@ pub enum EntryTypes {
 pub const ALREADY_HAS_PROFILE: &str = "This agent already has a profile";
 pub const NOT_THE_AUTHOR: &str = "Only the author of a profile can change it";
 pub const PROFILES_CANNOT_BE_DELETED: &str = "Profiles can't be deleted yet";
+pub const PERSONAL_INFORMATION_CANNOT_BE_DELETED: &str = "Personal information can't be deleted yet";
 pub const PERSONAL_INFORMATION_NEEDS_A_PROFILE: &str = "Personal information needs a profile first";
 pub const ALREADY_HAS_PERSONAL_INFORMATION: &str = "This agent already has personal information";
 pub const NAME_REQUIRED: &str = "A profile needs a name";
@@ -310,14 +311,15 @@ fn validate_by_original_author(
 /// gets designed together with editing. Personal information is half of
 /// the profile, so the same holds for it.
 fn validate_delete(action: &Delete) -> ExternResult<ValidateCallbackResult> {
-    let profile_types: [EntryType; 2] = [
-        UnitEntryTypes::Profile.try_into()?,
-        UnitEntryTypes::PersonalInformation.try_into()?,
-    ];
+    let profile_type: EntryType = UnitEntryTypes::Profile.try_into()?;
+    let personal_type: EntryType = UnitEntryTypes::PersonalInformation.try_into()?;
     let original = must_get_action(action.deletes_address.clone())?;
     match original.action().entry_type() {
-        Some(entry_type) if profile_types.contains(entry_type) => {
+        Some(entry_type) if *entry_type == profile_type => {
             Ok(ValidateCallbackResult::Invalid(PROFILES_CANNOT_BE_DELETED.into()))
+        }
+        Some(entry_type) if *entry_type == personal_type => {
+            Ok(ValidateCallbackResult::Invalid(PERSONAL_INFORMATION_CANNOT_BE_DELETED.into()))
         }
         _ => Ok(ValidateCallbackResult::Valid),
     }
@@ -544,6 +546,21 @@ mod tests {
             weight: Default::default(),
         }));
         assert_eq!(validate(op).unwrap(), invalid(PROFILES_CANNOT_BE_DELETED));
+    }
+
+    #[test]
+    fn agent_activity_refuses_deleting_personal_information() {
+        mock_host(vec![], Some(Action::Create(create_personal_information(OWNER))));
+        let op = r_activity(Action::Delete(Delete {
+            author: ak(OWNER),
+            timestamp: Timestamp::from_micros(0),
+            action_seq: 6,
+            prev_action: ah(5),
+            deletes_address: ah(9),
+            deletes_entry_address: eh(12),
+            weight: Default::default(),
+        }));
+        assert_eq!(validate(op).unwrap(), invalid(PERSONAL_INFORMATION_CANNOT_BE_DELETED));
     }
 
     fn create_personal_information(author: u8) -> Create {
