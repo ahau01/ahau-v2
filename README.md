@@ -34,11 +34,11 @@ Whatever the backend, Āhau keeps these rules (full detail in [CLAUDE.md](CLAUDE
 
 | Path | What it is |
 |---|---|
-| `src/app/` | The Svelte app: the first-launch screens. Runs today against a pretend profile client. |
+| `src/app/` | The Svelte app: the first-launch screens. In dev it runs against the local conductor, or a pretend client with `?pretend`. |
 | `src/first-launch/` | Which first-launch screen to show, in plain TypeScript, tested without Svelte or Holochain. |
 | `src/contract/` | **Reference only.** A typed list of the 69 actions the old SSB app's data layer supported. Used as a checklist so nothing gets lost in the rebuild; new code doesn't have to match it. |
 | `src/fixtures/` | The fake in-memory backend behind the frozen contract's tests. The app no longer uses it. |
-| `src/profile/` | The profile client module: the only code that talks to Holochain about profiles. Also a pretend client for running the app without Holochain. |
+| `src/profile/` | The profile client module: the only code that talks to Holochain about profiles. Also the dev-only connection to the local conductor, and a pretend client for running the app without Holochain. |
 | `dnas/ahau/` | The Holochain DNA. Empty for now; the profile zome goes here next. |
 | `workdir/` | The hApp manifest that bundles the DNA. |
 | `flake.nix`, `flake.lock` | The pinned Holochain dev environment. |
@@ -52,14 +52,16 @@ Requires Node 20 (see `.nvmrc`).
 
 ```bash
 npm install
-npm run dev     # serve the app at http://localhost:5173 (pretend Holochain)
+npm run dev     # serve the app at http://localhost:5173
 npm test        # build and run all tests
 ```
 
-`npm run dev` runs first launch against a pretend profile client, kept in the
-browser's localStorage: create a profile, then reload to see a returning
-person go straight in. Clear site data to start over. Add `?pretend=fail-start`
-or `?pretend=fail-save` to the URL to see the failure screens.
+`npm run dev` connects to the local conductor from `npm run conductor` (see
+[Demo: first launch on Holochain](#demo-first-launch-on-holochain)). Without
+Holochain, open http://localhost:5173/?pretend to run against a pretend profile
+client kept in the browser's localStorage: create a profile, then reload to see
+a returning person go straight in. Clear site data to start over.
+`?pretend=fail-start` or `?pretend=fail-save` shows the failure screens.
 
 Other commands:
 
@@ -77,7 +79,7 @@ Other commands:
 The Holochain tools (`holochain`, `hc`, `lair-keystore`, Rust) come from
 [Holonix](https://developer.holochain.org/get-started/), pinned in
 `flake.lock` to Holochain 0.6. You only need this for the Holochain commands
-below; `npm test` and `npm run dev` work without it.
+below; `npm test` and `npm run dev` with `?pretend` work without it.
 
 1. Install Nix with Holochain's package cache. Run this **once** per machine,
    then open a new terminal:
@@ -93,29 +95,63 @@ below; `npm test` and `npm run dev` work without it.
    holochain --version   # holochain 0.6.x
    ```
 
+   The dev shell loads your `.bashrc`, so your prompt can look exactly as it
+   did before. To check you're in it, run `echo $IN_NIX_SHELL`: it prints
+   `impure` inside the dev shell and nothing outside. You can also skip the
+   interactive shell and run one command in it, for example
+   `nix develop -c npm run conductor`.
+
 3. Inside the dev shell, using Node 20 from `.nvmrc` as above:
 
 | Command | What it does |
 |---|---|
 | `npm run build:happ` | Pack the DNA and hApp into `workdir/ahau.happ` |
 | `npm run test:conductor` | Run the tests against a real Holochain conductor |
-| `npm run conductor` | Run a local dev conductor with the hApp; apps connect on port 8888 |
+| `npm run conductor` | Run a local dev conductor with the hApp: admin port 4444, apps connect on port 8888 |
 
-4. To connect to the dev conductor from your own code, you need an app
+4. To connect to the dev conductor from your own Node script, you need an app
    authentication token. It lets a local process reach the hApp. It is not a
-   login, and identity stays the agent key. Keep `npm run conductor` running.
-   Its last line shows the admin port, for example
-   `Conductor launched #!0 {"admin_port":38647,"app_ports":[8888]}`. In a
-   second terminal:
+   login, and identity stays the agent key. Keep `npm run conductor` running,
+   then in a second terminal:
 
    ```bash
-   node scripts/issue-app-token.mjs 38647   # prints the token as a JSON byte array
+   node scripts/issue-app-token.mjs 4444   # prints the token as a JSON byte array
    ```
 
-   Then pass it to the profile client:
-   `createProfileClient({ url: new URL('ws://localhost:8888'), appToken, origin: 'ahau-dev' })`.
    The token is dev-only: it can be reused and doesn't expire. Restarting
-   `npm run conductor` creates a new sandbox, so you need a new token.
+   `npm run conductor` creates a new sandbox, so you need a new token. Zome
+   calls also need signing credentials; `src/profile/dev-connection.ts` shows
+   how the app gets both.
+
+### Demo: first launch on Holochain
+
+1. In the dev shell, start the conductor and leave it running. It is ready
+   when it prints `Conductor launched`:
+
+   ```bash
+   npm run conductor
+   ```
+
+2. In a second terminal (the dev shell isn't needed), serve the app and open
+   http://localhost:5173:
+
+   ```bash
+   npm run dev
+   ```
+
+3. You see the launch screen, then create profile. Enter a name and save to
+   land in the app.
+4. Reload the page: you go straight in, because this agent key already has a
+   profile.
+5. Stop the conductor and reload: you see the failed-to-start message. Start
+   it again and reload to carry on. Restarting `npm run conductor` makes a new
+   sandbox and a new agent, so you start from create profile again.
+
+The dev server reaches the conductor's admin port (4444) and gives the page an
+app token and a signing key that can only call the profile functions. The page
+never gets admin access. Set `AHAU_ADMIN_PORT` if you run the conductor on
+another admin port. This is for development only; a launcher does this job
+outside dev.
 
 ## Where to start reading
 

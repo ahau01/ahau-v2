@@ -1,6 +1,7 @@
 /**
- * The profile client module: the only code that talks to Holochain about
- * profiles. Screens use this, never a zome call directly.
+ * The profile client. With dev-connection.ts, which gets it connected
+ * outside a launcher, this module is the only code that talks to Holochain
+ * about profiles. Screens use it, never a zome call directly.
  *
  * Identity is the conductor's agent key. There is no login here: `appToken`
  * lets this process reach one installed hApp on the local conductor; it is
@@ -44,16 +45,22 @@ export interface ProfileClient {
   close (): Promise<void>
 }
 
+/** The installed hApp, and the role and zome within it that hold profiles. */
+export const APP_ID = 'ahau'
+export const ROLE = 'ahau'
+export const ZOME = 'profiles'
+/** Every profiles zome function this client calls; grants list exactly these. */
+export const PROFILE_FUNCTIONS = ['get_my_profile', 'create_my_profile'] as const
+type ProfileFunction = typeof PROFILE_FUNCTIONS[number]
+
 const DEFAULT_TIMEOUT_MS = 30_000
 const RETRY_MS = 250
-const ROLE = 'ahau'
-const ZOME = 'profiles'
 
 export function createProfileClient (options: ProfileClientOptions = {}): ProfileClient {
   // Kept once connected: the app token is single-use, so later calls reuse it.
   let connection: AppWebsocket | undefined
 
-  async function callProfiles<T> (fnName: string, payload: unknown): Promise<T> {
+  async function callProfiles<T> (fnName: ProfileFunction, payload: unknown): Promise<T> {
     if (!connection) throw new Error('Not connected to Holochain: call waitUntilReady first')
     return await connection.callZome({ role_name: ROLE, zome_name: ZOME, fn_name: fnName, payload })
   }
