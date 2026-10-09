@@ -22,8 +22,7 @@ pub struct Profile {
     pub full_name: Option<String>,
     /// Also known as.
     pub alt_names: Vec<String>,
-    /// `YYYY`, `YYYY-MM` or `YYYY-MM-DD`: people often know only part of it.
-    pub date_of_birth: Option<String>,
+    pub date_of_birth: Option<PartialDate>,
     pub place_of_birth: Option<String>,
     /// About.
     pub description: Option<String>,
@@ -31,6 +30,21 @@ pub struct Profile {
     pub skills: Vec<String>,
     /// Places of education.
     pub education: Vec<String>,
+}
+
+/// `YYYY`, `YYYY-MM` or `YYYY-MM-DD`: people often know only part of a
+/// date. Stored as the bare string, so entries written before this type
+/// existed read the same. Whether it names a day that can exist is checked
+/// by validation (`is_valid`), not when it's read, so a bad one is refused
+/// with a reason rather than failing to decode.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct PartialDate(pub String);
+
+impl From<&str> for PartialDate {
+    fn from(date: &str) -> Self {
+        PartialDate(date.into())
+    }
 }
 
 /// How the person identifies. `Unknown` is a choice, unlike no answer.
@@ -164,33 +178,35 @@ fn validate_profile_content(profile: &Profile) -> ExternResult<ValidateCallbackR
         return Ok(ValidateCallbackResult::Invalid(BIRTH_ORDER_INVALID.into()));
     }
     if let Some(date) = &profile.date_of_birth {
-        if !is_partial_date(date) {
+        if !date.is_valid() {
             return Ok(ValidateCallbackResult::Invalid(DATE_OF_BIRTH_INVALID.into()));
         }
     }
     Ok(ValidateCallbackResult::Valid)
 }
 
-/// `YYYY`, `YYYY-MM` or `YYYY-MM-DD`, naming a day that can exist. Digits
-/// may be unknown (`X`) where the old app's date picker allowed it: trailing
-/// year digits, the whole month, or the day's last digit or both.
-fn is_partial_date(date: &str) -> bool {
-    let parts: Vec<&str> = date.split('-').collect();
-    let (year, month, day) = match parts.as_slice() {
-        [y] => (*y, None, None),
-        [y, m] => (*y, Some(*m), None),
-        [y, m, d] => (*y, Some(*m), Some(*d)),
-        _ => return false,
-    };
-    let Some(year) = read_year(year) else { return false };
-    let month = match month.map(read_month) {
-        None => return true,
-        Some(None) => return false,
-        Some(Some(month)) => month,
-    };
-    match day {
-        None => true,
-        Some(day) => is_day_in(day, year, month),
+impl PartialDate {
+    /// `YYYY`, `YYYY-MM` or `YYYY-MM-DD`, naming a day that can exist. Digits
+    /// may be unknown (`X`) where the old app's date picker allowed it:
+    /// trailing year digits, the whole month, or the day's last digit or both.
+    pub fn is_valid(&self) -> bool {
+        let parts: Vec<&str> = self.0.split('-').collect();
+        let (year, month, day) = match parts.as_slice() {
+            [y] => (*y, None, None),
+            [y, m] => (*y, Some(*m), None),
+            [y, m, d] => (*y, Some(*m), Some(*d)),
+            _ => return false,
+        };
+        let Some(year) = read_year(year) else { return false };
+        let month = match month.map(read_month) {
+            None => return true,
+            Some(None) => return false,
+            Some(Some(month)) => month,
+        };
+        match day {
+            None => true,
+            Some(day) => is_day_in(day, year, month),
+        }
     }
 }
 
