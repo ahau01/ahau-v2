@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "noEmit": true },
-  "include": ["src/app/**/*.ts", "src/app/**/*.svelte", "src/contract/**/*.ts", "src/fixtures/**/*.ts"],
-  "exclude": []
+  "include": ["src/app/**/*.ts", "src/app/**/*.svelte", "src/first-launch/**/*.ts", "src/profile/client.ts", "src/profile/pretend-client.ts"],
+  "exclude": ["src/**/*.test.ts"]
 }

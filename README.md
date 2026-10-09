@@ -34,10 +34,11 @@ Whatever the backend, Āhau keeps these rules (full detail in [CLAUDE.md](CLAUDE
 
 | Path | What it is |
 |---|---|
-| `src/app/` | The Svelte app shell. Runs today against fake in-memory data. |
+| `src/app/` | The Svelte app: the first-launch screens. Runs today against a pretend profile client. |
+| `src/first-launch/` | Which first-launch screen to show, in plain TypeScript, tested without Svelte or Holochain. |
 | `src/contract/` | **Reference only.** A typed list of the 69 actions the old SSB app's data layer supported. Used as a checklist so nothing gets lost in the rebuild; new code doesn't have to match it. |
-| `src/fixtures/` | The fake in-memory backend the shell runs on for now. |
-| `src/profile/` | The profile client module: the only code that talks to Holochain about profiles. |
+| `src/fixtures/` | The fake in-memory backend behind the frozen contract's tests. The app no longer uses it. |
+| `src/profile/` | The profile client module: the only code that talks to Holochain about profiles. Also a pretend client for running the app without Holochain. |
 | `dnas/ahau/` | The Holochain DNA. Empty for now; the profile zome goes here next. |
 | `workdir/` | The hApp manifest that bundles the DNA. |
 | `flake.nix`, `flake.lock` | The pinned Holochain dev environment. |
@@ -51,9 +52,14 @@ Requires Node 20 (see `.nvmrc`).
 
 ```bash
 npm install
-npm run dev     # serve the app shell at http://localhost:5173
+npm run dev     # serve the app at http://localhost:5173 (pretend Holochain)
 npm test        # build and run all tests
 ```
+
+`npm run dev` runs first launch against a pretend profile client, kept in the
+browser's localStorage: create a profile, then reload to see a returning
+person go straight in. Clear site data to start over. Add `?pretend=fail-start`
+or `?pretend=fail-save` to the URL to see the failure screens.
 
 Other commands:
 
