@@ -36,14 +36,7 @@ function profileClient (): ProfileClient {
       ...(pretend === 'fail-save' && { fail: 'save' as const })
     })
   }
-  return createDevProfileClient({
-    url: new URL('ws://localhost:8888'),
-    fetchConnection: async () => {
-      const response = await fetch('/__ahau/dev-connection')
-      if (!response.ok) throw new Error(await response.text())
-      return await response.json()
-    }
-  })
+  return createDevProfileClient()
 }
 
 export default app

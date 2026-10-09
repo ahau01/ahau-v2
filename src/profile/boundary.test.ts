@@ -11,13 +11,31 @@ import { join } from 'node:path'
 
 const appDir = fileURLToPath(new URL('../../src/app/', import.meta.url))
 
+/** `from '@holochain/…'` (imports and re-exports), bare `import '@holochain/…'`, and `import('@holochain/…')`. */
+function importsHolochain (source: string): boolean {
+  return /(?:\bfrom|\bimport\s*\(?)\s*['"]@holochain\//.test(source)
+}
+
+test('boundary: every way of pulling in Holochain client code is caught', () => {
+  for (const source of [
+    "import { AppWebsocket } from '@holochain/client'",
+    'import type { CellId } from "@holochain/client"',
+    "import '@holochain/client'",
+    "export { AppWebsocket } from '@holochain/client'",
+    "export * from '@holochain/client'",
+    "const m = await import('@holochain/client')",
+    "import {\n  AppWebsocket\n} from\n  '@holochain/client'"
+  ]) assert.ok(importsHolochain(source), source)
+  assert.equal(importsHolochain("import { createDevProfileClient } from '../profile/dev-connection.js'"), false)
+})
+
 test('boundary: no file in the app shell imports Holochain client code', async () => {
   const files = await readdir(appDir, { recursive: true })
   const offenders: string[] = []
   for (const file of files) {
     if (!/\.(ts|svelte)$/.test(file)) continue
     const source = await readFile(join(appDir, file), 'utf8')
-    if (/from\s+['"]@holochain\//.test(source) || /import\(\s*['"]@holochain\//.test(source)) offenders.push(file)
+    if (importsHolochain(source)) offenders.push(file)
   }
   assert.deepEqual(offenders, [])
 })
