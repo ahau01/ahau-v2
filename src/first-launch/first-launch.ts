@@ -182,6 +182,8 @@ function readForm (form: ProfileForm): { profile: NewProfile } | { errors: Profi
   if (!name) errors.name = 'Please enter a name.'
   if (birthOrder && !/^[1-9]\d*$/.test(birthOrder)) errors.birthOrder = BIRTH_ORDER_INVALID
   if ('error' in dateOfBirth) errors.dateOfBirth = dateOfBirth.error
+  // `'error' in dateOfBirth` changes nothing at runtime (that case set an
+  // error above); it tells TypeScript the date was read, for below.
   if (Object.keys(errors).length > 0 || 'error' in dateOfBirth) return { errors }
 
   const profile: NewProfile = {
