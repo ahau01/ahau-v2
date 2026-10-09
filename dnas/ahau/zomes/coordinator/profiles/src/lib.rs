@@ -17,7 +17,10 @@ pub struct MyProfile {
 }
 
 /// Creates the profile of the agent running this call. Both entries are
-/// written in this one call, so one can't exist without the other.
+/// written in this one call, so both are committed or neither. Validation
+/// separately refuses personal information without an earlier profile, or a
+/// second one, whoever writes it. A profile with no personal information is
+/// valid: profiles written before it existed have none.
 #[hdk_extern]
 pub fn create_my_profile(input: MyProfile) -> ExternResult<MyProfile> {
     create_entry(EntryTypes::Profile(input.profile.clone()))?;

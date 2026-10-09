@@ -72,6 +72,8 @@ pub enum EntryTypes {
 pub const ALREADY_HAS_PROFILE: &str = "This agent already has a profile";
 pub const NOT_THE_AUTHOR: &str = "Only the author of a profile can change it";
 pub const PROFILES_CANNOT_BE_DELETED: &str = "Profiles can't be deleted yet";
+pub const PERSONAL_INFORMATION_NEEDS_A_PROFILE: &str = "Personal information needs a profile first";
+pub const ALREADY_HAS_PERSONAL_INFORMATION: &str = "This agent already has personal information";
 pub const NAME_REQUIRED: &str = "A profile needs a name";
 pub const BIRTH_ORDER_INVALID: &str = "Order of birth must be a whole number, from 1";
 pub const DATE_OF_BIRTH_INVALID: &str = "Date of birth must be a real date: a year, a year and month, or a full date";
@@ -94,6 +96,14 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
             app_entry_type: Some(UnitEntryTypes::Profile),
             action,
         }) => validate_create_profile(&action),
+        FlatOp::StoreRecord(OpRecord::CreatePrivateEntry {
+            app_entry_type: UnitEntryTypes::PersonalInformation,
+            action,
+        })
+        | FlatOp::RegisterAgentActivity(OpActivity::CreatePrivateEntry {
+            app_entry_type: Some(UnitEntryTypes::PersonalInformation),
+            action,
+        }) => validate_create_personal_information(&action),
         // Checked on every op that carries the update, so that neither the
         // author's record nor the update metadata on the original can carry
         // someone else's change.
@@ -247,21 +257,38 @@ fn first_invalid<const N: usize>(
 /// One profile per agent key: the author's chain before this action must
 /// hold no other profile.
 fn validate_create_profile(action: &Create) -> ExternResult<ValidateCallbackResult> {
-    let profile_type: EntryType = UnitEntryTypes::Profile.try_into()?;
+    if created_earlier(action, UnitEntryTypes::Profile)? {
+        return Ok(ValidateCallbackResult::Invalid(ALREADY_HAS_PROFILE.into()));
+    }
+    Ok(ValidateCallbackResult::Valid)
+}
+
+/// Personal information is the private half of a profile: at most one per
+/// agent key, and only once that agent's profile exists. The contents are
+/// private, but the action is public, so every authority can check this.
+fn validate_create_personal_information(action: &Create) -> ExternResult<ValidateCallbackResult> {
+    if !created_earlier(action, UnitEntryTypes::Profile)? {
+        return Ok(ValidateCallbackResult::Invalid(PERSONAL_INFORMATION_NEEDS_A_PROFILE.into()));
+    }
+    if created_earlier(action, UnitEntryTypes::PersonalInformation)? {
+        return Ok(ValidateCallbackResult::Invalid(ALREADY_HAS_PERSONAL_INFORMATION.into()));
+    }
+    Ok(ValidateCallbackResult::Valid)
+}
+
+/// Whether the author's chain before this action creates an entry of this type.
+fn created_earlier(action: &Create, of: UnitEntryTypes) -> ExternResult<bool> {
+    let wanted: EntryType = of.try_into()?;
     let earlier = must_get_agent_activity(
         action.author.clone(),
         ChainFilter::new(action.prev_action.clone()),
     )?;
-    let has_profile = earlier.iter().any(|activity| {
+    Ok(earlier.iter().any(|activity| {
         matches!(
             activity.action.hashed.content,
-            Action::Create(Create { ref entry_type, .. }) if *entry_type == profile_type
+            Action::Create(Create { ref entry_type, .. }) if *entry_type == wanted
         )
-    });
-    if has_profile {
-        return Ok(ValidateCallbackResult::Invalid(ALREADY_HAS_PROFILE.into()));
-    }
-    Ok(ValidateCallbackResult::Valid)
+    }))
 }
 
 /// A profile is its author's own account of themselves (CLAUDE.md rule 1),
@@ -517,5 +544,46 @@ mod tests {
             weight: Default::default(),
         }));
         assert_eq!(validate(op).unwrap(), invalid(PROFILES_CANNOT_BE_DELETED));
+    }
+
+    fn create_personal_information(author: u8) -> Create {
+        Create {
+            entry_type: EntryType::App(AppEntryDef::new(1.into(), 0.into(), EntryVisibility::Private)),
+            entry_hash: eh(12),
+            action_seq: 5,
+            prev_action: ah(4),
+            ..create_profile(author)
+        }
+    }
+
+    #[test]
+    fn agent_activity_accepts_personal_information_after_a_profile() {
+        mock_host(vec![Action::Create(create_profile(OWNER))], None);
+        let op = r_activity(Action::Create(create_personal_information(OWNER)));
+        assert_eq!(validate(op).unwrap(), ValidateCallbackResult::Valid);
+    }
+
+    #[test]
+    fn agent_activity_refuses_personal_information_without_a_profile() {
+        mock_host(vec![], None);
+        let op = r_activity(Action::Create(create_personal_information(OWNER)));
+        assert_eq!(validate(op).unwrap(), invalid(PERSONAL_INFORMATION_NEEDS_A_PROFILE));
+    }
+
+    #[test]
+    fn agent_activity_refuses_a_second_personal_information() {
+        mock_host(
+            vec![Action::Create(create_profile(OWNER)), Action::Create(create_personal_information(OWNER))],
+            None,
+        );
+        let op = r_activity(Action::Create(create_personal_information(OWNER)));
+        assert_eq!(validate(op).unwrap(), invalid(ALREADY_HAS_PERSONAL_INFORMATION));
+    }
+
+    #[test]
+    fn store_record_refuses_personal_information_without_a_profile() {
+        mock_host(vec![], None);
+        let op = s_record(Action::Create(create_personal_information(OWNER)), RecordEntry::Hidden);
+        assert_eq!(validate(op).unwrap(), invalid(PERSONAL_INFORMATION_NEEDS_A_PROFILE));
     }
 }

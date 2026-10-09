@@ -14,6 +14,13 @@ pub fn create_profile(profile: Profile) -> ExternResult<()> {
     Ok(())
 }
 
+/// Writes personal information with no checks, profile or not.
+#[hdk_extern]
+pub fn create_personal_information(personal: PersonalInformation) -> ExternResult<()> {
+    create_entry(EntryTypes::PersonalInformation(personal))?;
+    Ok(())
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateAgentProfileInput {
     pub agent: AgentPubKey,

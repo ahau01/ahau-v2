@@ -116,6 +116,33 @@ test('promise: another agent cannot delete my personal information, even bypassi
   })
 })
 
+test('promise: personal information cannot be written without a profile, even bypassing the app', async () => {
+  await runScenario(async scenario => {
+    const [owner] = await oneAgentWithTestZome(scenario)
+
+    await assert.rejects(
+      testZome(owner, 'create_personal_information', { email: 'mere@example.com' }),
+      /Personal information needs a profile first/
+    )
+  })
+})
+
+test('promise: an agent cannot hold a second personal information, even bypassing the app', async () => {
+  await runScenario(async scenario => {
+    const [owner] = await oneAgentWithTestZome(scenario)
+    await testZome(owner, 'create_profile', { name: 'Mere' })
+    await testZome(owner, 'create_personal_information', { email: 'mere@example.com' })
+
+    await assert.rejects(
+      testZome(owner, 'create_personal_information', { email: 'other@example.com' }),
+      /This agent already has personal information/
+    )
+    const ownerClient = await readyClient(owner)
+    assert.equal((await ownerClient.getMyProfile())?.personal.email, 'mere@example.com')
+    await ownerClient.close()
+  })
+})
+
 test('promise: I can change my own profile', async () => {
   await runScenario(async scenario => {
     const [owner] = await oneAgentWithTestZome(scenario)
