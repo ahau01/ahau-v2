@@ -34,6 +34,34 @@ await shot('02b-create-profile-empty-middle', 500)
 await shot('02c-create-profile-empty-bottom', 'bottom')
 
 const box = name => page.getByRole('textbox', { name, exact: true })
+// Scrolled so this box sits just under the dialog's title, as in 02e and 02f.
+const shotFrom = async (name, label) => {
+  const top = await box(label).evaluate(el => {
+    const body = el.closest('.body')
+    return el.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - 12
+  })
+  await shot(name, top)
+}
+const freshForm = async () => {
+  await page.getByRole('button', { name: 'Cancel' }).click()
+  await page.getByRole('button', { name: /who are you/i }).click()
+  await page.getByRole('dialog').waitFor()
+}
+
+// One box added to an empty form, as 02d, 02e and 02f.
+await page.getByRole('button', { name: 'Add another name' }).click()
+await page.locator(':focus').evaluate(el => el.blur())
+await shot('02d-add-another-name', 0)
+await freshForm()
+await page.getByRole('button', { name: 'Add skill/qualification' }).click()
+await page.locator(':focus').evaluate(el => el.blur())
+await shotFrom('02e-add-skill', 'Place of birth')
+await freshForm()
+await page.getByRole('button', { name: 'Add a place of education' }).click()
+await page.locator(':focus').evaluate(el => el.blur())
+await shotFrom('02f-add-education', 'Place of birth')
+await freshForm()
+
 await box('First name / known as').fill('Test')
 await box('Order of birth').fill('1')
 await page.getByText('Other', { exact: true }).click()
@@ -55,6 +83,12 @@ await page.locator(':focus').evaluate(el => el.blur())
 await shot('03a-create-profile-filled-top', 0)
 await shot('03b-create-profile-filled-middle', 470)
 await shot('03c-create-profile-filled-bottom', 'bottom')
+
+// Date of birth error, as 04a: day and month, no year.
+await page.getByRole('combobox', { name: 'Year' }).selectOption('')
+await page.getByRole('button', { name: 'Save' }).click()
+await page.getByText('Please specify a year', { exact: true }).waitFor()
+await page.locator('fieldset.date').screenshot({ path: `${out}/04a-error-date-of-birth.png` })
 
 // Date of birth error, as 04b: day only.
 await page.getByRole('combobox', { name: 'Month' }).selectOption('')

@@ -47,7 +47,7 @@ Record alongside each image:
 - **v2:** `docs/parity/first-launch/`, same file names, sizes and data, taken
   in headless Chromium against `?pretend`. `shoot.mjs` there retakes them.
 
-Each v2 image was compared by eye with the old one of the same name. They
+Each of the 12 v2 images was compared by eye with the old one of the same name. They
 match in layout, copy, colours and order. These differences remain, all
 deliberate:
 
