@@ -11,7 +11,7 @@
     "build:happ": "cargo build --release --target wasm32-unknown-unknown && hc dna pack dnas/ahau/workdir && hc app pack workdir",
     "test:zomes": "cargo test --workspace",
     "test:conductor": "npm run build:happ && hc dna pack dnas/ahau/test/workdir && hc app pack workdir/rogue && rm -rf dist && npm run build && files=$(find dist -name '*.conductor.js') && { [ -n \"$files\" ] || { echo 'no conductor tests found in dist' >&2; exit 1; }; } && node --test --test-concurrency=1 $files",
-    "conductor": "npm run build:happ && hc sandbox clean && echo pass | hc sandbox --piped generate workdir/ahau.happ --app-id ahau --run=8888 network mem",
+    "conductor": "npm run build:happ && hc sandbox clean && echo pass | hc sandbox --piped -f=4444 generate workdir/ahau.happ --app-id ahau --run=8888 network mem",
     "check:coverage": "npm run build && node scripts/check-contract-coverage.mjs --ci",
     "derive:manifest": "node scripts/derive-manifest.mjs",
     "check:manifest": "node scripts/derive-manifest.mjs --check",

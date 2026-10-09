@@ -4,7 +4,8 @@
  *
  * DEV ONLY. It keeps the one profile this pretend agent has in `storage`
  * (the browser's localStorage in the app) so "returning user" can be demoed
- * by reloading. #18 replaces it with the real client.
+ * by reloading. The app uses it with `?pretend`; otherwise dev runs on the
+ * local conductor (see dev-connection.ts).
  */
 
 import type { Profile, ProfileClient } from './client.js'
