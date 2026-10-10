@@ -126,13 +126,30 @@ answer by pattern-matching the rest of the codebase.
 
 ## Agent skills
 
+### Specs and changes: OpenSpec
+
+Work is scoped, specified and built with OpenSpec (`/opsx:*` skills,
+`openspec/`). `/opsx:explore` to think a problem through, `/opsx:propose`
+to write the change, `/opsx:apply` to build it, `/opsx:verify` and
+`/opsx:archive` to close it. `openspec/config.yaml` restates the kaupapa
+rules above for every artifact; this file is the source of truth, so change
+both together. See `docs/agents/openspec.md`.
+
+Don't use the Matt Pocock planning skills here (`wayfinder`, `to-spec`,
+`to-tickets`, `triage`, `implement`): OpenSpec replaces them. The ones still
+in use are `diagnosing-bugs`, `domain-modeling`, `grilling`, `research` and
+`prototype`.
+
 ### Issue tracker
 
-Issues and specs live as GitHub issues in `ahau01/ahau-v2`, managed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+GitHub issues in `ahau01/ahau-v2` (via `gh`) are the backlog and intake:
+bugs, ideas, open questions, and decisions waiting on a person. Picking one
+up turns it into an OpenSpec change that links the issue; the PR closes it.
+No maps or child tickets. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
-Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 

@@ -30,10 +30,12 @@ context: |
   the old app could do (ADR-0006). It is not the spec, and new code must not
   match it operation-for-operation.
 
-  Issues live in GitHub (ahau01/ahau-v2). ADRs live in docs/adr/.
+  GitHub issues (ahau01/ahau-v2) are the backlog; a change's scope and
+  design live in the change, not on the issue. ADRs live in docs/adr/.
 
 rules:
   proposal:
+    - Link the GitHub issue the change comes from, if there is one
     - If the change touches relationship or identity data, sync, or access control, say so up front and name which of the four rules it bears on
     - If the change touches relationship storage, state how multi-source assertions are preserved
     - Anything outside the change's explicit scope goes under a "Flagged, not done" heading rather than into the plan
