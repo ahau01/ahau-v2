@@ -2,7 +2,7 @@
   "name": "ahau-v2",
   "version": "0.0.0",
   "private": true,
-  "description": "Backend-agnostic data-access contract for Āhau v2",
+  "description": "Āhau v2: a rebuild of the Āhau whakapapa app on Holochain",
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
