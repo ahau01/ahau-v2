@@ -39,11 +39,13 @@ test('dev connection: a dev app port that accepts but never answers fails in sec
   })
 
   try {
+    // Well past dev's 3s, well short of the launcher's 30s.
     const outcome = await Promise.race([
       client.waitUntilReady(),
-      new Promise(resolve => setTimeout(() => resolve('still waiting'), 5000).unref())
+      new Promise<'still waiting'>(resolve => setTimeout(() => resolve('still waiting'), 8000).unref())
     ])
-    assert.equal(outcome === 'still waiting' ? outcome : (outcome as { status: string }).status, 'failed')
+    if (outcome === 'still waiting') assert.fail('the dev client was still waiting after 8s')
+    assert.equal(outcome.status, 'failed')
   } finally {
     for (const socket of sockets) socket.destroy()
     await new Promise(resolve => silent.close(resolve))

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 
 import { dhtSync, runScenario, type PlayerApp } from '@holochain/tryorama'
 
-import { BIRTH_ORDER_INVALID, GENDERS, completeProfile } from './client.js'
+import { ALREADY_HAS_PROFILE, BIRTH_ORDER_INVALID, GENDERS, completeProfile, type Profile } from './client.js'
 import { cellOf, happ, readyClient, rogueHapp } from './conductor-harness.js'
 
 /**
@@ -46,6 +46,7 @@ test('promise: another agent cannot create a profile for me, even bypassing the 
       fn_name: 'create_profile',
       payload: { name: 'Mere, as written by someone else' }
     })
+    assert.equal((await myProfileOn(rogue))?.name, 'Mere, as written by someone else')
     await dhtSync([owner, rogue], cellOf(owner).cell_id[0])
 
     const ownerClient = await readyClient(owner)
@@ -250,7 +251,7 @@ test('promise: an agent cannot hold a second profile, even bypassing the app', a
     })
 
     await write('First')
-    await assert.rejects(write('Second'), /This agent already has a profile/)
+    await assert.rejects(write('Second'), (err: Error) => err.message.includes(ALREADY_HAS_PROFILE))
   })
 })
 
@@ -270,7 +271,7 @@ test('promise: a profile with invalid fields is refused, even bypassing the app'
   })
 })
 
-test('promise: the zome takes exactly the genders the app offers, even bypassing the app', async () => {
+test('promise: the zome keeps every gender the app offers and refuses one it does not, even bypassing the app', async () => {
   await runScenario(async scenario => {
     const [, rogue] = await twoAgentsOnOneNetwork(scenario)
     const write = (fnName: string, gender: string) => cellOf(rogue).callZome({
@@ -282,8 +283,14 @@ test('promise: the zome takes exactly the genders the app offers, even bypassing
     // One profile per agent, so the first gender creates it and the rest change it.
     const [first, ...rest] = GENDERS
     await write('create_profile', first)
-    for (const gender of rest) await write('update_my_profile', gender)
-    await assert.rejects(write('update_my_profile', 'tane'))
+    assert.equal((await myProfileOn(rogue))?.gender, first)
+    for (const gender of rest) {
+      await write('update_my_profile', gender)
+      assert.equal((await myProfileOn(rogue))?.gender, gender)
+    }
+    // Refused because the integrity zome's Gender type can't hold it: the
+    // same type validation reads entries into, so no entry can carry it.
+    await assert.rejects(write('update_my_profile', 'tane'), /error: Deserialize\(/)
   })
 })
 
@@ -317,3 +324,8 @@ async function testZome (player: PlayerApp, fnName: string, payload: unknown): P
   return await cellOf(player).callZome({ zome_name: 'rogue_profiles', fn_name: fnName, payload })
 }
 
+
+/** The player's own profile, read through the real coordinator on their own chain. */
+async function myProfileOn (player: PlayerApp): Promise<Profile | null> {
+  return await cellOf(player).callZome({ zome_name: 'profiles', fn_name: 'get_my_profile' }) as Profile | null
+}

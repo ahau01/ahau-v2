@@ -48,9 +48,10 @@ export interface Profile {
 }
 
 /**
- * Every gender the profiles integrity zome accepts (its `Gender` enum); a
- * conductor test keeps the two equal. `unknown` is an answer the person
- * chose, unlike `null` (no answer).
+ * The genders the app offers. A conductor test checks the profiles
+ * integrity zome (its `Gender` enum) keeps each one, but not that the zome
+ * has no others. `unknown` is an answer the person chose, unlike `null` (no
+ * answer).
  */
 export const GENDERS = ['male', 'female', 'other', 'unknown'] as const
 export type Gender = typeof GENDERS[number]

@@ -4,7 +4,7 @@ import { createServer, type Socket } from 'node:net'
 
 import { runScenario } from '@holochain/tryorama'
 
-import { ALREADY_HAS_PROFILE, completeProfile, createProfileClient, type Profile } from './client.js'
+import { ALREADY_HAS_PROFILE, BIRTH_ORDER_INVALID, completeProfile, createProfileClient, type Profile } from './client.js'
 import { happ, readyClient } from './conductor-harness.js'
 
 /**
@@ -260,7 +260,7 @@ test('promise: createMyProfile refuses invalid fields plainly and saves nothing'
     })
     assert.deepEqual(await client.createMyProfile({ name: 'Mere', birthOrder: 0 }), {
       status: 'failed',
-      reason: 'Order of birth must be a whole number, from 1'
+      reason: BIRTH_ORDER_INVALID
     })
     assert.equal(await client.getMyProfile(), null)
     await client.close()
