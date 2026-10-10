@@ -27,16 +27,21 @@ approach:
 4. **`docs/` is already mostly evidence.** `old-app-capture/` (old app
    screenshots plus `capture.mjs`), `parity/` (the v2 equivalents plus
    `shoot.mjs`), `research/`, `history/` and the Leg 1 outcome docs are all
-   records of something that happened. Only `plans/` and a few sentences
-   elsewhere claim authority over what the system should do.
+   records of something that happened. `plans/group-permissions.md` calls
+   itself a functional spec; `contract-decisions.md` preserves Leg 1
+   decisions, one of which CLAUDE.md still cites as a current principle; and
+   CLAUDE.md calls the capability inventory "the spec". The cleanup must
+   distinguish current authority from retained rationale rather than label
+   every decision-shaped document obsolete.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Each of "where is the spec", "where are decisions recorded", "what has
-  been built" and "which skill do I invoke" has exactly one answer in the
-  repo, and the other documents either repeat it or point at it.
+- Each of "where is the current spec", "where are current and historical
+  decisions recorded", "what has been built" and "which skill do I invoke"
+  has one clear answer in the repo. Historical documents may preserve prior
+  reasoning, but they do not override current OpenSpec requirements.
 - Every link in a living document resolves.
 - Evidence survives unchanged: no screenshot, capture script, research doc,
   knowledge-base file, Leg 1 document or archived change is moved, reworded
@@ -44,9 +49,9 @@ approach:
 
 **Non-Goals:**
 
-- No new document, index, registry, or keep-in-step checklist. The repo
-  already has one standing obligation (`CLAUDE.md` and
-  `openspec/config.yaml` move together); this change adds none.
+- No new document, index, registry, or keep-in-step checklist. Keep only the
+  compact `openspec/config.yaml` context the CLI injects into artifact
+  instructions; do not expand it into a parallel narrative.
 - No edits inside frozen material — `docs/history/`,
   `openspec/changes/archive/`, `reference/leg1-contract/`. References that
   are already dead there stay dead, per the practice `docs/INDEX.md` sets
@@ -60,9 +65,13 @@ approach:
 **Authority boundaries extend `docs/agents/openspec.md`'s existing "Where
 things live" list; no new file.** That section already names
 `openspec/changes/`, `openspec/specs/`, `openspec/changes/archive/`,
-`openspec/config.yaml` and GitHub issues. It gains the three homes it omits
-(`CLAUDE.md`/`CONTEXT.md`, `reference/leg1-contract/`, `docs/`) and, for
-each, what it is *not*. *Alternative:* a new top-level `AUTHORITY.md`.
+`openspec/config.yaml` and GitHub issues. It gains the homes it omits
+(`CLAUDE.md`/`CONTEXT.md`, `reference/leg1-contract/`, `docs/`, and
+`README.md`) and, for each, what it is *not*. For `docs/`, distinguish
+retained historical decision reasoning from authority over current
+requirements; `CLAUDE.md` and OpenSpec carry any principle that still governs
+the current system.
+*Alternative:* a new top-level `AUTHORITY.md`.
 Rejected — a fourth file restating the same boundaries is the failure mode
 this change is cleaning up.
 
@@ -75,8 +84,11 @@ already summarises those subtrees correctly as subtrees.
 **`docs/plans/group-permissions.md` is demoted in place, not moved.** Delete
 the "Functional spec for the first Holochain slice" blockquote, the
 "Delivery Milestones" table and its `<!-- /plan turns each into a plan -->`
-template comment; retitle the status footer so the file reads as the live
-problem statement and open questions for work not yet started. *Alternatives:*
+template comment. Retain Problem, Evidence, Users, Hypothesis, Success
+Metrics, Scope, Open Questions and Risks as draft input, and add a clear
+statement that none are approved requirements until adopted by an OpenSpec
+change. Retitle the status footer so the file reads as the live problem
+statement and open questions for work not yet started. *Alternatives:*
 (a) move it under `docs/research/` — rejected, it breaks twelve references
 including line-number citations, and a problem statement is not research;
 (b) fold it into a GitHub issue and delete it now — rejected, that discards
@@ -85,15 +97,19 @@ moment is when group permissions is picked up and `/openspec-propose`
 absorbs the content; until then the content is more useful than the tidiness.
 
 **`delivery: skills`, then regenerate — never hand-edit the generated
-trees.** `openspec config set delivery skills`, then `openspec update
---force`, then delete `.claude/commands/opsx/`. The regeneration matters
-beyond the deletion: the skill bodies currently cite `/opsx:*` (because
-`delivery: both` makes them point at the command names), so regenerating is
-what makes their self-references correct. `.agents/skills/` regenerates the
-same way and stays Codex-flavoured. Reviewing that diff is a task step: with
-the generator version pinned and unchanged, it should contain invocation
-names and nothing else. *Alternative:* `git rm` the commands tree and leave
-`delivery: both`. Rejected — the next `openspec update` brings it back.
+trees.** Set `openspec config set delivery skills` and run
+`openspec update --force`. Regeneration updates skill references that
+currently point at `/opsx:*` because `delivery: both` makes them point at
+the command names. If the update leaves the tracked
+`.claude/commands/opsx/` files behind, remove them, then update again to
+confirm they stay gone. `.agents/skills/` remains Codex-flavoured. The
+generated command and skill bodies
+currently differ in substantive workflow instructions, so the person
+applying this change must review those differences and confirm the skill
+versions preserve required safeguards before deleting the command tree. Do
+not assume the diff contains only invocation names. *Alternative:* `git rm`
+the commands tree and leave `delivery: both`. Rejected — the next
+`openspec update` brings it back.
 
 **Verification resolves links and asserts absences; it does not grep for a
 token.** At apply time, extract the relative links from each edited living
@@ -113,11 +129,14 @@ final.
 
 - **`delivery` is a machine-global setting the repo cannot pin** → a fresh
   clone on a machine set to `both` will regenerate `.claude/commands/opsx/`
-  on the next `openspec update`. Mitigation: one factual sentence in
-  `docs/agents/openspec.md` — this repo's entry points are the `openspec-*`
-  skills, and a regenerated `.claude/commands/opsx/` can be deleted. No
-  checklist, no CI check; the cost of it reappearing is a stray directory,
-  not a wrong answer.
+  on the next `openspec update`. Mitigation: state that the canonical entry
+  points are the `openspec-*` skills and that regeneration under `both`
+  restores an extra command tree. This change does not promise to enforce a
+  per-machine setting or add a recurring checklist.
+- **The skill and command versions contain different workflow instructions**
+  → choosing skills changes more than their names. Mitigation: task 1.2
+  requires a semantic review of the generated skill versions and confirmation
+  that required safeguards remain before the command tree is removed.
 - **Rewriting `CLAUDE.md`'s status and High-risk preamble touches the file
   agents read for the kaupapa rules** → a wording slip there costs more than
   anywhere else in this diff. Mitigation: the four rules' text is not
@@ -139,10 +158,10 @@ final.
 ## Migration Plan
 
 One PR against `main`, saying `Closes #58`. No build, runtime or data
-effect, so no staged rollout: `npm test` and the conductor tests are
-unaffected by every file in the diff. Rollback is reverting the commit,
-plus `openspec config set delivery both` on the machine if the generated
-trees are wanted back.
+effect, so no staged rollout. Validate the OpenSpec change and the edited
+links/hook; runtime and conductor tests are outside this documentation-only
+scope. Rollback is reverting the commit, plus `openspec config set delivery
+both` on the machine if the generated trees are wanted back.
 
 ## Open Questions
 

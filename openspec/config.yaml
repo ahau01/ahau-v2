@@ -1,7 +1,8 @@
 schema: spec-driven
 
-# Constraints from CLAUDE.md that an agent cannot infer from the code.
-# CLAUDE.md is the source of truth; keep this in step with it.
+# Compact constraint subset the OpenSpec CLI injects into artifact
+# instructions. CLAUDE.md remains the full source of truth; update this
+# block only when one of its constraints actually changes.
 context: |
   Āhau v2 rebuilds the Āhau whakapapa app directly on Holochain. It encodes
   kaupapa Māori principles (data sovereignty, non-erasure of contested

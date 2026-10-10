@@ -14,9 +14,14 @@ Holochain, rather than copying how the old app did things.
   to Holochain under their agent key. Next time they go straight in. Also a
   typed record of everything the old app's data layer could do (see "What's
   in this repo").
-- **Next:** group permissions on Holochain
-  ([plan](docs/plans/group-permissions.md)) — and listing what people actually
-  do with Āhau ([#13](https://github.com/ahau01/ahau-v2/issues/13)).
+- **Done:** landing and a navigable shell ([#59](https://github.com/ahau01/ahau-v2/issues/59)).
+  After launch, a person lands on their own profile with a shell for
+  Profile, Archive, Whakapapa and the tribe list. Specs: `openspec/specs/launch`,
+  `openspec/specs/navigation`, `openspec/specs/own-profile`.
+- **Next:** group permissions on Holochain, not started — see the draft
+  problem statement at [docs/plans/group-permissions.md](docs/plans/group-permissions.md)
+  — and listing what people actually do with Āhau
+  ([#13](https://github.com/ahau01/ahau-v2/issues/13)).
 
 ## What stays the same
 
@@ -40,7 +45,8 @@ Whatever the backend, Āhau keeps these rules (full detail in [CLAUDE.md](CLAUDE
 | `workdir/` | The hApp manifest that bundles the DNA. |
 | `flake.nix`, `flake.lock` | The pinned Holochain dev environment. |
 | `reference/leg1-contract/` | **Frozen reference, not part of the build.** A typed list of the 69 actions the old SSB app's data layer supported, the review it was derived from, its conformance tests and in-memory fixture backend. Used as a checklist so nothing gets lost in the rebuild; new code doesn't have to match it. See its own README. |
-| `docs/` | Decisions, plans and history. Start at [docs/INDEX.md](docs/INDEX.md). |
+| `openspec/` | Where specs, in-flight changes and decisions live: `specs/` (what the system does now), `changes/` (work in flight), `changes/archive/` (finished changes, kept for their reasoning). |
+| `docs/` | Supporting evidence, research and history — not authoritative for current specs or decisions. Start at [docs/INDEX.md](docs/INDEX.md). |
 
 ## Setup
 
@@ -150,7 +156,8 @@ outside dev.
 ## Where to start reading
 
 - [CLAUDE.md](CLAUDE.md) — the rules above, and how to work in this repo (including with AI tools)
-- [docs/adr/](docs/adr/) — the decisions that got us here, in order
+- [openspec/specs/](openspec/specs/) — what the system does now, the only live spec
+- [openspec/changes/archive/](openspec/changes/archive/) — the decision record that replaced ADRs
 - [docs/contract-decisions.md](docs/contract-decisions.md) — lessons from the contract that still apply on Holochain (e.g. removing something is a "retraction", not a delete)
 - [docs/history/](docs/history/) — background on the original Āhau
 
