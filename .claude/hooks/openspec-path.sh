@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SessionStart hook: put the repo's pinned CLIs (node_modules/.bin) on PATH
-# for the agent's Bash commands. The /opsx:* skills run plain `openspec`, so
+# for the agent's Bash commands. The openspec-* skills run plain `openspec`, so
 # without this an agent gets whatever global version is installed, or none.
 set -euo pipefail
 
@@ -11,5 +11,5 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
 fi
 
 if [ ! -x "$bin/openspec" ]; then
-  echo "openspec isn't installed in node_modules; run \`npm install\` before using the /opsx:* skills."
+  echo "openspec isn't installed in node_modules; run \`npm install\` before using the openspec-* skills."
 fi

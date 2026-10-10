@@ -19,12 +19,17 @@ result isn't a bug — it's correct-looking code aimed at the wrong objective,
 which review and demos don't catch.
 
 This repo is a rebuild of Āhau directly on Holochain, designed around what
-people need to do rather than how the SSB-era app did it. The spec is a
-capability inventory (#13). The Leg 1 typed
+people need to do rather than how the SSB-era app did it. `openspec/specs/`
+holds the live spec of what the system does now; `docs/capability-inventory.md`
+is a checklist of what the old app could do, not a spec to copy screen by
+screen. The Leg 1 typed
 contract in `reference/leg1-contract/contract/` is **frozen reference** — a record of what the
 old app's data layer could do, used as a checklist so nothing is dropped —
-not an interface new code must implement. No Holochain code exists yet; the
-first slice is group permissions. These
+not an interface new code must implement. A `profiles` zome
+(`dnas/ahau/zomes/{integrity,coordinator}/profiles/`) exists with conductor
+tests: first launch was the first slice (#14), landing and shell the second
+(archived 2026-10-11, specs `launch`, `navigation`, `own-profile`). Group
+permissions is next, not started. These
 rules apply to the Holochain zomes, the client modules that call them, and
 the Svelte shell.
 
@@ -68,8 +73,10 @@ the no-canonical-source rule, so I'm doing X instead."
 
 ## High-risk areas — "it works" is not sign-off
 
-No Holochain code exists yet, so these are risks to design against, not
-code to audit — revisit this section once the first slice lands.
+Zome code now exists, so these are risks to design against *and* code to
+audit — the `profiles` zome's validation rules and the dev-path signing
+grants that accumulate on every page load (#42) are live surfaces, not
+hypotheticals.
 
 - **Sync and conflict resolution** — concurrent offline edits are the normal
   case for a decentralised system. Any conflict-handling logic needs
@@ -128,16 +135,18 @@ answer by pattern-matching the rest of the codebase.
 
 ### Specs and changes: OpenSpec
 
-Work is scoped, specified and built with OpenSpec (`/opsx:*` skills,
-`openspec/`). `/opsx:explore` to think a problem through, `/opsx:propose`
-to write the change, `/opsx:apply` to build it, `/opsx:verify` and
-`/opsx:archive` to close it. `openspec/config.yaml` restates the kaupapa
-rules above for every artifact; this file is the source of truth, so change
-both together. See `docs/agents/openspec.md`.
+Work is scoped, specified and built with OpenSpec (`openspec-*` skills,
+`openspec/`). `/openspec-explore` to think a problem through,
+`/openspec-propose` to write the change, `/openspec-apply-change` to build
+it, `/openspec-verify-change` and `/openspec-archive-change` to close it.
+`openspec/config.yaml` carries the compact context OpenSpec's CLI injects
+into artifact instructions — update it only when that constraint actually
+changes, not on every edit here. This file remains the full kaupapa rules
+and working norms, the source of truth. See `docs/agents/openspec.md`.
 
-Don't use the Matt Pocock planning skills here (`wayfinder`, `to-spec`,
-`to-tickets`, `triage`, `implement`): OpenSpec replaces them. The ones still
-in use are `diagnosing-bugs`, `domain-modeling`, `grilling`, `research` and
+Planning-style tooling that predates OpenSpec is no longer installed in
+this repo; OpenSpec replaces it. The planning skills still in use are
+`diagnosing-bugs`, `domain-modeling`, `grilling`, `research` and
 `prototype`.
 
 ### Issue tracker

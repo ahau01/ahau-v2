@@ -1,13 +1,13 @@
 # Domain Docs
 
-How agents (and the `/opsx:*` workflows) should consume this repo's domain documentation when exploring the codebase.
+How agents (and the `openspec-*` workflows) should consume this repo's domain documentation when exploring the codebase.
 
 ## Before exploring, read these
 
 - **`CONTEXT.md`** at the repo root, or
 - **`CONTEXT-MAP.md`** at the repo root if it exists: it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
 
-If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `domain-modeling` skill creates them lazily when terms or decisions actually get resolved, often during `/opsx:explore` or while writing a change's `design.md`.
+If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `domain-modeling` skill creates them lazily when terms or decisions actually get resolved, often during `/openspec-explore` or while writing a change's `design.md`.
 
 ## File structure
 

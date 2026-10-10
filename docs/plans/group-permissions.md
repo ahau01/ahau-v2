@@ -1,10 +1,13 @@
 # Group Permissions (Kaitiaki Role Management)
 
-> **Functional spec for the first Holochain slice** — the feature the
-> Holochain capability-grant exit criterion is tested against, built
-> directly on Holochain around user capabilities rather than ported from the
-> old app. The evidence below describes the old SSB-based app. It is kept as
-> the reason this feature matters, not as a design to copy.
+This is a draft problem statement and evidence for group permissions, the
+feature next up after landing and shell (see `README.md`'s Status). None of
+the Problem, Evidence, Users, Hypothesis, Success Metrics, Scope, Open
+Questions or Risks below are approved requirements — `openspec/specs/` is
+the only live spec, and this content becomes requirements only once
+`/openspec-propose` adopts it into a change. The evidence below describes
+the old SSB-based app. It is kept as the reason this feature matters, not
+as a design to copy.
 
 ## Problem
 Groups ("tribes") in Āhau have a single binary role — kaitiaki (admin) vs.
@@ -66,15 +69,6 @@ enforced by the backend rather than only hidden in the UI.
 - Two-devices-offline-then-sync validation — deferred to the second,
   committed validation pass (see Open Questions).
 
-## Delivery Milestones
-<!-- Business outcomes, not engineering tasks. /plan turns each into a plan. -->
-<!-- Status: pending | in-progress | complete -->
-
-| # | Milestone | Outcome | Status | Plan |
-|---|---|---|---|---|
-| 1 | Kaitiaki/member removal | A kaitiaki can remove another kaitiaki or member from a group via the UI, and the removal is enforced for every member | pending | |
-| 2 | One enforced per-content permission | At least one matrix setting (e.g. whakapapa record creation) is stored with the group and enforced by validation | pending | |
-
 ## Open Questions
 - [ ] Is the target model the per-content-type matrix (whakapapa / collections /
   stories × kaitiaki-only / all-members), or a simpler kaitiaki-vs-member
@@ -101,5 +95,6 @@ enforced by the backend rather than only hidden in the UI.
 | A permission enforced only in the UI gets counted as a pass | Medium | High — the sovereignty guarantee becomes social, not technical | Success metrics require rejection at validation, tested against a real conductor |
 
 ---
-*Status: Draft — no milestone started. Awaiting product decisions (see Open
-Questions) before planning Milestone 1.*
+*Status: Draft problem statement, not an approved spec. Awaiting the
+product decisions in Open Questions before `/openspec-propose` turns this
+into a change.*

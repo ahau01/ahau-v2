@@ -9,10 +9,14 @@ Leg 1 docs (`history/leg1/`) and migrated reference material from
 
 | Location | Contents |
 |---|---|
-| [`plans/`](plans/) | `group-permissions.md` — the functional spec for the first Holochain slice. `ahau-monorepo`'s own plans live in that repo. |
-| [`research/`](research/) | Research notes citing primary sources: `pataka-always-online-peer.md` — issue #22, whether an always-online peer is still needed on Holochain, the open questions, and recommended sequencing. |
-| [`agents/`](agents/) | How agent skills should consume this repo: `issue-tracker.md` (GitHub Issues via `gh`), `domain.md` (where `CONTEXT.md` lives). Read alongside the root [`CLAUDE.md`](../CLAUDE.md), which carries the project's kaupapa principles. |
+| [`../openspec/`](../openspec/) | `specs/` — what the system does now, the only live spec. `changes/` — work in flight. `changes/archive/` — finished changes, kept for their reasoning. `docs/` below is supporting evidence and history, not authoritative for current specs or decisions. |
+| [`plans/`](plans/) | `group-permissions.md` — a draft problem statement and evidence for group permissions, not an approved spec; becomes requirements once a change adopts it. `ahau-monorepo`'s own plans live in that repo. |
+| [`research/`](research/) | Research notes citing primary sources: `pataka-always-online-peer.md` — issue #22, whether an always-online peer is still needed on Holochain, the open questions, and recommended sequencing; `holochain-group-permissions.md` — group-permissions research on Holochain; `2026-10-04-rust-holochain-learning-tickets.md` — Rust/Holochain learning tickets. |
+| [`agents/`](agents/) | How agent skills should consume this repo: `openspec.md` (the OpenSpec flow and where things live), `issue-tracker.md` (GitHub Issues via `gh`), `triage-labels.md` (backlog labels), `domain.md` (where `CONTEXT.md` lives). Read alongside the root [`CLAUDE.md`](../CLAUDE.md), which carries the project's kaupapa principles. |
+| `capability-inventory.md` | A checklist of what the old app's data layer could do, used so nothing is dropped in the rebuild — not a spec to copy screen by screen. |
 | `contract-decisions.md`, `token-verification.md`, `design-parity.md` | Leg 1 outcome docs that still apply — why the contract's cross-cutting semantics are shaped as they are (reasoning carries forward from the capability-driven redesign), how tokens were verified, how design parity is judged. |
+| [`old-app-capture/`](old-app-capture/) | Screenshots of the old app's screens plus the `capture.mjs` script that took them, used as a visual reference for parity work. |
+| [`parity/`](parity/) | The v2 equivalents of the old-app captures, plus the `shoot.mjs` script that took them. |
 
 ## History
 
