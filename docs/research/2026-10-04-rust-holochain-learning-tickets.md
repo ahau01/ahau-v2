@@ -25,19 +25,17 @@ fetched. Crate versions come from the crates.io API.
 
 ### 1.1 Decisions made
 
-| Decision | Source |
-|---|---|
-| Rewrite instead of continuing to patch the SSB stack. | [ADR-0002](../adr/0002-rewrite-instead-of-continuing-to-patch-ssb-architecture.md) |
-| Holochain is the only backend being built. nostr was dropped for capacity reasons. Production backend choice is formally still "undecided pending this one adapter clearing its exit criteria". | [ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md) L39-74 |
-| **Exit criterion.** Holochain's capability-grant system must deliver *enforced* group permissions (kaitiaki/member removal, plus at least one per-content-type permission) "without resorting to custom protocol-level workarounds". Patching Holochain or relying on undocumented conductor behaviour falsifies it. | ADR-0003 L49-57 |
-| Two-devices-offline-then-sync validation is **out of** the first checkpoint and deferred to a second, committed validation pass. | ADR-0003 L59-66, L167-173 |
-| Keep the Svelte shell. Gramps.js is deferred. | [ADR-0004](../adr/0004-continue-with-svelte-shell-defer-gramps-js.md) |
-| No SSB-to-v2 data migration for the MVP. | [ADR-0005](../adr/0005-clean-slate-ssb-data-migration-stance.md) |
-| Redesign around user capabilities directly on Holochain. The spec is a capability inventory (#13). The Leg 1 contract in `src/contract/` is frozen reference and a checklist, not an interface to implement. | [ADR-0006](../adr/0006-capability-driven-redesign-not-behaviour-replication.md) L46-61 |
-| The shell talks to Holochain only through thin per-feature client modules (for example a `groups` client). No adapter layer. | ADR-0006 L63-69 |
-| Kaupapa principles are invariants. Kaupapa tests move to Holochain tests against a real conductor. The multi-source "both assertions survive" test does not exist yet, and it "belongs in the first slice touching relationship data", together with the deferred offline-then-sync validation. | ADR-0006 L71-97 |
-| Removal is retraction, never erasure. A permission is either enforced or it isn't, and the UI must never show an unenforced rule as a lock. Graph traversal happens in the backend. | ADR-0006 L75-86; [contract-decisions.md](../contract-decisions.md) §1, §4 |
-| The dev environment is pinned to Holochain 0.6 through Holonix `main-0.6` (`flake.nix`). `flake.lock` pins `holochain-0.6.3`. JS deps are `@holochain/client` 0.20.8 and `@holochain/tryorama` 0.19.2 (`package.json`). | `flake.nix`, `flake.lock` L65, `package.json`; README "Holochain" section |
+- Rewrite instead of continuing to patch the SSB stack.
+- Holochain is the only backend being built. nostr was dropped for capacity reasons. Production backend choice is formally still "undecided pending this one adapter clearing its exit criteria".
+- **Exit criterion.** Holochain's capability-grant system must deliver *enforced* group permissions (kaitiaki/member removal, plus at least one per-content-type permission) "without resorting to custom protocol-level workarounds". Patching Holochain or relying on undocumented conductor behaviour falsifies it.
+- Two-devices-offline-then-sync validation is **out of** the first checkpoint and deferred to a second, committed validation pass.
+- Keep the Svelte shell. Gramps.js is deferred.
+- No SSB-to-v2 data migration for the MVP.
+- Redesign around user capabilities directly on Holochain. The spec is a capability inventory (#13). The Leg 1 contract in `src/contract/` is frozen reference and a checklist, not an interface to implement.
+- The shell talks to Holochain only through thin per-feature client modules (for example a `groups` client). No adapter layer.
+- Kaupapa principles are invariants. Kaupapa tests move to Holochain tests against a real conductor. The multi-source "both assertions survive" test does not exist yet, and it belongs in the first slice touching relationship data, together with the deferred offline-then-sync validation.
+- Removal is retraction, never erasure. A permission is either enforced or it isn't, and the UI must never show an unenforced rule as a lock. Graph traversal happens in the backend ([contract-decisions.md](../contract-decisions.md) §1, §4).
+- The dev environment is pinned to Holochain 0.6 through Holonix `main-0.6` (`flake.nix`). `flake.lock` pins `holochain-0.6.3`. JS deps are `@holochain/client` 0.20.8 and `@holochain/tryorama` 0.19.2 (`package.json`; README "Holochain" section).
 
 ### 1.2 Sequencing as it stands (2026-10-04)
 
@@ -46,37 +44,38 @@ fetched. Crate versions come from the crates.io API.
    (`src/profile/client.ts`, `src/profile/client.conductor.ts`, merged in
    PR #23). The DNA has no zomes yet (`dnas/ahau/workdir/dna.yaml`).
 2. **Next, the profile slice (#14 and its sub-issues):**
-   - #16: store my own profile on Holochain, name only. Validation must
+  - #16: store my own profile on Holochain, name only. Validation must
      reject non-owner writes and a second profile per agent key. First decide
      between holochain-open-dev/profiles and a small custom zome.
-   - #17: first-launch flow against a pretend client.
-   - #18: connect first launch to the real conductor. This is the
+  - #17: first-launch flow against a pretend client.
+  - #18: connect first launch to the real conductor. This is the
      stakeholder demo.
-   - #19 and #20: parity with the old app.
+  - #19 and #20: parity with the old app.
 
-   #14 explains why profiles come before group permissions: "group
-   permissions needs people with profiles. ADR-0003's exit criterion is
-   unchanged."
+   #14 explains why profiles come before group permissions: group
+   permissions needs people with profiles, and the Holochain capability-grant
+   exit criterion for the group-permissions checkpoint is unchanged.
 3. **Then the first slice proper, group permissions**
    ([docs/plans/group-permissions.md](../plans/group-permissions.md)). Two
    milestones, both still `pending`:
-   - M1: kaitiaki/member removal, enforced so that "the removed agent's
+  - M1: kaitiaki/member removal, enforced so that "the removed agent's
      writes to the group are rejected by validation".
-   - M2: one per-content-type permission, starting with "whakapapa record
+  - M2: one per-content-type permission, starting with "whakapapa record
      creation: Kaitiaki only", rejected by validation.
 
    The spec is "Draft — no milestone started. Awaiting product decisions"
    (L104-106).
 4. **Second validation pass:** offline-then-sync, and the first
-   relationship-data slice carrying the multi-source assertion test
-   (ADR-0003, ADR-0006 Decision 6).
+   relationship-data slice carrying the multi-source assertion test (per the
+   Holochain exit criterion and the decision to rewrite kaupapa tests as
+   Holochain tests against a real conductor).
 5. **In parallel and not blocking:**
-   - #13, the capability inventory. Open and unassigned. Per ADR-0006 it must
+  - #13, the capability inventory. Open and unassigned. It must
      be complete "before deep Holochain work beyond the group-permissions
-     slice" (L178-182).
-   - #24, move the frozen contract out of the build. Blocked by #17.
-   - #21, licence.
-   - #22, the Pātaka question. Its Q2, "can a group member be something
+     slice".
+  - #24, move the frozen contract out of the build. Blocked by #17.
+  - #21, licence.
+  - #22, the Pātaka question. Its Q2, "can a group member be something
      other than a person?", must be checked while designing group
      permissions.
 
@@ -89,7 +88,7 @@ fetched. Crate versions come from the crates.io API.
   not been recovered. (`group-permissions.md` L79-94)
 - **Profiles module.** Use holochain-open-dev/profiles or a custom zome
   (#16)?
-- **Production backend choice** (ADR-0003 L68-74).
+- **Production backend choice.** Formally undecided — Holochain is the thing being built and evaluated, not yet the committed production choice, since there is no second adapter left to compare it against.
 - **Pātaka / always-on peer** (#22). Can it hold data without being able to
   read it? Can a non-person agent be a group member?
 - **Multi-device identity.** Explicitly out of scope for #14.
@@ -243,7 +242,7 @@ fetched. Crate versions come from the crates.io API.
   - 🔁 *Spike → real*: code or findings meant to become, or directly shape,
     real repo code.
   - ✅ *Real*: an existing or near-real ticket.
-- **Size**, at the team's current ~10 h/week per developer (ADR-0003 L18-21):
+- **Size**, at the team's current ~10 h/week per developer:
   - **S** ≤ ½ day
   - **M** 1–3 days
   - **L** about a week or more
@@ -427,7 +426,8 @@ fetched. Crate versions come from the crates.io API.
   - upgrade-holochain-0.6.md (LinkQuery/GetOptions changes)
   - [contract-decisions.md](../contract-decisions.md) §1
 - **Feeds:** port of `semantics/retraction-hides-without-erasing`
-  (ADR-0006 Decision 6); group listing in the first slice.
+  (the Holochain-backed version of the SSB-era conformance case); group
+  listing in the first slice.
 
 ### T8. Group membership spike: only kaitiaki can add members
 
@@ -465,8 +465,8 @@ fetched. Crate versions come from the crates.io API.
 
 ### T9. Removal-enforced spike: can a removed member's writes be rejected?
 
-- **Kind / size:** 🔁 Spike → real. This is **the ADR-0003 exit-criterion
-  question in miniature**. **L**. Pair throughout.
+- **Kind / size:** 🔁 Spike → real. This is **the Holochain capability-grant
+  exit-criterion question in miniature**. **L**. Pair throughout.
 - **Goal:** the limits of deterministic validation. `must_get_agent_activity`
   and `ChainFilter`, and why `get_links` isn't allowed. Three agents in
   Sweettest.
@@ -481,18 +481,19 @@ fetched. Crate versions come from the crates.io API.
   - [ ] Test and implement last-kaitiaki protection.
   - [ ] A findings note answering:
     - (a) Does this need any undocumented conductor behaviour or a
-      Holochain patch? That is ADR-0003's falsification signal.
+      Holochain patch? That is the falsification signal for the Holochain
+      capability-grant exit criterion.
     - (b) What does "removed" mean for the removed agent's already-synced
       data?
     - (c) What did the design have to assume about ordering?
-- **Read:** must-get-host-functions.md, validation.md, ADR-0003 L49-57,
+- **Read:** must-get-host-functions.md, validation.md,
   group-permissions.md (Open Questions, Risks).
 - **Feeds:** the M1 plan, which the spec says is not yet written.
 - **⚑ Kaupapa (access control, sync):**
   - This touches the "revoked member's already-synced local data" leak
     vector (CLAUDE.md L79-83). The ticket documents it; it does not paper
     over it.
-  - Removal is retraction (ADR-0006 Decision 5).
+  - Removal is retraction, never erasure.
   - Must not introduce an "authoritative" node to decide ordering (rule 3).
 
 ### T10. Capability grants and `call_remote` kata
@@ -516,7 +517,8 @@ fetched. Crate versions come from the crates.io API.
   - [calling-zome-functions.md](https://github.com/holochain/docs-pages/blob/main/src/pages/build/calling-zome-functions.md)
   - self-paced training Lesson 3 (`private-publication`, 2023; expect API
     drift)
-- **Feeds:** gap G1, the wording of ADR-0003's exit criterion.
+- **Feeds:** gap G1, the wording of the Holochain capability-grant exit
+  criterion.
 - **⚑ Kaupapa (access control, identity):**
   - Assigned grants bind to agent keys, not sessions (rule 4).
   - Avoid transferable secrets as "passwords".
@@ -541,7 +543,7 @@ fetched. Crate versions come from the crates.io API.
   entries.md (multiple updates).
 - **Feeds:** M2.
 - **⚑ Kaupapa (access control, conflict):**
-  - "A permission is either enforced or it isn't" (ADR-0006 Decision 5).
+  - "A permission is either enforced or it isn't."
   - Concurrent policy edits must be represented, not silently overwritten.
 
 ### T12. Offline-then-sync basics: two agents, one goes dark
@@ -562,7 +564,7 @@ fetched. Crate versions come from the crates.io API.
     treat that as "the" value (CLAUDE.md "Holochain is not a database").
 - **Read:** entries.md ("it's up to you to decide whether two updates … are
   a conflict"); testing-with-tryorama.md; sweet_consistency.rs.
-- **Feeds:** ADR-0003's committed second validation pass. CLAUDE.md
+- **Feeds:** the committed second validation pass (offline-then-sync). CLAUDE.md
   L75-78's requirement for "two-devices-offline-then-sync test coverage
   against a real conductor".
 - **⚑ Kaupapa (sync):** the test asserts that both edits survive. There is
@@ -571,7 +573,7 @@ fetched. Crate versions come from the crates.io API.
 ### T13. Multi-source relationship assertions: two agents disagree and both survive
 
 - **Kind / size:** 🔁 Spike → real. Intended to become **the missing kaupapa
-  test** (ADR-0006 L92-97; CLAUDE.md L116-120). **L**. Pair throughout. This
+  test** (CLAUDE.md L116-120). **L**. Pair throughout. This
   is the most kaupapa-sensitive ticket in the set.
 - **Goal:** design an entry and link model where a relationship is "source X
   asserts Y", and prove it under partition.
@@ -666,8 +668,8 @@ A practical cadence at 10 h/week:
 ## 4. Gaps, contradictions and open questions
 
 - **G1. The exit criterion names the wrong mechanism.**
-  - ADR-0003 asks whether "Holochain's capability-grant system" delivers
-    enforced group permissions (L49-53).
+  - The exit criterion asks whether "Holochain's capability-grant system"
+    delivers enforced group permissions.
   - The group-permissions spec measures success as writes "rejected by
     validation" (L52-53).
   - Per the Holochain docs, capability grants gate zome function calls, and
@@ -682,8 +684,7 @@ A practical cadence at 10 h/week:
     0.6.x.
   - But Tryorama is "no longer an official package", it was removed from
     Holonix in 0.6.1, and its README says not to expect 0.7+ support.
-  - CLAUDE.md L78 and ADR-0006 L92 say "Tryorama or Sweettest" without
-    choosing.
+  - CLAUDE.md L78 says "Tryorama or Sweettest" without choosing.
   - Kaupapa tests are about to be written, so the harness choice should be
     decided before that (T4).
   - Probably keep Tryorama for TS client tests and Sweettest for zome and
@@ -703,8 +704,8 @@ A practical cadence at 10 h/week:
     checks (must-get-host-functions.md).
   - "Removed agent's writes are rejected" has an inherent ordering problem
     under partition: a removed agent may write before seeing the removal.
-  - This is the crux of ADR-0003's falsification test. T9 and T14 should
-    produce evidence, not assumptions.
+  - This is the crux of the Holochain capability-grant exit criterion's
+    falsification test. T9 and T14 should produce evidence, not assumptions.
   - Watch for designs that quietly introduce an authoritative orderer
     (CLAUDE.md rule 3).
 - **G5. CLAUDE.md is stale on two points.**
@@ -714,20 +715,22 @@ A practical cadence at 10 h/week:
     lands".
   - Minor, but agents read it first.
 - **G6. Slice order.**
-  - ADR-0003 and ADR-0006 name group permissions as the first slice. #14
-    puts profiles first and gives a reason.
-  - This is consistent in spirit but not recorded in an ADR. A one-line note
-    in ADR-0006 or the group-permissions spec would stop future confusion.
+  - The Holochain-adoption and capability-driven-redesign decisions name
+    group permissions as the first slice. #14 puts profiles first and gives
+    a reason.
+  - This is consistent in spirit but not recorded anywhere formal. A
+    one-line note in the group-permissions spec would stop future confusion.
 - **G7. The relationship-data slice has no plan or owner.**
-  - ADR-0006 puts the multi-source test "in the first slice touching
-    relationship data", but no such slice is planned or ticketed.
+  - The capability-driven redesign decision puts the multi-source test "in
+    the first slice touching relationship data", but no such slice is
+    planned or ticketed.
   - The group-permissions spec's M2 mentions "whakapapa record creation",
     which may be the first code to touch whakapapa data.
   - Decide whether M2's placeholder whakapapa record must already follow the
     assertion model (T11 vs T13).
-- **G8. The capability inventory (#13) is unassigned.** ADR-0006 makes
-  completing it a precondition for Holochain work beyond the first slice, and
-  calls it onboarding for the junior. It could run alongside T0–T5 as the
+- **G8. The capability inventory (#13) is unassigned.** It's a precondition
+  for Holochain work beyond the first slice, and doubles as onboarding for
+  the junior. It could run alongside T0–T5 as the
   junior's product-knowledge track.
 - **G9. Where scratch code lives** is undecided. A separate repo is
   suggested. `docs/INDEX.md` also doesn't list `docs/research/` yet; add it

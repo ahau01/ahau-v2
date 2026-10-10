@@ -48,8 +48,7 @@ way you get the pinned version, not a global install.
 
 ## Decisions and vocabulary
 
-Lasting decisions still go in ADRs (`docs/adr/`) and terms in `CONTEXT.md`,
-via `domain-modeling` (see [domain.md](domain.md)). A change's `design.md`
-records why this change is shaped the way it is; an ADR records a decision
-other changes have to respect. If a design decision will outlive the
-change, write the ADR too and link it.
+Terms go in `CONTEXT.md`, via `domain-modeling` (see [domain.md](domain.md)).
+A lasting decision is recorded in a spec's requirements, or in a change's
+`design.md` if it doesn't belong in a spec — nothing else is written in
+parallel.

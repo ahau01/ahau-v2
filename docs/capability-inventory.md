@@ -3,9 +3,8 @@
 This is the capability inventory asked for in
 [#13](https://github.com/ahau01/ahau-v2/issues/13): what people can do in the
 old Āhau app, written from their point of view and without implementation
-detail. Under [ADR-0006](adr/0006-capability-driven-redesign-not-behaviour-replication.md)
-it is a checklist so nothing gets dropped. It is not a spec to copy screen by
-screen.
+detail. It is a checklist so nothing gets dropped in the capability-driven
+redesign — it is not a spec to copy screen by screen.
 
 **This first section covers the top-level pages only**
 ([#60](https://github.com/ahau01/ahau-v2/issues/60)). It feeds the "next slice:

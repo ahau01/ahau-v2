@@ -2,7 +2,7 @@
 
 ## Purpose
 
-A person viewing their own profile in Āhau: their own account of themselves (ADR-0008). It shows the public part and the private part separately, and says truthfully who can see each one.
+A person viewing their own profile in Āhau: their own account of themselves. It shows the public part and the private part separately, and says truthfully who can see each one.
 
 ## Requirements
 

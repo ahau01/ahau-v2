@@ -104,8 +104,9 @@ That is relevant to the bootstrap/relay discussion in [§4.6](#46-bootstrap-and-
 
 The frozen contract kept `storehouse.*` "because a community running its own
 storehouse is central to what Āhau means by data sovereignty"
-(`storehouse.ts` header). Under ADR-0006 that's a capability to keep, not an
-API to copy. A rough mapping to Holochain:
+(`storehouse.ts` header). That's a capability to keep, not an
+API to copy, per the redesign around user capabilities rather than old-app
+behaviour. A rough mapping to Holochain:
 
 - `acceptInvite` becomes joining with a membrane proof.
 - `blockStorehouse` becomes removing the node from the group. There is no app-level block any more (§4.4).
@@ -403,7 +404,7 @@ pātaka):
   resort.
 - **Operational.** For a pātaka the hapū controls, wiping or decommissioning
   the disk. This is a social guarantee, not a technical one, and the UI must
-  say so plainly (ADR-0006: never present an unenforced rule as a lock).
+  say so plainly — never present an unenforced rule as a lock.
 - **Membrane change.** Making the membrane stricter changes the DNA, which
   is also a new network.
 
@@ -492,18 +493,19 @@ No pātaka code. Only design hooks that are cheap now and expensive later:
    inference.
 4. **Arc test**: one Sweettest with a zero-arc agent and a full-arc agent,
    where the full-arc agent goes offline. Confirms the "phones go dark"
-   behaviour on 0.6.3 and gives the second validation pass (ADR-0003) a
-   starting point.
+   behaviour on 0.6.3 and gives the second (offline-then-sync) validation
+   pass a starting point.
 5. **Client modules never address a specific peer.** The per-feature client
-   (ADR-0006) reads from "the network", never from a named node.
+   reads from "the network", never from a named node.
 
 ### 5.2 Before the first real whānau group network exists
 
 - **Decide the entry envelope, i.e. Q1 A vs B, per content type.** Changing
   integrity-zome entry definitions or validation changes the DNA hash, which
   is a new network ([cloning.md](#src-docs-cloning): "keyed by the hash of
-  all its integrity zomes and DNA modifiers"). Under ADR-0005 (clean slate)
-  there is no data to migrate *yet*. Once a real group is on a network,
+  all its integrity zomes and DNA modifiers"). Under the clean-slate stance
+  (no SSB-to-v2 data migration) there is no data to migrate *yet*. Once a
+  real group is on a network,
   switching to encrypted entries means re-founding it. One option to weigh:
   an envelope with a cleartext/sealed discriminator and a key epoch from day
   one, with validation only reading envelope fields. **Flag, don't decide**:
@@ -526,7 +528,7 @@ When it's built, the shape should be: the same hApp, headless, joining as a
 `node` agent at full arc. Run it in a plain conductor or Edge Node, matched
 to our Holochain version (Edge Node main is 0.7, and its 0.6 data
 directories aren't compatible), with our own membrane-proof install step.
-No separate pātaka app and no dashboard rebuilt screen by screen (ADR-0006).
+No separate pātaka app and no dashboard rebuilt screen by screen — capabilities are designed the way Holochain does them best, not copied from the old app.
 Kaitiaki tools needed: admit a node, see which nodes hold the group's data,
 remove a node.
 
@@ -541,7 +543,7 @@ routing reads through named providers is the rule-3 anti-pattern.
 |---|---|---|
 | Plan edit | `group-permissions.md`: agent model, node agents, removal-reads question | Before Milestone 1 planning |
 | Issue (#13 follow-up) | Add to the capability inventory: "whānau data stays reachable when everyone's phone is off"; "a whānau can keep a backup they control"; "a kaitiaki can see and remove the always-on nodes holding group data"; "a person can sign up from a web page" | Now |
-| Spike issue | Sweettests: removed-agent reads; zero-arc + full-arc offline; Edge Node or headless conductor joining with a membrane proof | During the second validation pass (ADR-0003) |
+| Spike issue | Sweettests: removed-agent reads; zero-arc + full-arc offline; Edge Node or headless conductor joining with a membrane proof | During the second (offline-then-sync) validation pass |
 | Issue (Q5) | Web registration: stakeholder check, then design | When a hapū asks |
 | ADR | Pātaka readability and entry encryption (Q1 + Q4): A vs B per content type, key rotation on removal | Before the first real group network; needs hapū input |
 | ADR | Network infrastructure: who runs bootstrap/relay, and why that isn't a central authority | Before the first real group network |
@@ -567,7 +569,7 @@ routing reads through named providers is the rule-3 anti-pattern.
   of to each of their agent keys breaks rule 4 on the second device.
 - **Āhau-hosted by default.** A default pātaka run by the dev team is a
   central custodian with extra steps.
-- **Rebuilding the old pātaka app screen by screen** (ADR-0006).
+- **Rebuilding the old pātaka app screen by screen**, instead of designing the capability natively for Holochain.
 - **Picking Q1 or Q3 in code** without a recorded hapū decision.
 
 ---

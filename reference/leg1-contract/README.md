@@ -1,7 +1,6 @@
 # Leg 1 contract — frozen reference
 
-Everything in this folder is frozen per
-[ADR-0006](../../docs/adr/0006-capability-driven-redesign-not-behaviour-replication.md):
+Everything in this folder is frozen:
 a record of what the old SSB-era app's data layer could do, kept so nothing
 gets dropped while Āhau is rebuilt around user capabilities directly on
 Holochain. It is a checklist against the capability inventory
@@ -19,7 +18,8 @@ must implement — don't make Holochain code match it operation-for-operation.
   kaupapa cases this repo has had (`retraction-hides-without-erasing`,
   `visibility-excludes-non-members`) — they proved little since they only
   ever ran against the fixture, but they're the starting point for the
-  Holochain-backed versions ADR-0006 Decision 6 calls for.
+  Holochain-backed versions that kaupapa tests need to be rewritten as,
+  against a real conductor (Tryorama or Sweettest).
 - `fixtures/` — the in-memory backend the conformance suite ran against.
   No live code uses it.
 - `scripts/` — `derive-manifest.mjs` (generates `contract/manifest.json`

@@ -19,13 +19,12 @@ result isn't a bug — it's correct-looking code aimed at the wrong objective,
 which review and demos don't catch.
 
 This repo is a rebuild of Āhau directly on Holochain, designed around what
-people need to do rather than how the SSB-era app did it
-([ADR-0006](docs/adr/0006-capability-driven-redesign-not-behaviour-replication.md)). The spec is a capability inventory (#13). The Leg 1 typed
+people need to do rather than how the SSB-era app did it. The spec is a
+capability inventory (#13). The Leg 1 typed
 contract in `reference/leg1-contract/contract/` is **frozen reference** — a record of what the
 old app's data layer could do, used as a checklist so nothing is dropped —
 not an interface new code must implement. No Holochain code exists yet; the
-first slice is group permissions
-([ADR-0003](docs/adr/0003-holochain-as-leg-2-protocol-candidate.md)). These
+first slice is group permissions. These
 rules apply to the Holochain zomes, the client modules that call them, and
 the Svelte shell.
 
@@ -94,7 +93,7 @@ code to audit — revisit this section once the first slice lands.
   Holochain directly.
 - **The frozen contract is not the spec** — don't make Holochain code match
   `reference/leg1-contract/contract/` operation-for-operation; that
-  reintroduces SSB's shapes (ADR-0006). Use it to check nothing the old app
+  reintroduces SSB's shapes. Use it to check nothing the old app
   did has been dropped.
 
 ## Working norms
@@ -154,4 +153,4 @@ No maps or child tickets. See `docs/agents/issue-tracker.md`.
 
 ### Domain docs
 
-Single-context layout: `CONTEXT.md` + `docs/adr/` at the repo root (created lazily as needed). See `docs/agents/domain.md`.
+Single-context layout: `CONTEXT.md` at the repo root (created lazily as needed). See `docs/agents/domain.md`.
