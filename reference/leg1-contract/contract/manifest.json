@@ -1,0 +1,1480 @@
+{
+  "derivedFrom": "contract-source/data-access-triage.json",
+  "generatedBy": "scripts/derive-manifest.mjs",
+  "totals": {
+    "operations": 68,
+    "reads": 28,
+    "writes": 40,
+    "absorbed": 3,
+    "dropped": 6,
+    "domains": 16
+  },
+  "dropped": [
+    "disableAutoPrune",
+    "getArtefact",
+    "getArtefacts",
+    "getAutoPruneConfig",
+    "getCommunity",
+    "updateAutoPrune"
+  ],
+  "operations": [
+    {
+      "name": "DELETE_ARTEFACT",
+      "domain": "artefact",
+      "kind": "write",
+      "purpose": "Remove an artefact from the archive.",
+      "sourceAccessor": "DELETE_ARTEFACT",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "ArtefactInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "saveArtefact",
+      "domain": "artefact",
+      "kind": "write",
+      "purpose": "Create or update an artefact - an image, recording or document held in the archive.",
+      "sourceAccessor": "saveArtefact",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "ArtefactInput"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "deleteCollection",
+      "domain": "collection",
+      "kind": "write",
+      "purpose": "Remove a collection.",
+      "sourceAccessor": "deleteCollection",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "CollectionInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "getAllCollections",
+      "domain": "collection",
+      "kind": "read",
+      "purpose": "List the collections available for browsing.",
+      "sourceAccessor": "getAllCollections",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "filter",
+          "type": "StoryFilter"
+        }
+      ],
+      "ssbFlags": [
+        "feedId",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "originalAuthor"
+      ],
+      "callSites": 1
+    },
+    {
+      "name": "saveCollection",
+      "domain": "collection",
+      "kind": "write",
+      "purpose": "Create or update a collection - a curated grouping of stories.",
+      "sourceAccessor": "saveCollection",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "CollectionInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "saveCollectionStoryLink",
+      "domain": "collection",
+      "kind": "write",
+      "purpose": "Add a story to a collection, or remove it.",
+      "sourceAccessor": "saveCollectionStoryLink",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "CollectionStoryLinkInput"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "deleteTribe",
+      "domain": "community",
+      "kind": "write",
+      "purpose": "Remove a group, tombstoning both its public and private records.",
+      "sourceAccessor": "deleteTribe",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "privateInput",
+          "type": "CommunityProfileInput!"
+        },
+        {
+          "name": "publicInput",
+          "type": "CommunityProfileInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "saveCommunity",
+      "domain": "community",
+      "kind": "write",
+      "purpose": "Create or update a group's profile.",
+      "sourceAccessor": "saveCommunity",
+      "absorbs": [
+        "savePublicCommunity"
+      ],
+      "variables": [
+        {
+          "name": "input",
+          "type": "CommunityProfileInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 4
+    },
+    {
+      "name": "updateTribe",
+      "domain": "community",
+      "kind": "write",
+      "purpose": "Update both halves of a group's paired profile at once.",
+      "sourceAccessor": "updateTribe",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "privateInput",
+          "type": "CommunityProfileInput!"
+        },
+        {
+          "name": "publicInput",
+          "type": "CommunityProfileInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "getAllCredentials",
+      "domain": "credentials",
+      "kind": "read",
+      "purpose": "List the verifiable credentials the user holds.",
+      "sourceAccessor": "getAllCredentials",
+      "absorbs": [],
+      "variables": [],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 3
+    },
+    {
+      "name": "saveLink",
+      "domain": "link",
+      "kind": "write",
+      "purpose": "Create or update a link between two people - the act of recording a relationship in the whakapapa.",
+      "sourceAccessor": "saveLink",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "LinkInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 4
+    },
+    {
+      "name": "whakapapaLink",
+      "domain": "link",
+      "kind": "read",
+      "purpose": "Look up a single link between two people, checking whether a parent-child or partner relationship already exists before creating one.",
+      "sourceAccessor": "whakapapaLink",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "parent",
+          "type": "String!"
+        },
+        {
+          "name": "child",
+          "type": "String!"
+        },
+        {
+          "name": "isPartner",
+          "type": "Boolean"
+        }
+      ],
+      "ssbFlags": [
+        "recps"
+      ],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "getIndexes",
+      "domain": "loading",
+      "kind": "read",
+      "purpose": "Report whether the backend has finished preparing data, and how far along it is, so the app knows when it can render.",
+      "sourceAccessor": "getIndexes",
+      "absorbs": [],
+      "variables": [],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "blockPataka",
+      "domain": "pataka",
+      "kind": "write",
+      "purpose": "Stop a storehouse from replicating the user's records.",
+      "sourceAccessor": "blockPataka",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [
+        "feedId"
+      ],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "getPatakas",
+      "domain": "pataka",
+      "kind": "read",
+      "purpose": "List the storehouses replicating this user's groups.",
+      "sourceAccessor": "getPatakas",
+      "absorbs": [],
+      "variables": [],
+      "ssbFlags": [
+        "feedId"
+      ],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "unblockPataka",
+      "domain": "pataka",
+      "kind": "write",
+      "purpose": "Allow a previously blocked storehouse to replicate again.",
+      "sourceAccessor": "unblockPataka",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [
+        "feedId"
+      ],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "deletePerson",
+      "domain": "person",
+      "kind": "write",
+      "purpose": "Remove a person from the record, tombstoning both their profile and the whakapapa links that reference them.",
+      "sourceAccessor": "deletePerson",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        },
+        {
+          "name": "details",
+          "type": "TombstoneInput"
+        },
+        {
+          "name": "allowPublic",
+          "type": "Boolean"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 14
+    },
+    {
+      "name": "findPersonByName",
+      "domain": "person",
+      "kind": "read",
+      "purpose": "Search for people by name within a group, used when adding a person to a record or linking them into a whakapapa.",
+      "sourceAccessor": "findPersonByName",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "name",
+          "type": "String!"
+        },
+        {
+          "name": "groupId",
+          "type": "String"
+        },
+        {
+          "name": "type",
+          "type": "String"
+        }
+      ],
+      "ssbFlags": [
+        "blobUri",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "blobUri",
+        "originalAuthor"
+      ],
+      "callSites": 4
+    },
+    {
+      "name": "getPerson",
+      "domain": "person",
+      "kind": "read",
+      "purpose": "Fetch a person's full profile together with their whakapapa links and the authors who contributed to the record - the read behind opening a person in the tree.",
+      "sourceAccessor": "getPerson",
+      "absorbs": [
+        "getPersonMinimal",
+        "getPersonFull"
+      ],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [
+        "feedId",
+        "authors",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "blobUri"
+      ],
+      "callSites": 4
+    },
+    {
+      "name": "getPersonCustomFields",
+      "domain": "person",
+      "kind": "read",
+      "purpose": "Read a person's tribe-defined custom fields - the key/value pairs an iwi or hapu adds beyond the standard profile schema.",
+      "sourceAccessor": "getPersonCustomFields",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [
+        "recps"
+      ],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "loadPersonList",
+      "domain": "person",
+      "kind": "read",
+      "purpose": "List the people in a tribe, with an admin variant returning the fuller record available to kaitiaki.",
+      "sourceAccessor": "loadPersonList",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "type",
+          "type": "String!"
+        },
+        {
+          "name": "tribeId",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "savePerson",
+      "domain": "person",
+      "kind": "write",
+      "purpose": "Create or update a person profile.",
+      "sourceAccessor": "savePerson",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "PersonProfileInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "whoami",
+      "domain": "person",
+      "kind": "read",
+      "purpose": "Identify the signed-in user and the groups they belong to, including their own profile and per-group settings. Read at startup and by ~40 call sites as the ambient identity context.",
+      "sourceAccessor": "whoami",
+      "absorbs": [],
+      "variables": [],
+      "ssbFlags": [
+        "feedId",
+        "recps",
+        "authors",
+        "tombstone",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "recps",
+        "tombstone",
+        "originalAuthor"
+      ],
+      "callSites": 40
+    },
+    {
+      "name": "getProfile",
+      "domain": "profile",
+      "kind": "read",
+      "purpose": "Read a community profile - how a person or group presents itself within a group, as distinct from their node in the whakapapa.",
+      "sourceAccessor": "getProfile",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [
+        "feedId",
+        "recps",
+        "authors",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "recps",
+        "authors",
+        "originalAuthor"
+      ],
+      "callSites": 10
+    },
+    {
+      "name": "deleteAhau",
+      "domain": "settings",
+      "kind": "write",
+      "purpose": "Delete the local database and reset the application.",
+      "sourceAccessor": "deleteAhau",
+      "absorbs": [],
+      "variables": [],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "deleteSettings",
+      "domain": "settings",
+      "kind": "write",
+      "purpose": "Remove a group's settings.",
+      "sourceAccessor": "deleteSettings",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "SettingsInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "getAllSettings",
+      "domain": "settings",
+      "kind": "read",
+      "purpose": "Read settings across every group the user belongs to, for screens that span groups.",
+      "sourceAccessor": "getAllSettings",
+      "absorbs": [],
+      "variables": [],
+      "ssbFlags": [
+        "recps"
+      ],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "getBackup",
+      "domain": "settings",
+      "kind": "read",
+      "purpose": "Retrieve the user's identity backup, so they can recover their account on another device or after reinstalling.",
+      "sourceAccessor": "getBackup",
+      "absorbs": [],
+      "variables": [],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 3
+    },
+    {
+      "name": "getSettings",
+      "domain": "settings",
+      "kind": "read",
+      "purpose": "Read one group's settings.",
+      "sourceAccessor": "getSettings",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "ID!"
+        }
+      ],
+      "ssbFlags": [
+        "recps"
+      ],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "saveSettings",
+      "domain": "settings",
+      "kind": "write",
+      "purpose": "Create or update a group's settings - the per-tribe configuration a kaitiaki controls.",
+      "sourceAccessor": "saveSettings",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "SettingsInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "deleteStory",
+      "domain": "story",
+      "kind": "write",
+      "purpose": "Remove a story from the archive.",
+      "sourceAccessor": "deleteStory",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "StoryInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "getAllStories",
+      "domain": "story",
+      "kind": "read",
+      "purpose": "List the stories in the archive for browsing.",
+      "sourceAccessor": "getAllStories",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "filter",
+          "type": "StoryFilter"
+        }
+      ],
+      "ssbFlags": [
+        "feedId",
+        "recps",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "recps",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "callSites": 2
+    },
+    {
+      "name": "getAllStoriesByMentions",
+      "domain": "story",
+      "kind": "read",
+      "purpose": "Find the stories that mention a given person, so someone's record shows where they appear in the wider archive.",
+      "sourceAccessor": "getAllStoriesByMentions",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [
+        "feedId",
+        "recps",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "recps",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "callSites": 1
+    },
+    {
+      "name": "getCollection",
+      "domain": "story",
+      "kind": "read",
+      "purpose": "Open a single collection - a curated grouping of stories.",
+      "sourceAccessor": "getCollection",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "ID!"
+        }
+      ],
+      "ssbFlags": [
+        "feedId",
+        "recps",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "recps",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "callSites": 2
+    },
+    {
+      "name": "getStory",
+      "domain": "story",
+      "kind": "read",
+      "purpose": "Open a single story - a record of an event, with its text, media, contributors and the people it mentions.",
+      "sourceAccessor": "getStory",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "ID!"
+        }
+      ],
+      "ssbFlags": [
+        "feedId",
+        "recps",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "recps",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "callSites": 2
+    },
+    {
+      "name": "saveStory",
+      "domain": "story",
+      "kind": "write",
+      "purpose": "Create or update a story.",
+      "sourceAccessor": "saveStory",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "StoryInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "approveEditGroupPersonSubmission",
+      "domain": "submissions",
+      "kind": "write",
+      "purpose": "Approve a proposed edit to a person's profile, accepting only the fields the reviewer allows.",
+      "sourceAccessor": "approveEditGroupPersonSubmission",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        },
+        {
+          "name": "allowedFields",
+          "type": "PersonProfileInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "approveEditWhakapapaViewSubmission",
+      "domain": "submissions",
+      "kind": "write",
+      "purpose": "Approve a proposed edit to a whakapapa view, accepting only the fields the reviewer allows.",
+      "sourceAccessor": "approveEditWhakapapaViewSubmission",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        },
+        {
+          "name": "allowedFields",
+          "type": "WhakapapaViewInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "approveNewGroupPersonSubmission",
+      "domain": "submissions",
+      "kind": "write",
+      "purpose": "Approve adding a proposed new person to a group.",
+      "sourceAccessor": "approveNewGroupPersonSubmission",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        },
+        {
+          "name": "allowedFields",
+          "type": "PersonProfileInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "approveNewWhakapapaLink",
+      "domain": "submissions",
+      "kind": "write",
+      "purpose": "Approve a proposed new relationship, admitting it into the whakapapa.",
+      "sourceAccessor": "approveNewWhakapapaLink",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        },
+        {
+          "name": "allowedFields",
+          "type": "LinkInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "approveSubmission",
+      "domain": "submissions",
+      "kind": "write",
+      "purpose": "Approve a proposal wholesale, accepting it as submitted.",
+      "sourceAccessor": "approveSubmission",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        },
+        {
+          "name": "targetId",
+          "type": "String"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "createSubmissionsLink",
+      "domain": "submissions",
+      "kind": "write",
+      "purpose": "Record that one proposal depends on another, so related changes are reviewed and applied in the right order.",
+      "sourceAccessor": "createSubmissionsLink",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "parent",
+          "type": "String"
+        },
+        {
+          "name": "child",
+          "type": "String"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "getSubmissions",
+      "domain": "submissions",
+      "kind": "read",
+      "purpose": "List the pending proposals awaiting review - what a kaitiaki sees when deciding what to approve, including each proposal's target, comments, group and dependencies.",
+      "sourceAccessor": "getSubmissions",
+      "absorbs": [],
+      "variables": [],
+      "ssbFlags": [
+        "feedId",
+        "recps",
+        "authors",
+        "tombstone",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "recps",
+        "authors",
+        "tombstone",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "callSites": 1
+    },
+    {
+      "name": "proposeEditGroupPerson",
+      "domain": "submissions",
+      "kind": "write",
+      "purpose": "Propose changes to an existing person's profile within a group.",
+      "sourceAccessor": "proposeEditGroupPerson",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "profileId",
+          "type": "String!"
+        },
+        {
+          "name": "input",
+          "type": "PersonProfileInput!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        },
+        {
+          "name": "groupId",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "proposeEditWhakapapaView",
+      "domain": "submissions",
+      "kind": "write",
+      "purpose": "Propose changes to a whakapapa view - its focus, name, or which relationships are treated as primary.",
+      "sourceAccessor": "proposeEditWhakapapaView",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "whakapapaId",
+          "type": "String!"
+        },
+        {
+          "name": "input",
+          "type": "WhakapapaViewInput!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        },
+        {
+          "name": "groupId",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "proposeNewGroupPerson",
+      "domain": "submissions",
+      "kind": "write",
+      "purpose": "Propose adding a new person to a group, for a kaitiaki to review.",
+      "sourceAccessor": "proposeNewGroupPerson",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "PersonProfileInput!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        },
+        {
+          "name": "groupId",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "proposeNewWhakapapaLink",
+      "domain": "submissions",
+      "kind": "write",
+      "purpose": "Propose a new relationship between two people, for review before it enters the whakapapa.",
+      "sourceAccessor": "proposeNewWhakapapaLink",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "LinkInput!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        },
+        {
+          "name": "groupId",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "proposeTombstone",
+      "domain": "submissions",
+      "kind": "write",
+      "purpose": "Propose removing a record, for a kaitiaki to review rather than deleting it outright.",
+      "sourceAccessor": "proposeTombstone",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "recordId",
+          "type": "String!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        },
+        {
+          "name": "groupId",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "rejectSubmission",
+      "domain": "submissions",
+      "kind": "write",
+      "purpose": "Decline a proposal, with a comment explaining why.",
+      "sourceAccessor": "rejectSubmission",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "tombstoneSubmission",
+      "domain": "submissions",
+      "kind": "write",
+      "purpose": "Remove a submission from view entirely, rather than declining it on the record.",
+      "sourceAccessor": "tombstoneSubmission",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        },
+        {
+          "name": "tombstoneInput",
+          "type": "TombstoneInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 3
+    },
+    {
+      "name": "createSubGroup",
+      "domain": "subtribe",
+      "kind": "write",
+      "purpose": "Create a subgroup within a group, for a hapu or whanau within a wider iwi.",
+      "sourceAccessor": "createSubGroup",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "deleteSubGroup",
+      "domain": "subtribe",
+      "kind": "write",
+      "purpose": "Remove a person's membership of a subgroup, and their corresponding record in the parent group.",
+      "sourceAccessor": "deleteSubGroup",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "profileInSubGroup",
+          "type": "CommunityProfileInput!"
+        },
+        {
+          "name": "profileInGroup",
+          "type": "CommunityProfileInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "getSubGroups",
+      "domain": "subtribe",
+      "kind": "read",
+      "purpose": "List the subgroups of a group.",
+      "sourceAccessor": "getSubGroups",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [
+        "feedId",
+        "recps",
+        "authors",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "recps",
+        "authors",
+        "originalAuthor"
+      ],
+      "callSites": 2
+    },
+    {
+      "name": "addAdminsToGroup",
+      "domain": "tribe",
+      "kind": "write",
+      "purpose": "Grant administrative rights over a group to named people.",
+      "sourceAccessor": "addAdminsToGroup",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "groupId",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "getMembers",
+      "domain": "tribe",
+      "kind": "read",
+      "purpose": "List the people in a group.",
+      "sourceAccessor": "getMembers",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "ID!"
+        }
+      ],
+      "ssbFlags": [
+        "feedId",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "originalAuthor"
+      ],
+      "callSites": 2
+    },
+    {
+      "name": "getTribe",
+      "domain": "tribe",
+      "kind": "read",
+      "purpose": "Read one group - its public and private profile, who tends it, and the user's standing in it.",
+      "sourceAccessor": "getTribe",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [
+        "feedId",
+        "recps",
+        "authors",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "recps",
+        "authors",
+        "originalAuthor"
+      ],
+      "callSites": 2
+    },
+    {
+      "name": "getTribes",
+      "domain": "tribe",
+      "kind": "read",
+      "purpose": "List the groups the user belongs to, for navigation and group switching.",
+      "sourceAccessor": "getTribes",
+      "absorbs": [],
+      "variables": [],
+      "ssbFlags": [
+        "feedId",
+        "recps",
+        "authors",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "recps",
+        "authors",
+        "originalAuthor"
+      ],
+      "callSites": 4
+    },
+    {
+      "name": "initGroup",
+      "domain": "tribe",
+      "kind": "write",
+      "purpose": "Create a new group - the act that establishes a tribe or community and the permission boundary everything else in Ahau hangs off.",
+      "sourceAccessor": "initGroup",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "communityProfile",
+          "type": "CommunityProfileInput!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "acceptGroupApplication",
+      "domain": "tribes-application",
+      "kind": "write",
+      "purpose": "Admit an applicant to a group.",
+      "sourceAccessor": "acceptGroupApplication",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        },
+        {
+          "name": "groupIntro",
+          "type": "String"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "createGroupApplication",
+      "domain": "tribes-application",
+      "kind": "write",
+      "purpose": "Apply to join a group.",
+      "sourceAccessor": "createGroupApplication",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "groupId",
+          "type": "String!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "declineGroupApplication",
+      "domain": "tribes-application",
+      "kind": "write",
+      "purpose": "Refuse an application to join.",
+      "sourceAccessor": "declineGroupApplication",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        },
+        {
+          "name": "comment",
+          "type": "String"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "listGroupApplications",
+      "domain": "tribes-application",
+      "kind": "read",
+      "purpose": "List applications awaiting a decision, so a kaitiaki can see who is asking to join.",
+      "sourceAccessor": "listGroupApplications",
+      "absorbs": [],
+      "variables": [],
+      "ssbFlags": [
+        "feedId",
+        "recps",
+        "authors",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "recps",
+        "authors",
+        "blobUri",
+        "originalAuthor"
+      ],
+      "callSites": 1
+    },
+    {
+      "name": "offerMembershipCredential",
+      "domain": "tribes-application",
+      "kind": "write",
+      "purpose": "Issue a verifiable credential attesting that someone belongs to a group.",
+      "sourceAccessor": "offerMembershipCredential",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "tribeId",
+          "type": "String!"
+        },
+        {
+          "name": "poBoxId",
+          "type": "String!"
+        },
+        {
+          "name": "feedId",
+          "type": "String!"
+        },
+        {
+          "name": "claims",
+          "type": "MembershipClaimInput!"
+        }
+      ],
+      "ssbFlags": [
+        "feedId"
+      ],
+      "flagsViaFragments": [],
+      "callSites": 1
+    },
+    {
+      "name": "getDescendantLinks",
+      "domain": "whakapapa",
+      "kind": "read",
+      "purpose": "Fetch the child and partner links descending from a person, to draw the tree below them.",
+      "sourceAccessor": "getDescendantLinks",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "profileId",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "getFamilyLinks",
+      "domain": "whakapapa",
+      "kind": "read",
+      "purpose": "Fetch the links around a person - immediate family, or extended kin when asked - to draw their local whakapapa.",
+      "sourceAccessor": "getFamilyLinks",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "profileId",
+          "type": "String!"
+        },
+        {
+          "name": "extended",
+          "type": "Boolean"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 2
+    },
+    {
+      "name": "getWhakapapaView",
+      "domain": "whakapapa",
+      "kind": "read",
+      "purpose": "Open a saved whakapapa view - the curated lens over the graph: which person is the focus, which profiles are ignored, which parent or partner counts as primary where someone has several, plus the view's name, image and guardians.",
+      "sourceAccessor": "getWhakapapaView",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "id",
+          "type": "String!"
+        }
+      ],
+      "ssbFlags": [
+        "feedId",
+        "recps",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "recps",
+        "originalAuthor"
+      ],
+      "callSites": 3
+    },
+    {
+      "name": "getWhakapapaViews",
+      "domain": "whakapapa",
+      "kind": "read",
+      "purpose": "List the whakapapa views belonging to a group, for the index screen and for choosing a target when submitting a change.",
+      "sourceAccessor": "getWhakapapaViews",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "groupId",
+          "type": "String"
+        }
+      ],
+      "ssbFlags": [
+        "feedId",
+        "recps",
+        "originalAuthor"
+      ],
+      "flagsViaFragments": [
+        "feedId",
+        "recps",
+        "originalAuthor"
+      ],
+      "callSites": 4
+    },
+    {
+      "name": "saveWhakapapaView",
+      "domain": "whakapapa",
+      "kind": "write",
+      "purpose": "Create or update a whakapapa view - naming it, setting its focus, ignoring profiles, or recording which relationships are primary.",
+      "sourceAccessor": "saveWhakapapaView",
+      "absorbs": [],
+      "variables": [
+        {
+          "name": "input",
+          "type": "WhakapapaViewInput"
+        }
+      ],
+      "ssbFlags": [],
+      "flagsViaFragments": [],
+      "callSites": 5
+    }
+  ]
+}

@@ -26,9 +26,9 @@ context: |
   nothing is erased (removal is retraction). Zome calls stay inside
   per-feature client modules; components never call Holochain directly.
 
-  The typed contract in src/contract/ is frozen reference, a checklist of what
-  the old app could do (ADR-0006). It is not the spec, and new code must not
-  match it operation-for-operation.
+  The typed contract in reference/leg1-contract/contract/ is frozen reference,
+  a checklist of what the old app could do (ADR-0006). It is not the spec,
+  and new code must not match it operation-for-operation.
 
   GitHub issues (ahau01/ahau-v2) are the backlog; a change's scope and
   design live in the change, not on the issue. ADRs live in docs/adr/.
