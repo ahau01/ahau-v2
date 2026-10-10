@@ -1,13 +1,18 @@
 # Triage Labels
 
-The skills speak in terms of five canonical triage roles. This file maps those roles to the actual label strings used in this repo's issue tracker.
+Labels that say where a backlog issue stands. They apply to GitHub issues,
+not to OpenSpec changes: once a change exists, its state is in the change.
 
-| Label in mattpocock/skills | Label in our tracker | Meaning                                  |
-| -------------------------- | -------------------- | ---------------------------------------- |
-| `needs-triage`             | `needs-triage`       | Maintainer needs to evaluate this issue  |
-| `needs-info`               | `needs-info`         | Waiting on reporter for more information |
-| `ready-for-agent`          | `ready-for-agent`    | Fully specified, ready for an AFK agent  |
-| `ready-for-human`          | `ready-for-human`    | Requires human implementation            |
-| `wontfix`                  | `wontfix`            | Will not be actioned                     |
+| Label             | Meaning                                                        |
+| ----------------- | -------------------------------------------------------------- |
+| `needs-triage`    | Maintainer needs to evaluate this issue                        |
+| `needs-info`      | Waiting on more information before it can be picked up         |
+| `ready-for-agent` | Clear enough for an agent to take to `/opsx:propose` unaided   |
+| `ready-for-human` | Needs a person: a decision, hands-on work, or access to a running system |
+| `wontfix`         | Will not be actioned                                           |
 
-When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
+`ready-for-agent` doesn't skip review. A change that touches relationship
+data, sync or access control still has a person read its proposal and
+design before `/opsx:apply` ([openspec.md](openspec.md)).
+
+The `wayfinder:*` labels are retired; see [issue-tracker.md](issue-tracker.md).
