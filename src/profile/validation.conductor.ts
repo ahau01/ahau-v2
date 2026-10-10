@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 
 import { dhtSync, runScenario, type PlayerApp } from '@holochain/tryorama'
 
-import { BIRTH_ORDER_INVALID, completeProfile } from './client.js'
+import { ALREADY_HAS_PROFILE, BIRTH_ORDER_INVALID, GENDERS, completeProfile, type Profile } from './client.js'
 import { cellOf, happ, readyClient, rogueHapp } from './conductor-harness.js'
 
 /**
@@ -31,6 +31,28 @@ test('promise: another agent cannot overwrite my profile, even bypassing the app
       }),
       /Only the author of a profile can change it/
     )
+    assert.deepEqual(await ownerClient.getMyProfile(), completeProfile({ name: 'Mere' }))
+    await ownerClient.close()
+  })
+})
+
+test('promise: another agent cannot create a profile for me, even bypassing the app', async () => {
+  await runScenario(async scenario => {
+    const [owner, rogue] = await twoAgentsOnOneNetwork(scenario)
+    // Every action is signed by its author, so the rogue's write can only
+    // ever be the rogue's own profile, never one under the owner's key.
+    await cellOf(rogue).callZome({
+      zome_name: 'rogue_profiles',
+      fn_name: 'create_profile',
+      payload: { name: 'Mere, as written by someone else' }
+    })
+    assert.equal((await myProfileOn(rogue))?.name, 'Mere, as written by someone else')
+    await dhtSync([owner, rogue], cellOf(owner).cell_id[0])
+
+    const ownerClient = await readyClient(owner)
+    assert.equal(await ownerClient.getMyProfile(), null)
+    const created = await ownerClient.createMyProfile({ name: 'Mere' })
+    assert.equal(created.status, 'created')
     assert.deepEqual(await ownerClient.getMyProfile(), completeProfile({ name: 'Mere' }))
     await ownerClient.close()
   })
@@ -229,7 +251,7 @@ test('promise: an agent cannot hold a second profile, even bypassing the app', a
     })
 
     await write('First')
-    await assert.rejects(write('Second'), /This agent already has a profile/)
+    await assert.rejects(write('Second'), (err: Error) => err.message.includes(ALREADY_HAS_PROFILE))
   })
 })
 
@@ -246,6 +268,29 @@ test('promise: a profile with invalid fields is refused, even bypassing the app'
     await assert.rejects(write({ name: 'Mere', dateOfBirth: '01/01/1990' }), /Date of birth must be a real date/)
     // The form shows this same message before saving, so the two can't drift.
     await assert.rejects(write({ name: 'Mere', birthOrder: 0 }), (err: Error) => err.message.includes(BIRTH_ORDER_INVALID))
+  })
+})
+
+test('promise: the zome keeps every gender the app offers and refuses one it does not, even bypassing the app', async () => {
+  await runScenario(async scenario => {
+    const [, rogue] = await twoAgentsOnOneNetwork(scenario)
+    const write = (fnName: string, gender: string) => cellOf(rogue).callZome({
+      zome_name: 'rogue_profiles',
+      fn_name: fnName,
+      payload: { name: 'Mere', gender }
+    })
+
+    // One profile per agent, so the first gender creates it and the rest change it.
+    const [first, ...rest] = GENDERS
+    await write('create_profile', first)
+    assert.equal((await myProfileOn(rogue))?.gender, first)
+    for (const gender of rest) {
+      await write('update_my_profile', gender)
+      assert.equal((await myProfileOn(rogue))?.gender, gender)
+    }
+    // Refused because the integrity zome's Gender type can't hold it: the
+    // same type validation reads entries into, so no entry can carry it.
+    await assert.rejects(write('update_my_profile', 'tane'), /error: Deserialize\(/)
   })
 })
 
@@ -279,3 +324,8 @@ async function testZome (player: PlayerApp, fnName: string, payload: unknown): P
   return await cellOf(player).callZome({ zome_name: 'rogue_profiles', fn_name: fnName, payload })
 }
 
+
+/** The player's own profile, read through the real coordinator on their own chain. */
+async function myProfileOn (player: PlayerApp): Promise<Profile | null> {
+  return await cellOf(player).callZome({ zome_name: 'profiles', fn_name: 'get_my_profile' }) as Profile | null
+}

@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { createServer, type Socket } from 'node:net'
 
 import { createDevProfileClient, devConnectionResponse } from './dev-connection.js'
 
@@ -17,6 +18,38 @@ test('dev connection: when the conductor is not running, the client reports fail
   const readiness = await client.waitUntilReady()
 
   assert.equal(readiness.status, 'failed')
+})
+
+test('dev connection: a dev app port that accepts but never answers fails in seconds, not the launcher\'s 30', async () => {
+  // Accepts TCP connections and then says nothing, so the WebSocket upgrade never completes.
+  const sockets: Socket[] = []
+  const silent = createServer(socket => { sockets.push(socket) })
+  await new Promise<void>(resolve => silent.listen(0, '127.0.0.1', resolve))
+  const address = silent.address()
+  if (address === null || typeof address === 'string') throw new Error('no TCP port')
+
+  const client = createDevProfileClient({
+    url: new URL(`ws://127.0.0.1:${address.port}`),
+    origin: 'ahau-test',
+    fetchConnection: async () => ({
+      appToken: [1, 2, 3],
+      cellId: [new Array(39).fill(0), new Array(39).fill(0)],
+      signing: { capSecret: [], privateKey: [], publicKey: [], signingKey: [] }
+    })
+  })
+
+  try {
+    // Well past dev's 3s, well short of the launcher's 30s.
+    const outcome = await Promise.race([
+      client.waitUntilReady(),
+      new Promise<'still waiting'>(resolve => setTimeout(() => resolve('still waiting'), 8000).unref())
+    ])
+    if (outcome === 'still waiting') assert.fail('the dev client was still waiting after 8s')
+    assert.equal(outcome.status, 'failed')
+  } finally {
+    for (const socket of sockets) socket.destroy()
+    await new Promise(resolve => silent.close(resolve))
+  }
 })
 
 test('dev connection: the dev server answers 503 when nothing is on the admin port', async () => {

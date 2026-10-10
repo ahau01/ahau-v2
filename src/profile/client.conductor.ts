@@ -4,7 +4,7 @@ import { createServer, type Socket } from 'node:net'
 
 import { runScenario } from '@holochain/tryorama'
 
-import { completeProfile, createProfileClient, type Profile } from './client.js'
+import { ALREADY_HAS_PROFILE, BIRTH_ORDER_INVALID, completeProfile, createProfileClient, type Profile } from './client.js'
 import { happ, readyClient } from './conductor-harness.js'
 
 /**
@@ -260,7 +260,7 @@ test('promise: createMyProfile refuses invalid fields plainly and saves nothing'
     })
     assert.deepEqual(await client.createMyProfile({ name: 'Mere', birthOrder: 0 }), {
       status: 'failed',
-      reason: 'Order of birth must be a whole number, from 1'
+      reason: BIRTH_ORDER_INVALID
     })
     assert.equal(await client.getMyProfile(), null)
     await client.close()
@@ -296,7 +296,8 @@ test('promise: a second createMyProfile for the same agent fails plainly and kee
     const second = await client.createMyProfile({ name: 'Someone else' })
     assert.equal(second.status, 'failed')
     const reason = second.status === 'failed' ? second.reason : ''
-    assert.equal(reason, 'This agent already has a profile')
+    // The pretend client gives this same reason, so the two can't drift.
+    assert.equal(reason, ALREADY_HAS_PROFILE)
     assert.deepEqual(await client.getMyProfile(), completeProfile({ name: 'Mere' }))
     await client.close()
   })

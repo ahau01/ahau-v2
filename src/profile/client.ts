@@ -47,8 +47,14 @@ export interface Profile {
   personal: PersonalInformation
 }
 
-/** `unknown` is an answer the person chose, unlike `null` (no answer). */
-export type Gender = 'male' | 'female' | 'other' | 'unknown'
+/**
+ * The genders the app offers. A conductor test checks the profiles
+ * integrity zome (its `Gender` enum) keeps each one, but not that the zome
+ * has no others. `unknown` is an answer the person chose, unlike `null` (no
+ * answer).
+ */
+export const GENDERS = ['male', 'female', 'other', 'unknown'] as const
+export type Gender = typeof GENDERS[number]
 
 /** Contact details kept on the person's own chain, never published. */
 export interface PersonalInformation {
@@ -72,6 +78,13 @@ export type NewProfile = Partial<Omit<Profile, 'personal'>> & {
  * and shows this same text; a conductor test keeps the two equal.
  */
 export const BIRTH_ORDER_INVALID = 'Order of birth must be a whole number, from 1'
+
+/**
+ * The zome's refusal of a second profile for one agent key
+ * (ALREADY_HAS_PROFILE in the profiles integrity zome). The pretend client
+ * gives the same reason; a conductor test keeps the two equal.
+ */
+export const ALREADY_HAS_PROFILE = 'This agent already has a profile'
 
 /**
  * The profile a NewProfile saves as: unfilled fields empty, as the zome
@@ -130,6 +143,11 @@ export const ZOME = 'profiles'
 export const PROFILE_FUNCTIONS = ['get_my_profile', 'create_my_profile'] as const
 type ProfileFunction = typeof PROFILE_FUNCTIONS[number]
 
+/**
+ * For a launcher, which may still be starting the conductor. Dev overrides
+ * it with a much shorter wait (dev-connection.ts), as its conductor is
+ * already up by the time the page connects.
+ */
 const DEFAULT_TIMEOUT_MS = 30_000
 const RETRY_MS = 250
 

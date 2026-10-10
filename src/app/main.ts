@@ -29,11 +29,12 @@ import.meta.hot?.dispose(() => {
 /**
  * In dev, the local conductor from `npm run conductor`, reached through the
  * dev server. `?pretend` runs without Holochain instead; `?pretend=fail-start`
- * or `?pretend=fail-save` demos the failure screens.
+ * or `?pretend=fail-save` demos the failure screens. Dev builds only: a
+ * production build leaves the pretend client out entirely.
  */
 function profileClient (): ProfileClient {
   const pretend = new URLSearchParams(location.search).get('pretend')
-  if (pretend !== null) {
+  if (import.meta.env.DEV && pretend !== null) {
     return createPretendProfileClient({
       storage: localStorage,
       latencyMs: 600,
