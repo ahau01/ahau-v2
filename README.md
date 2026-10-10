@@ -11,13 +11,15 @@ Holochain, rather than copying how the old app did things
 
 ## Status
 
-- **Done:** a Svelte app shell, plus a typed record of everything the old app's
-  data layer could do (see "What's in this repo").
-- **Next:** list what people actually do with Āhau ([#13](https://github.com/ahau01/ahau-v2/issues/13)),
-  and build the first feature on Holochain — group permissions
-  ([ADR-0003](docs/adr/0003-holochain-as-leg-2-protocol-candidate.md)).
-- **Started:** the Holochain dev environment, an empty hApp, and the profile
-  client module ([#15](https://github.com/ahau01/ahau-v2/issues/15)).
+- **Done:** first launch on Holochain ([#14](https://github.com/ahau01/ahau-v2/issues/14)).
+  A new person sees a launch screen, creates their profile, and it is saved
+  to Holochain under their agent key. Next time they go straight in. Also a
+  typed record of everything the old app's data layer could do (see "What's
+  in this repo").
+- **Next:** group permissions on Holochain
+  ([ADR-0003](docs/adr/0003-holochain-as-leg-2-protocol-candidate.md),
+  [plan](docs/plans/group-permissions.md)) — and listing what people actually
+  do with Āhau ([#13](https://github.com/ahau01/ahau-v2/issues/13)).
 
 ## What stays the same
 
@@ -39,7 +41,7 @@ Whatever the backend, Āhau keeps these rules (full detail in [CLAUDE.md](CLAUDE
 | `src/contract/` | **Reference only.** A typed list of the 69 actions the old SSB app's data layer supported. Used as a checklist so nothing gets lost in the rebuild; new code doesn't have to match it. |
 | `src/fixtures/` | The fake in-memory backend behind the frozen contract's tests. The app no longer uses it. |
 | `src/profile/` | The profile client module: the only code that talks to Holochain about profiles. Also the dev-only connection to the local conductor, and a pretend client for running the app without Holochain. |
-| `dnas/ahau/` | The Holochain DNA. Empty for now; the profile zome goes here next. |
+| `dnas/ahau/` | The Holochain DNA, with the profiles zome: the rules for who can write a profile (`zomes/integrity/`) and the functions the app calls (`zomes/coordinator/`). |
 | `workdir/` | The hApp manifest that bundles the DNA. |
 | `flake.nix`, `flake.lock` | The pinned Holochain dev environment. |
 | `src/conformance/` | Tests written against the contract. The ones about the rules above will move to Holochain tests. |
@@ -70,7 +72,7 @@ Other commands:
 | `npm run typecheck` | Typecheck the TypeScript |
 | `npm run check:app` | Typecheck the Svelte app |
 | `npm run build` | Compile to `dist/` |
-| `npm run build:app` | Build the app shell for production |
+| `npm run build:app` | Build the app for production |
 | `npm run check:coverage` | Check the contract still matches the old app review |
 | `npm run check:manifest` | Check the contract's generated manifest is up to date |
 
