@@ -20,6 +20,9 @@
       devShells.default = pkgs.mkShell {
         inputsFrom = [ inputs'.holonix.devShells.default ];
         packages = [ pkgs.binaryen ];
+
+        # OpenSpec sends anonymous usage stats unless told not to.
+        OPENSPEC_TELEMETRY = "0";
       };
     };
   };
