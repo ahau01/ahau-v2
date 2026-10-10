@@ -64,10 +64,11 @@ Three terms the code uses:
 3. **Pātaka step.** Clicking the avatar runs `login()` (`Login.vue:176-189`).
    If you have just created your profile, the "connect to a Pātaka" dialog
    opens first (`Login.vue:58-65`). Both Skip and Connect then continue
-   (`Login.vue:170-174, 191-199`). In this code a returning person skips
-   the dialog, because `onboarded` starts as `true` (`Login.vue:107`). The
-   v2.27.2 capture says otherwise: clicking a returning profile showed the
-   Pātaka screen. See Open questions.
+   (`Login.vue:170-174, 191-199`). A returning person skips the dialog,
+   because `onboarded` starts as `true` (`Login.vue:107`). The #61 capture
+   confirms it: after a restart, clicking your avatar goes straight to your
+   profile. The dialog shows only after you create your profile, in that
+   session. See Open questions.
 4. **Where you end up.** `login()` goes to the route named `person`, using
    your personal tribe id and your personal profile id
    (`Login.vue:179-185`). That route redirects to `profile`
@@ -147,7 +148,7 @@ Everything except the launch screen and the tribe list is under a tribe id
 - **Personal** (your personal tribe): your profile, account settings,
   Pātaka connections, your archive and collections, your whakapapa records,
   your people list (the People item only shows if the kaitiaki check
-  passes), and your wallet.
+  passes; for a new identity it doesn't), and your wallet.
 - **Tribe-scoped:** the community profile, members and kaitiaki lists, the
   tribe's archive and collections, its whakapapa records (plus a separate
   kaitiaki-only list), the people list (kaitiaki only), tribe settings, and
@@ -172,8 +173,8 @@ it: whoever opens the app on this device. Launch was already rebuilt in v2
 |---|---|---|---|---|---|
 | Any person on a new device | Is welcomed and asked "Ko wai koe / who are you?" before anything else | `views/Login.vue:14-37` | works (captured, v2.27.2) | identity | |
 | Any person on a new device | Creates their own profile (names, gender, birth, about, skills, contact) as the first act | `Login.vue:52-57, 205-218`; `components/dialog/profile/NewPersonDialog.vue` | works (captured, v2.27.2) | identity | |
-| A returning person | Sees their own avatar and name on launch and clicks it to enter. No password or account. | `Login.vue:39-51, 176-189` | unverified | identity | |
-| A new person | Is offered to connect to a Pātaka (an always-online peer) or skip, right after creating their profile | `Login.vue:58-65, 170-199`; `components/dialog/connection/NewPatakaDialog.vue` | unverified (see Open questions) | sync | |
+| A returning person | Sees their own avatar and name on launch and clicks it to enter. No password or account. | `Login.vue:39-51, 176-189` | works (captured, v2.27.2) | identity | |
+| A new person | Is offered to connect to a Pātaka (an always-online peer) or skip, right after creating their profile | `Login.vue:58-65, 170-199`; `components/dialog/connection/NewPatakaDialog.vue` | works (used during capture, v2.27.2). Not offered again after a restart. | sync | |
 
 ## Tribe list / discovery (`/tribe`)
 
@@ -307,8 +308,8 @@ Who sees it: you. It sits in your personal group.
 
 | Who | What | Where seen | Status | Kaupapa flag | Keep? |
 |---|---|---|---|---|---|
-| A person | Lands on their own profile after entering the app | `Login.vue:176-185`; `views.js:74-75` | unverified | identity | |
-| A person | Reads their own profile, including skills and education | `Profile.vue:21-64`; `ProfileInfoCard.vue:4-30` | unverified | identity | |
+| A person | Lands on their own profile after entering the app | `Login.vue:176-185`; `views.js:74-75` | works (captured, v2.27.2) | identity | |
+| A person | Reads their own profile, including skills and education | `Profile.vue:21-64`; `ProfileInfoCard.vue:4-30` | works (captured, v2.27.2) | identity | |
 | A person | Sees their own family (parents, partners, siblings, children) and opens any of them | `ProfileInfoCard.vue:10-30` | unverified | relationship | |
 | A person | Sees the tribes they belong to and jumps to one, or follows "discover your tribes" to the tribe list | `Profile.vue:80-105` | unverified | permissions | |
 | A person | Manages Pātaka connections from their profile (same as on the tribe list) | `Profile.vue:134` | unverified | sync | |
@@ -415,16 +416,19 @@ when you hold a credential (`SideNavMenu.vue:223-225`).
 
 ## Open questions
 
-1. **Does a returning person see the Pātaka dialog?** The monorepo code
-   skips it, because `onboarded` starts as `true` (`Login.vue:107, 177`).
-   The v2.27.2 capture shows a "SKIP FOR NOW on the Pātaka screen" step
-   after clicking an existing profile (`old-app-capture/notes.md:8`). Which
-   behaviour did people actually get?
-2. **Does "People" show in your personal tribe?** The nav item checks
-   `profile.kaitiaki` on your own profile (`SideNavMenu.vue:247-252`). The
-   page itself treats you as kaitiaki of your personal tribe
-   (`store/root.mjs:62-64`). It's unclear whether your own profile lists you
-   as kaitiaki, so it's unclear whether the item appears.
+1. **Does a returning person see the Pātaka dialog?** Answered in #61: no.
+   After a restart, clicking your avatar goes straight to your profile,
+   as the code says (`onboarded` starts as `true`, `Login.vue:107, 177`).
+   The dialog shows only when you click yourself straight after creating
+   your profile, in that session. That is the step #20 recorded
+   (`old-app-capture/notes.md:8`). See `old-app-capture/notes.md`, "Open
+   questions answered".
+2. **Does "People" show in your personal tribe?** Answered in #61: no, not
+   for a new identity. Your side nav is Profile, Archive and Whakapapa
+   (`old-app-capture/11a-own-profile-desktop.png`). So your own profile
+   doesn't list you as kaitiaki (`SideNavMenu.vue:247-252`), even though
+   the page treats you as kaitiaki of your personal tribe
+   (`store/root.mjs:62-64`).
 3. **What could someone do on another person's page at
    `.../person/:profileId/profile`?** Nothing in the code sends anyone
    there except to your own profile. Was it ever used for other people?
@@ -432,10 +436,14 @@ when you hold a credential (`SideNavMenu.vue:223-225`).
    acts when `authors.add` is set (`ProfileShow.vue:216-223`).
 5. **Who may edit or delete a collection?** `CollectionShow.vue` shows the
    controls to everyone. The backend's rule isn't visible from the UI.
-6. **Did any of this work in the running app?** All statuses are
-   "unverified" from code reading. #13's top-priority source (clicking
-   through the running app) hasn't been done for these pages. The capture
-   notes say the monorepo build had issues.
+6. **Did any of this work in the running app?** Partly answered in #61.
+   Entering the app, your own profile, the empty Archive and Whakapapa, the
+   empty tribe list and the app bar all loaded and navigated in v2.27.2,
+   with no console errors. The rows those captures show are now "works
+   (captured, v2.27.2)". One fault: the Archive's collections heading shows
+   the untranslated key VIEWARCHIVE.COLLECTIONSTITLE, because
+   `Archive.vue:19` doesn't call `$t`. Everything that needs data first (a
+   tribe, a story, a whakapapa) is still unverified.
 7. **Did kaitiaki actually use membership credentials (issuing, accepting,
    the wallet)?** They're behind a beta toggle (`TribeSettings.vue:47`).
 8. **Is the 10-second re-fetch of tribes (`Appbar.vue:186`,
