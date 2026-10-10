@@ -2,8 +2,8 @@
 
 ## Context
 
-- **The old app.** The GitLab `ahau` repo at `f257cf1e` is v2.27.2, with Electron 26.4.1 and Vuetify 2.3.20. In development it runs as two processes: `ui` (`npm run dev`, serving on port 3000) and `desktop` (`npm run dev`, which loads `http://localhost:3000`, `desktop/main.js:55-57`). Both need Node 18.
-- **What !985 left at that commit.** `@playwright/test` is a `ui` dev dependency. `ui/e2e/login.spec.js` launches `desktop/main.js` with `_electron.launch()` and `NODE_ENV=development`. `Login.vue` has `data-testid`s for `login-splash`, `who-are-you-button` and `login-avatar`. The spec's `executablePath` points at `electron.exe`, so it only ran on Windows as written.
+- **The old app.** The old app at `eb4fb48` is v2.27.2, with Electron 26.4.1 and Vuetify 2.3.20. In development it runs as two processes: `ui` (`npm run dev`, serving on port 3000) and `desktop` (`npm run dev`, which loads `http://localhost:3000`, `desktop/main.js:55-57`). Both need Node 18.
+- **The baseline and !985.** Captures run from `~/projects/ahau` (`ahau01/ahau`, `eb4fb48`, v2.27.2). It has the same app code as #20's GitLab `f257cf1e`, without !985's additions: no `data-testid`s in `Login.vue`, no `ui/e2e/`, and no Playwright in `ui`. !985's `login.spec.js` is used only as the model for launching (`_electron.launch()` on `desktop/main.js` with `NODE_ENV=development`). Its `executablePath` pointed at `electron.exe`, so it only ran on Windows as written.
 - **Data folder.** `desktop/ssb.config.js:9` puts all of the app's data in `envPaths(process.env.APP_NAME || env.ahau.appName).data`. A new `APP_NAME` means a new identity and an empty database.
 - **Layout breakpoints.** `ProfileShow.vue:164-168` (`mobile` is `xs`, `tablet` is `md`) and `SideNavMenu.vue`. With Vuetify 2.3's default breakpoints, under 600px is mobile and about 960–1264px is tablet.
 - **Ports.** The SSB, blob and GraphQL ports are fixed by `ahau-env`, so only one copy of the old app can run at a time.
@@ -68,9 +68,9 @@ The agent writes `notes.md` from those files. The script doesn't generate it, be
 
 The JSON files are kept until the notes are written and then deleted. Only the PNGs, `capture.mjs` and `notes.md` are committed.
 
-### D6. Navigation by role and text, using !985's test ids where they exist
+### D6. Navigation by role and text only
 
-The script finds controls the way a person would: by accessible role and visible label (`getByRole`, `getByText`). It uses `login-avatar` and `who-are-you-button` for the launch screen. When a label is ambiguous, it scopes the search to the side nav or app bar element rather than adding test ids (Non-Goals).
+The script finds controls the way a person would: by accessible role and visible label (`getByRole`, `getByText`), including on the launch screen. The baseline has no `data-testid`s. When a label is ambiguous, it scopes the search to the side nav or app bar element rather than adding test ids (Non-Goals).
 
 ### D7. Q1 is checked in the script; Q2 and Q6 are judged from what it captured
 
@@ -84,7 +84,7 @@ This change writes nothing to Holochain. It has no merge-sensitive mutations, no
 
 ## Risks / Trade-offs
 
-- **The old app won't install or start under Node 18 on Linux** (native modules, `patch-package`, `electron-builder install-app-deps`). → Use Node 18 from nix (`nix shell nixpkgs#nodejs_18`). If install still fails, stop and report the error in #61. The slice owner decides whether to capture by hand. Don't patch the old app.
+- **The old app won't install or start under Node 18 on Linux** (native modules, `patch-package`, `electron-builder install-app-deps`). → Use Node 18 from a pinned nixpkgs (`nix shell github:NixOS/nixpkgs/nixos-24.11#nodejs_18`). Skip the root install (see the proposal's Flagged items). If install still fails, stop and report the error in #61. The slice owner decides whether to capture by hand. Don't patch the old app.
 - **Electron 26 under Xvfb** may need flags (GPU, sandbox). → Try `--disable-gpu` first, then the real display (D4). Note what was needed in the script's header.
 - **Some views can't be reached without data**, or a label isn't found. → The script records the failure for that view and continues. A missing view is reported in the notes and in #61, never faked.
 - **The `ahau-env` ports are taken** by another copy of the old app. → The script checks the GraphQL port before launching and stops with a clear message.

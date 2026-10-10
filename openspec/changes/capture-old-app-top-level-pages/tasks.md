@@ -6,8 +6,8 @@ If the old app won't install or start, or a view can't be reached, stop at that 
 
 ## 1. Set up the old app
 
-- [ ] 1.1 Clone `https://gitlab.com/ahau/ahau.git` into a new folder outside both repos (not `~/projects/ahau`). Check out `f257cf1e21827472fd928111cf229bc84cf1a2f6` (branch `e2e-testing-eval`). Verify: `git rev-parse HEAD` prints that hash, and `ui/e2e/login.spec.js` exists.
-- [ ] 1.2 In a Node 18 shell (`nix shell nixpkgs#nodejs_18`), run `npm install --engine-strict` in the repo root, `ui/` and `desktop/`, as its README says. Verify: `node --version` is 18.x, and each install exits 0.
+- [ ] 1.1 Use the existing clone at `~/projects/ahau` (`https://github.com/ahau01/ahau.git`). Verify: `git rev-parse HEAD` prints `eb4fb4887018574f874e33c082dedc9dcc166a25`, and `git status --short` is empty. If `main` has moved, check out `eb4fb48`.
+- [ ] 1.2 In a Node 18 shell (`nix shell github:NixOS/nixpkgs/nixos-24.11#nodejs_18`), run `npm install --engine-strict` in `ui/` and `desktop/`. Skip the repo root: its `wait-on` dependency needs Node 20 or later (proposal, Flagged). Verify: `node --version` is 18.x, both installs exit 0, `desktop/node_modules/electron/dist/electron` exists, and `git status --short` is still empty.
 - [ ] 1.3 Start `ui` (`npm run dev`) and `desktop` (`npm run dev`) with `APP_NAME=ahau-capture`, by hand, once. Verify: the launch screen's "who are you" button shows, and a new `ahau-capture` data folder exists. Then stop both. Note any Xvfb or Electron flags that were needed (design D4, Risks).
 
 ## 2. The capture script
@@ -40,7 +40,7 @@ Only views the script reaches without setting up data (design Non-Goals). If a v
 
 Write these up in a new section of `docs/old-app-capture/notes.md`, headed for #61 and set out like #20's sections, from the script's JSON files (design D5).
 
-- [ ] 5.1 Record how the captures were made: the GitLab remote URL, `git rev-parse HEAD`, the app version, the OS, Node and Electron versions, the display (Xvfb or real), the window sizes, the `APP_NAME`, and the command that runs `capture.mjs`. Verify: the section has each of these, and the command matches the script's header.
+- [ ] 5.1 Record how the captures were made: the remote URL (`github.com/ahau01/ahau`), `git rev-parse HEAD`, the app version, the OS, Node and Electron versions, the Node source (pinned nixos-24.11), the skipped root install, how this commit relates to #20's `f257cf1e`, the display (Xvfb or real), the window sizes, the `APP_NAME`, and the command that runs `capture.mjs`. Verify: the section has each of these, and the command matches the script's header.
 - [ ] 5.2 Add a table with one row for each PNG: file name, what it shows, window size, and address. Verify: every PNG added in groups 3 and 4 has a row with all four filled in.
 - [ ] 5.3 Copy each page's wording from its JSON into an "Exact wording" subsection: headings, app-bar and side-nav labels, buttons, section titles, and the empty-page messages for Archive, Whakapapa and the tribe list. Verify: each page from group 3 has a subsection, and its wording matches its JSON.
 - [ ] 5.4 Answer the open questions from `docs/capability-inventory.md`, naming the file that shows each answer (design D7). Verify: each one has an answer:
