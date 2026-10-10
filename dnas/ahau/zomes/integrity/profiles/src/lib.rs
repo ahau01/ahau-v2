@@ -87,6 +87,7 @@ pub enum EntryTypes {
 
 pub const ALREADY_HAS_PROFILE: &str = "This agent already has a profile";
 pub const NOT_THE_AUTHOR: &str = "Only the author of a profile can change it";
+pub const UPDATE_MUST_POINT_AT_ORIGINAL: &str = "Changes to a profile must point at its first version";
 pub const PROFILES_CANNOT_BE_DELETED: &str = "Profiles can't be deleted yet";
 pub const PERSONAL_INFORMATION_CANNOT_BE_DELETED: &str = "Personal information can't be deleted yet";
 pub const PERSONAL_INFORMATION_NEEDS_A_PROFILE: &str = "Personal information needs a profile first";
@@ -139,13 +140,13 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
             action,
         }) => first_invalid([
             validate_profile_content(&profile),
-            validate_by_original_author(&action.author, &action.original_action_address),
+            validate_update(&action),
         ]),
         FlatOp::RegisterAgentActivity(OpActivity::UpdateEntry {
             app_entry_type: Some(UnitEntryTypes::Profile),
             action,
             ..
-        }) => validate_by_original_author(&action.author, &action.original_action_address),
+        }) => validate_update(&action),
         // Personal information is private, so these ops carry no contents;
         // only who may change it can be checked.
         FlatOp::StoreRecord(OpRecord::UpdatePrivateEntry {
@@ -162,7 +163,7 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
             app_entry_type: UnitEntryTypes::PersonalInformation,
             action,
             ..
-        }) => validate_by_original_author(&action.author, &action.original_action_address),
+        }) => validate_update(&action),
         FlatOp::RegisterAgentActivity(OpActivity::DeleteEntry { action, .. }) => validate_delete(&action),
         FlatOp::StoreRecord(OpRecord::DeleteEntry { action, .. })
         | FlatOp::RegisterDelete(OpDelete { action }) => validate_delete(&action),
@@ -311,16 +312,18 @@ fn created_earlier(action: &Create, of: UnitEntryTypes) -> ExternResult<bool> {
 }
 
 /// A profile is its author's own account of themselves (CLAUDE.md rule 1),
-/// so only that author may change it.
-fn validate_by_original_author(
-    author: &AgentPubKey,
-    original: &ActionHash,
-) -> ExternResult<ValidateCallbackResult> {
-    let original = must_get_action(original.clone())?;
-    if original.action().author() != author {
+/// so only that author may change it. A change adds a version and points at
+/// the first one, so every version hangs off one place and none can be
+/// orphaned on a fork of updates (ADR-0008).
+fn validate_update(action: &Update) -> ExternResult<ValidateCallbackResult> {
+    let original = must_get_action(action.original_action_address.clone())?;
+    if *original.action().author() != action.author {
         return Ok(ValidateCallbackResult::Invalid(NOT_THE_AUTHOR.into()));
     }
-    Ok(ValidateCallbackResult::Valid)
+    match original.action() {
+        Action::Create(create) if create.entry_type == action.entry_type => Ok(ValidateCallbackResult::Valid),
+        _ => Ok(ValidateCallbackResult::Invalid(UPDATE_MUST_POINT_AT_ORIGINAL.into())),
+    }
 }
 
 /// Delete ops don't say what they delete, so look at the original. No one
@@ -544,6 +547,22 @@ mod tests {
         assert_eq!(validate(op).unwrap(), ValidateCallbackResult::Valid);
     }
 
+    /// ADR-0008: every version hangs off the original, so none can be
+    /// orphaned on a fork of updates.
+    #[test]
+    fn store_entry_refuses_an_update_that_points_at_an_earlier_update() {
+        mock_host(vec![], Some(Action::Update(update_profile(OWNER, ah(9)))));
+        let op = s_entry(EntryCreationAction::Update(update_profile(OWNER, ah(8))), profile_entry());
+        assert_eq!(validate(op).unwrap(), invalid(UPDATE_MUST_POINT_AT_ORIGINAL));
+    }
+
+    #[test]
+    fn store_entry_refuses_a_profile_update_that_points_at_personal_information() {
+        mock_host(vec![], Some(Action::Create(create_personal_information(OWNER))));
+        let op = s_entry(EntryCreationAction::Update(update_profile(OWNER, ah(9))), profile_entry());
+        assert_eq!(validate(op).unwrap(), invalid(UPDATE_MUST_POINT_AT_ORIGINAL));
+    }
+
     #[test]
     fn agent_activity_refuses_a_second_profile() {
         mock_host(vec![Action::Create(create_profile(OWNER))], None);
@@ -613,6 +632,36 @@ mod tests {
         );
         let op = r_activity(Action::Create(create_personal_information(OWNER)));
         assert_eq!(validate(op).unwrap(), invalid(ALREADY_HAS_PERSONAL_INFORMATION));
+    }
+
+    fn update_personal_information(author: u8, original: ActionHash) -> Update {
+        Update {
+            entry_type: create_personal_information(author).entry_type,
+            original_entry_address: eh(12),
+            entry_hash: eh(13),
+            ..update_profile(author, original)
+        }
+    }
+
+    #[test]
+    fn agent_activity_accepts_a_personal_information_update_by_the_author() {
+        mock_host(vec![], Some(Action::Create(create_personal_information(OWNER))));
+        let op = r_activity(Action::Update(update_personal_information(OWNER, ah(9))));
+        assert_eq!(validate(op).unwrap(), ValidateCallbackResult::Valid);
+    }
+
+    #[test]
+    fn agent_activity_refuses_a_personal_information_update_that_points_at_an_earlier_update() {
+        mock_host(vec![], Some(Action::Update(update_personal_information(OWNER, ah(9)))));
+        let op = r_activity(Action::Update(update_personal_information(OWNER, ah(8))));
+        assert_eq!(validate(op).unwrap(), invalid(UPDATE_MUST_POINT_AT_ORIGINAL));
+    }
+
+    #[test]
+    fn store_record_refuses_a_personal_information_update_that_points_at_the_profile() {
+        mock_host(vec![], Some(Action::Create(create_profile(OWNER))));
+        let op = s_record(Action::Update(update_personal_information(OWNER, ah(9))), RecordEntry::Hidden);
+        assert_eq!(validate(op).unwrap(), invalid(UPDATE_MUST_POINT_AT_ORIGINAL));
     }
 
     #[test]

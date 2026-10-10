@@ -87,27 +87,44 @@ fn agent_action(agent: AgentPubKey, entry_type: UnitEntryTypes) -> ExternResult<
 /// it shows validation lets an author change their own profile.
 #[hdk_extern]
 pub fn update_my_profile(profile: Profile) -> ExternResult<()> {
-    update_entry(my_profile_action()?, EntryTypes::Profile(profile))?;
+    update_entry(my_action(UnitEntryTypes::Profile, ActionType::Create)?, EntryTypes::Profile(profile))?;
+    Ok(())
+}
+
+/// Updates this agent's own personal information, as `update_my_profile` does.
+#[hdk_extern]
+pub fn update_my_personal_information(personal: PersonalInformation) -> ExternResult<()> {
+    let original = my_action(UnitEntryTypes::PersonalInformation, ActionType::Create)?;
+    update_entry(original, EntryTypes::PersonalInformation(personal))?;
+    Ok(())
+}
+
+/// Tries to update this agent's own profile by pointing at its latest
+/// update rather than at the original.
+#[hdk_extern]
+pub fn update_my_latest_profile(profile: Profile) -> ExternResult<()> {
+    update_entry(my_action(UnitEntryTypes::Profile, ActionType::Update)?, EntryTypes::Profile(profile))?;
     Ok(())
 }
 
 /// Tries to delete this agent's own profile.
 #[hdk_extern]
 pub fn delete_my_profile() -> ExternResult<()> {
-    delete_entry(my_profile_action()?)?;
+    delete_entry(my_action(UnitEntryTypes::Profile, ActionType::Create)?)?;
     Ok(())
 }
 
-fn my_profile_action() -> ExternResult<ActionHash> {
+/// The latest action of this kind on this agent's own chain for that entry type.
+fn my_action(entry_type: UnitEntryTypes, action_type: ActionType) -> ExternResult<ActionHash> {
     let records = query(
         ChainQueryFilter::new()
-            .entry_type(UnitEntryTypes::Profile.try_into()?)
-            .action_type(ActionType::Create),
+            .entry_type(entry_type.try_into()?)
+            .action_type(action_type.clone()),
     )?;
     records
-        .first()
+        .last()
         .map(|record| record.action_address().clone())
-        .ok_or(wasm_error!(WasmErrorInner::Guest("This agent has no profile".into())))
+        .ok_or(wasm_error!(WasmErrorInner::Guest(format!("This agent has no {entry_type:?} {action_type:?}"))))
 }
 
 #[derive(Serialize, Deserialize, Debug)]
