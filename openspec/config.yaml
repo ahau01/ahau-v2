@@ -1,32 +1,51 @@
 schema: spec-driven
 
-# Project context (optional)
-# Add only constraints that should guide OpenSpec artifacts and workflows.
-# Include constraints an agent cannot infer by reading the code.
-# Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+# Constraints from CLAUDE.md that an agent cannot infer from the code.
+# CLAUDE.md is the source of truth; keep this in step with it.
+context: |
+  Āhau v2 rebuilds the Āhau whakapapa app directly on Holochain. It encodes
+  kaupapa Māori principles (data sovereignty, non-erasure of contested
+  authority, decentralisation) into its architecture. The conventional
+  pattern is often wrong for this data model.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Four things not to do:
+  1. No canonical version of relationship or identity data. No
+     last-write-wins, single-source-of-truth, or overwrite-on-conflict,
+     including during sync and in how entries are updated or linked. The
+     answer is usually "represent both"; choosing which version to show is a
+     render-layer decision, per viewer.
+  2. Relationships are assertions from a source ("source X asserts
+     relationship Y"), with multiple sources coexisting, not editable edges.
+  3. No assumed central authority. No primary database, centralised storage,
+     or single node/agent as source of truth.
+  4. Identity is not session auth. No email/password, sessions, JWT or OAuth.
+     Identity is an agent's public key; a device holding a key is not "a
+     logged-in user", and multi-device use must hold.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+  Holochain is not a database: DHT reads can be stale or incomplete, and
+  nothing is erased (removal is retraction). Zome calls stay inside
+  per-feature client modules; components never call Holochain directly.
+
+  The typed contract in src/contract/ is frozen reference, a checklist of what
+  the old app could do (ADR-0006). It is not the spec, and new code must not
+  match it operation-for-operation.
+
+  Issues live in GitHub (ahau01/ahau-v2). ADRs live in docs/adr/.
+
+rules:
+  proposal:
+    - If the change touches relationship or identity data, sync, or access control, say so up front and name which of the four rules it bears on
+    - If the change touches relationship storage, state how multi-source assertions are preserved
+    - Anything outside the change's explicit scope goes under a "Flagged, not done" heading rather than into the plan
+    - If a requirement seems to need a canonical value or a central authority, flag it as an open question instead of designing for it
+  specs:
+    - Where sources can disagree, write scenarios in which conflicting assertions from two sources both survive
+    - Permission requirements must hold at sync time and cache time, not just read time
+  design:
+    - For merge-sensitive mutations, explain why not the conventional alternative (e.g. update as replace-the-latest)
+    - Describe what happens when two devices go offline, make conflicting edits, then sync
+    - Describe what happens to already-synced data if permissions change afterward, including a revoked member's local copy
+    - Enforce permissions in validation rules and capability grants, not only in the UI or client
+  tasks:
+    - Conflict-handling and permission logic need tests against a real conductor (Tryorama or Sweettest), not mocked sync state
+    - Include explicit two-devices-offline-then-sync test tasks where sync or conflict behaviour is involved
