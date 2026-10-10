@@ -9,7 +9,7 @@
 // the only thing that reads it.
 //
 // Usage:
-//   node scripts/derive-manifest.mjs           # write src/contract/manifest.json
+//   node scripts/derive-manifest.mjs           # write contract/manifest.json
 //   node scripts/derive-manifest.mjs --check   # exit 1 if the written manifest is stale
 //   node scripts/derive-manifest.mjs --print   # print a summary
 
@@ -20,7 +20,7 @@ import { fileURLToPath } from 'url'
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const TRIAGE = join(ROOT, 'contract-source', 'data-access-triage.json')
 const INVENTORY = join(ROOT, 'contract-source', 'data-access-inventory.json')
-const OUT = join(ROOT, 'src', 'contract', 'manifest.json')
+const OUT = join(ROOT, 'contract', 'manifest.json')
 
 const triage = JSON.parse(readFileSync(TRIAGE, 'utf8'))
 const inventory = JSON.parse(readFileSync(INVENTORY, 'utf8'))
@@ -87,7 +87,7 @@ if (args.includes('--check')) {
     process.exit(1)
   }
   if (readFileSync(OUT, 'utf8') !== serialised) {
-    console.error('ERROR: src/contract/manifest.json is stale. Regenerate it.')
+    console.error('ERROR: contract/manifest.json is stale. Regenerate it.')
     process.exit(1)
   }
   console.log(`manifest up to date (${manifest.totals.operations} operations)`)
@@ -96,7 +96,7 @@ if (args.includes('--check')) {
   console.log('dropped:', manifest.dropped.join(', '))
 } else {
   writeFileSync(OUT, serialised)
-  console.log(`wrote ${manifest.totals.operations} operations to src/contract/manifest.json`)
+  console.log(`wrote ${manifest.totals.operations} operations to contract/manifest.json`)
   console.log(`  ${manifest.totals.reads} reads, ${manifest.totals.writes} writes, ${manifest.totals.domains} domains`)
   console.log(`  ${manifest.totals.absorbed} absorbed by merge, ${manifest.totals.dropped} dropped`)
 }

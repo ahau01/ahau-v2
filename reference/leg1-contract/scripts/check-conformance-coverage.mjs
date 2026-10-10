@@ -12,9 +12,10 @@
 // reported complete work while a sixth of its items were undecided, because it
 // counted the easy set and never said which set that was.
 //
-// Usage:
-//   node scripts/check-conformance-coverage.mjs        # report
-//   node scripts/check-conformance-coverage.mjs --ci   # exit 1 on any gap
+// Usage (from the repo root, after compiling this folder separately — see
+// reference/leg1-contract/README.md):
+//   node reference/leg1-contract/scripts/check-conformance-coverage.mjs        # report
+//   node reference/leg1-contract/scripts/check-conformance-coverage.mjs --ci   # exit 1 on any gap
 
 import { existsSync } from 'fs'
 import { join, dirname } from 'path'

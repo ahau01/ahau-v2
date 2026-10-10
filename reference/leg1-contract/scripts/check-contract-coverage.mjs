@@ -13,9 +13,10 @@
 // map alone, so an entry naming an operation that does not exist, or an
 // operation with no recorded source, is caught rather than assumed correct.
 //
-// Usage:
-//   node scripts/check-contract-coverage.mjs        # report
-//   node scripts/check-contract-coverage.mjs --ci   # exit 1 on any failure
+// Usage (from the repo root, after compiling this folder separately — see
+// reference/leg1-contract/README.md):
+//   node reference/leg1-contract/scripts/check-contract-coverage.mjs        # report
+//   node reference/leg1-contract/scripts/check-contract-coverage.mjs --ci   # exit 1 on any failure
 
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'

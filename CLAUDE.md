@@ -21,7 +21,7 @@ which review and demos don't catch.
 This repo is a rebuild of Āhau directly on Holochain, designed around what
 people need to do rather than how the SSB-era app did it
 ([ADR-0006](docs/adr/0006-capability-driven-redesign-not-behaviour-replication.md)). The spec is a capability inventory (#13). The Leg 1 typed
-contract in `src/contract/` is **frozen reference** — a record of what the
+contract in `reference/leg1-contract/contract/` is **frozen reference** — a record of what the
 old app's data layer could do, used as a checklist so nothing is dropped —
 not an interface new code must implement. No Holochain code exists yet; the
 first slice is group permissions
@@ -93,8 +93,9 @@ code to audit — revisit this section once the first slice lands.
   zome calls inside per-feature client modules so components never call
   Holochain directly.
 - **The frozen contract is not the spec** — don't make Holochain code match
-  `src/contract/` operation-for-operation; that reintroduces SSB's shapes
-  (ADR-0006). Use it to check nothing the old app did has been dropped.
+  `reference/leg1-contract/contract/` operation-for-operation; that
+  reintroduces SSB's shapes (ADR-0006). Use it to check nothing the old app
+  did has been dropped.
 
 ## Working norms
 

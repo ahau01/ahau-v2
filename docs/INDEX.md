@@ -29,8 +29,9 @@ root (e.g. `plans/data-access-triage.json`, `plans/data-access-inventory.json`) 
 repo is now confirmed stale and out of scope for this migration, so those
 paths won't resolve here and aren't being fixed retroactively; they're a
 record of where the inventory work actually happened. The equivalents this
-repo actually reads are vendored under `contract-source/`, which is what the
-manifest derivation and coverage gate use. They're a frozen snapshot
+repo actually reads are vendored under
+`reference/leg1-contract/contract-source/`, which is what the manifest
+derivation and coverage scripts there use. They're a frozen snapshot
 (ADR-0006).
 
 The plans' "Files to Change" tables and task steps name `ahau-v2` files at the

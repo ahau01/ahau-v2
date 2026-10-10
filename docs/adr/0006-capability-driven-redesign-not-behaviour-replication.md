@@ -9,9 +9,9 @@
 Leg 1 derived a backend-agnostic contract from the old app's data layer: 77
 exported data-access functions were triaged, 68 kept, and expressed as 69
 typed operations across 14 domains, with capability negotiation
-(`src/contract/capabilities.ts`), cross-cutting semantics
-(`src/contract/semantics.ts`), an in-memory fixture backend
-(`src/fixtures/`), and a conformance suite (`src/conformance/`). Its purpose
+(`reference/leg1-contract/contract/capabilities.ts`), cross-cutting semantics
+(`reference/leg1-contract/contract/semantics.ts`), an in-memory fixture backend
+(`reference/leg1-contract/fixtures/`), and a conformance suite (`reference/leg1-contract/conformance/`). Its purpose
 was to let protocol adapters be swapped, and to prove that by running two
 very different adapters (Holochain and nostr) behind it with zero frontend
 changes.
@@ -51,8 +51,8 @@ not an implementation-equivalent port behind a swappable contract.
    running old app, users/kaitiaki, and existing docs (tracked in #13). Each
    capability is designed the way Holochain does it best.
 
-2. **The Leg 1 contract is frozen as historical reference.** `src/contract/`
-   and `contract-source/` stop evolving. They remain in the repo as:
+2. **The Leg 1 contract is frozen as historical reference.** `reference/leg1-contract/contract/`
+   and `reference/leg1-contract/contract-source/` stop evolving. They remain in the repo as:
    - a record of the SSB-era app's possible actions, and
    - a verification checklist — cross-checked against the capability
      inventory so nothing the old app did is dropped unnoticed, and used to
@@ -192,5 +192,5 @@ criterion is unchanged.
   whole UI; ADR-0003's exit criterion (no patching the protocol) remains the
   early warning.
 - **Frozen reference drifts into being treated as live spec.** Mitigation:
-  mark `src/contract/` as frozen reference in its module header and in
+  mark `reference/leg1-contract/contract/` as frozen reference in its module header and in
   `docs/INDEX.md` when this ADR is accepted.

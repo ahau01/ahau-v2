@@ -38,14 +38,11 @@ Whatever the backend, Āhau keeps these rules (full detail in [CLAUDE.md](CLAUDE
 |---|---|
 | `src/app/` | The Svelte app: the first-launch screens. In dev it runs against the local conductor, or a pretend client with `?pretend`. |
 | `src/first-launch/` | Which first-launch screen to show, in plain TypeScript, tested without Svelte or Holochain. |
-| `src/contract/` | **Reference only.** A typed list of the 69 actions the old SSB app's data layer supported. Used as a checklist so nothing gets lost in the rebuild; new code doesn't have to match it. |
-| `src/fixtures/` | The fake in-memory backend behind the frozen contract's tests. The app no longer uses it. |
 | `src/profile/` | The profile client module: the only code that talks to Holochain about profiles. Also the dev-only connection to the local conductor, and a pretend client for running the app without Holochain. |
 | `dnas/ahau/` | The Holochain DNA, with the profiles zome: the rules for who can write a profile (`zomes/integrity/`) and the functions the app calls (`zomes/coordinator/`). |
 | `workdir/` | The hApp manifest that bundles the DNA. |
 | `flake.nix`, `flake.lock` | The pinned Holochain dev environment. |
-| `src/conformance/` | Tests written against the contract. The ones about the rules above will move to Holochain tests. |
-| `contract-source/` | The review of the old app's data functions the contract was built from. |
+| `reference/leg1-contract/` | **Frozen reference, not part of the build.** A typed list of the 69 actions the old SSB app's data layer supported, the review it was derived from, its conformance tests and in-memory fixture backend. Used as a checklist so nothing gets lost in the rebuild; new code doesn't have to match it. See its own README. |
 | `docs/` | Decisions, plans and history. Start at [docs/INDEX.md](docs/INDEX.md). |
 
 ## Setup
@@ -73,8 +70,6 @@ Other commands:
 | `npm run check:app` | Typecheck the Svelte app |
 | `npm run build` | Compile to `dist/` |
 | `npm run build:app` | Build the app for production |
-| `npm run check:coverage` | Check the contract still matches the old app review |
-| `npm run check:manifest` | Check the contract's generated manifest is up to date |
 
 ### Holochain
 
