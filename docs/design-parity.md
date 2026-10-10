@@ -64,6 +64,33 @@ deliberate:
 Later screens should follow the same layout: captures in `docs/old-app-capture/`
 (or alongside), v2 images under `docs/parity/<screen>/`.
 
+**Status: shell captured and compared (#61, add-landing-and-shell).**
+
+- **Old app:** `docs/old-app-capture/`, the `10`–`15` set. These came from
+  `github.com/ahau01/ahau` (`main`, `eb4fb4887018574f874e33c082dedc9dcc166a25`)
+  on Linux via Xvfb, at 1366×768 (desktop), 400×800 (narrow) and 1000×728
+  (tablet, not reshot for v2 — see below). `notes.md` records the data on screen.
+- **v2:** `docs/parity/shell/`, same file names and data, taken in headless
+  Chromium against `?pretend`. `shoot.mjs` there retakes them.
+
+Each of the seven v2 images was compared by eye with the old one of the same
+name. Layout and order match: app bar, gradient header band with the avatar
+overlapping its bottom edge, side nav, the profile page's two sections. These
+differences remain, all deliberate:
+
+| Difference | Why |
+|---|---|
+| No edit, Help or notifications-bell control | Cut from this slice (#63, #62); editing is #47 |
+| No Pātaka card or connect flow | Not shown after the avatar step in this slice |
+| Gradient header band, not the old app's default photo (`nzheader.webp`) | No header-image upload yet (#43); `ProfileHeader.vue`'s own fallback pattern is used instead, traced in `docs/token-verification.md` |
+| Silhouette avatar, no coloured circle behind it | The old app's circle comes from theme-service avatar assets of a different, unconfirmed provenance (see Theming, below); v2 reuses the gender-picker silhouettes instead (design D7) |
+| "Anyone using Āhau can see this." / "Only you can see this." labels | New: the page says who can actually see each section, which the old app didn't |
+| Two sections (Profile, Personal information), not three (Profile information, Skills and education, Contact information) | `own-profile` spec's grouping: public fields together, private fields together, not by topic |
+| "Still to come" wording on Archive, Whakapapa and the tribe list, not the old app's own empty-state copy | v2 hasn't built those sections yet, and the person may have data there; the spec forbids suggesting they have none (`navigation` spec) |
+| No drawer at narrow width; the side nav becomes an icon row under the header | Design Non-Goals: the top bar has only two controls, so they stay in the bar at every width instead of opening a drawer |
+| No app-bar logo or notification badge | Not in the `navigation` spec's top bar requirements |
+| Tablet width (`11c`) not reshot | Not one of the seven views task 6.1 required; the desktop and narrow layouts were judged sufficient for this slice |
+
 ## What parity does not cover
 
 - **Placeholder screens.** Milestone 3's screens exist to prove routing and

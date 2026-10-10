@@ -79,6 +79,29 @@
   /* Focus. Not taken from the source: see docs/token-verification.md. */
   --ahau-focus-ring: #5f9ea0;
 
+  /*
+   * Shell (pages after launch). Each from apps/ahau/ui/src as noted; see
+   * docs/token-verification.md. The launch screen keeps the dark tokens
+   * above; color-scheme is set to light only on the shell root.
+   */
+  --ahau-shell-overlay: linear-gradient(to right, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.7)); /* views/ProfileShow.vue .niho-bg */
+  /* components/profile/ProfileHeader.vue .header-bg: the pattern shown when there is
+     no header image, which is what this slice uses instead of the old app's default
+     photo (nzheader.webp) — a deliberate difference (docs/design-parity.md). */
+  --ahau-shell-header-band:
+    linear-gradient(45deg, hsl(0, 6%, 37.1%) 12%, transparent 0, transparent 88%, hsl(0, 6%, 37.1%) 0),
+    linear-gradient(135deg, transparent 37%, hsl(13.5, 4%, 31%) 0, hsl(13.5, 4%, 31%) 63%, transparent 0),
+    linear-gradient(45deg, transparent 37%, hsl(0, 6%, 37.1%) 0, hsl(0, 6%, 37.1%) 63%, transparent 0),
+    hsl(0, 5.2%, 27.6%);
+  --ahau-shell-app-bar: #303030;           /* components/menu/Appbar.vue, v-app-bar color */
+  --ahau-shell-nav-active: #b02425;        /* components/button/WhakapapaIcon.vue .icon.is-active, .icon.is-red; components/menu/SideNavMenu.vue inline color:#B02425 */
+  --ahau-shell-nav-inactive: #000000;      /* components/menu/SideNavMenu.vue, the unselected branch of each nav item's color ternary ('black') */
+  --ahau-shell-section-heading: #000000;   /* components/profile/Profile.vue .profile-info-label */
+  --ahau-shell-field-label: rgba(0, 0, 0, 0.6); /* components/profile/ProfileInfoItem.vue .profile-label */
+  --ahau-shell-card-border: rgba(0, 0, 0, 0.3); /* components/profile/ProfileInfoCard.vue, components/profile/ProfileCard.vue .rounded-border */
+  --ahau-shell-text: rgba(0, 0, 0, 0.87);  /* Vuetify 2 light-theme default, as --ahau-dialog-text already uses */
+  --ahau-shell-text-muted: rgba(0, 0, 0, 0.6);
+
   /* Typography. ahau-v2 pins the family the Vue app loads via typeface-roboto. */
   --ahau-font-body: Roboto, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --ahau-font-size-base: 16px;

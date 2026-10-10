@@ -1,9 +1,15 @@
 <script lang="ts">
   import type { LaunchState } from '../../first-launch/first-launch.js'
   import logo from '../assets/logo_red.svg'
+  import Avatar from '../Avatar.svelte'
   import { focusOnMount } from './focus-on-mount.js'
 
-  let { current, onbegin }: { current: LaunchState, onbegin: () => void } = $props()
+  let { current, onbegin, onenter }: {
+    current: LaunchState
+    onbegin: () => void
+    /** From the avatar step: go in. Records nothing; it is not a login. */
+    onenter: () => void
+  } = $props()
 </script>
 
 <!-- Layout and copy from the old app's views/Login.vue; see docs/old-app-capture/01-launch.png. -->
@@ -22,6 +28,23 @@
     <p class="welcome-word">welcome</p>
     <button type="button" class="who" onclick={onbegin}>
       <span lang="mi" class="maori">Ko wai koe --</span><span class="english">-- who are you?</span>
+    </button>
+  </section>
+{:else if current.kind === 'has-profile'}
+  <!-- The agent on this device has a profile. One control: no password,
+       account or sign-out, because there is no login. Size and spacing are
+       provisional until the #61 captures (design D9). -->
+  <section class="splash" aria-labelledby="launch-heading">
+    <h1 id="launch-heading" class="visually-hidden">Āhau</h1>
+    <button
+      type="button"
+      class="enter"
+      aria-labelledby="launch-person-name"
+      onclick={onenter}
+      use:focusOnMount
+    >
+      <Avatar name={current.profile.name} gender={current.profile.gender} size={170} />
+      <span id="launch-person-name">{current.profile.name}</span>
     </button>
   </section>
 {:else}
@@ -106,6 +129,22 @@
 
   .who .english {
     color: var(--ahau-welcome-english);
+  }
+
+  .enter {
+    display: grid;
+    justify-items: center;
+    gap: var(--ahau-space-3);
+    padding: var(--ahau-space-3);
+    border: none;
+    border-radius: var(--ahau-radius);
+    background: none;
+    color: var(--ahau-text);
+    font: inherit;
+    font-size: 1.25rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
   }
 
   h2 {
