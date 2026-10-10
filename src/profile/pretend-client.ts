@@ -8,7 +8,7 @@
  * local conductor (see dev-connection.ts).
  */
 
-import { completeProfile, type Gender, type PersonalInformation, type Profile, type ProfileClient } from './client.js'
+import { ALREADY_HAS_PROFILE, completeProfile, type Gender, type PersonalInformation, type Profile, type ProfileClient } from './client.js'
 
 export interface PretendProfileClientOptions {
   /** Where the pretend agent's profile is kept between reloads. */
@@ -46,7 +46,7 @@ export function createPretendProfileClient (options: PretendProfileClientOptions
       await delay(options.latencyMs ?? 0)
       if (options.fail === 'save') return { status: 'failed', reason: 'Pretend Holochain was told not to save' }
       // Like the zome: one profile per agent key.
-      if (readSaved(storage.getItem(KEY)) !== null) return { status: 'failed', reason: 'This agent already has a profile' }
+      if (readSaved(storage.getItem(KEY)) !== null) return { status: 'failed', reason: ALREADY_HAS_PROFILE }
       const saved = completeProfile(profile)
       storage.setItem(KEY, JSON.stringify(saved))
       return { status: 'created', profile: saved }

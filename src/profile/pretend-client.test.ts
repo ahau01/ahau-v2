@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
+import { ALREADY_HAS_PROFILE } from './client.js'
 import { createPretendProfileClient } from './pretend-client.js'
 
 const KEY = 'ahau:pretend-profile'
@@ -62,4 +63,12 @@ test('pretend client: a saved profile with every field reads back unchanged', as
   const client = createPretendProfileClient({ storage: storageHolding(saved) })
 
   assert.deepEqual(await client.getMyProfile(), saved)
+})
+
+test('pretend client: a second profile is refused with the zome\'s own reason', async () => {
+  const client = createPretendProfileClient({ storage: storageHolding({ name: 'Mere' }) })
+
+  const second = await client.createMyProfile({ name: 'Someone else' })
+
+  assert.deepEqual(second, { status: 'failed', reason: ALREADY_HAS_PROFILE })
 })

@@ -74,6 +74,13 @@ export type NewProfile = Partial<Omit<Profile, 'personal'>> & {
 export const BIRTH_ORDER_INVALID = 'Order of birth must be a whole number, from 1'
 
 /**
+ * The zome's refusal of a second profile for one agent key
+ * (ALREADY_HAS_PROFILE in the profiles integrity zome). The pretend client
+ * gives the same reason; a conductor test keeps the two equal.
+ */
+export const ALREADY_HAS_PROFILE = 'This agent already has a profile'
+
+/**
  * The profile a NewProfile saves as: unfilled fields empty, as the zome
  * stores them. Conductor tests compare what the zome reads back with this,
  * so these defaults can't drift from the zome's `#[serde(default)]`.
