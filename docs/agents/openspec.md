@@ -3,6 +3,14 @@
 How work goes from an idea to merged code in this repo. Replaces the
 Wayfinder map-and-tickets flow (#57).
 
+## Setup
+
+The CLI is pinned in `package.json`, so run `npm install` once. The
+`/opsx:*` skills call plain `openspec`. A `SessionStart` hook
+(`.claude/hooks/openspec-path.sh`) puts `node_modules/.bin` on PATH for
+agent sessions, and the nix devShell does the same for your terminal. Either
+way you get the pinned version, not a global install.
+
 ## Where things live
 
 - **`openspec/changes/<name>/`**: one change in progress: `proposal.md`,

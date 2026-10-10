@@ -23,6 +23,11 @@
 
         # OpenSpec sends anonymous usage stats unless told not to.
         OPENSPEC_TELEMETRY = "0";
+
+        # The repo's pinned CLIs (openspec) win over any global install.
+        shellHook = ''
+          export PATH="$PWD/node_modules/.bin:$PATH"
+        '';
       };
     };
   };
