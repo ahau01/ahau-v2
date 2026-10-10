@@ -36,6 +36,27 @@ test('promise: another agent cannot overwrite my profile, even bypassing the app
   })
 })
 
+test('promise: another agent cannot create a profile for me, even bypassing the app', async () => {
+  await runScenario(async scenario => {
+    const [owner, rogue] = await twoAgentsOnOneNetwork(scenario)
+    // Every action is signed by its author, so the rogue's write can only
+    // ever be the rogue's own profile, never one under the owner's key.
+    await cellOf(rogue).callZome({
+      zome_name: 'rogue_profiles',
+      fn_name: 'create_profile',
+      payload: { name: 'Mere, as written by someone else' }
+    })
+    await dhtSync([owner, rogue], cellOf(owner).cell_id[0])
+
+    const ownerClient = await readyClient(owner)
+    assert.equal(await ownerClient.getMyProfile(), null)
+    const created = await ownerClient.createMyProfile({ name: 'Mere' })
+    assert.equal(created.status, 'created')
+    assert.deepEqual(await ownerClient.getMyProfile(), completeProfile({ name: 'Mere' }))
+    await ownerClient.close()
+  })
+})
+
 test('promise: another agent cannot delete my profile, even bypassing the app', async () => {
   await runScenario(async scenario => {
     const [owner, rogue] = await twoAgentsOnOneNetwork(scenario)
