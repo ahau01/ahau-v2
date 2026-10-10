@@ -145,7 +145,7 @@ test('promise: an agent cannot hold a second personal information, even bypassin
 
 // No screen offers editing yet (ADR-0008): these pin what validation allows,
 // so editing needs no rule change when it ships.
-test('promise: only the author can change a profile, and the change reads back', async () => {
+test('promise: I can change my own profile, and the change reads back', async () => {
   await runScenario(async scenario => {
     const [owner] = await oneAgentWithTestZome(scenario)
     await testZome(owner, 'create_profile', { name: 'Mere' })
@@ -157,7 +157,7 @@ test('promise: only the author can change a profile, and the change reads back',
   })
 })
 
-test('promise: only the author can change personal information, and the change reads back', async () => {
+test('promise: I can change my own personal information, and the change reads back', async () => {
   await runScenario(async scenario => {
     const [owner] = await oneAgentWithTestZome(scenario)
     await testZome(owner, 'create_profile', { name: 'Mere' })
@@ -172,7 +172,7 @@ test('promise: only the author can change personal information, and the change r
 
 // Every version hangs off the first one, so none can be orphaned on a fork
 // of updates (ADR-0008).
-test('promise: a change that points at an earlier change is refused, even bypassing the app', async () => {
+test('promise: a profile change that points at an earlier change is refused, even bypassing the app', async () => {
   await runScenario(async scenario => {
     const [owner] = await oneAgentWithTestZome(scenario)
     await testZome(owner, 'create_profile', { name: 'Mere' })
@@ -184,6 +184,23 @@ test('promise: a change that points at an earlier change is refused, even bypass
     )
     const ownerClient = await readyClient(owner)
     assert.deepEqual(await ownerClient.getMyProfile(), completeProfile({ name: 'Mere Rangi' }))
+    await ownerClient.close()
+  })
+})
+
+test('promise: a personal information change that points at an earlier change is refused, even bypassing the app', async () => {
+  await runScenario(async scenario => {
+    const [owner] = await oneAgentWithTestZome(scenario)
+    await testZome(owner, 'create_profile', { name: 'Mere' })
+    await testZome(owner, 'create_personal_information', { email: 'mere@example.com' })
+    await testZome(owner, 'update_my_personal_information', { email: 'mere.rangi@example.com' })
+
+    await assert.rejects(
+      testZome(owner, 'update_my_latest_personal_information', { email: 'mere.r@example.com' }),
+      /Changes to a profile must point at its first version/
+    )
+    const ownerClient = await readyClient(owner)
+    assert.equal((await ownerClient.getMyProfile())?.personal.email, 'mere.rangi@example.com')
     await ownerClient.close()
   })
 })

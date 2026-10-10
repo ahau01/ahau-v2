@@ -87,15 +87,14 @@ fn agent_action(agent: AgentPubKey, entry_type: UnitEntryTypes) -> ExternResult<
 /// it shows validation lets an author change their own profile.
 #[hdk_extern]
 pub fn update_my_profile(profile: Profile) -> ExternResult<()> {
-    update_entry(my_action(UnitEntryTypes::Profile, ActionType::Create)?, EntryTypes::Profile(profile))?;
+    update_entry(my_original(UnitEntryTypes::Profile)?, EntryTypes::Profile(profile))?;
     Ok(())
 }
 
 /// Updates this agent's own personal information, as `update_my_profile` does.
 #[hdk_extern]
 pub fn update_my_personal_information(personal: PersonalInformation) -> ExternResult<()> {
-    let original = my_action(UnitEntryTypes::PersonalInformation, ActionType::Create)?;
-    update_entry(original, EntryTypes::PersonalInformation(personal))?;
+    update_entry(my_original(UnitEntryTypes::PersonalInformation)?, EntryTypes::PersonalInformation(personal))?;
     Ok(())
 }
 
@@ -107,24 +106,40 @@ pub fn update_my_latest_profile(profile: Profile) -> ExternResult<()> {
     Ok(())
 }
 
-/// Tries to delete this agent's own profile.
+/// Tries to update this agent's own personal information by pointing at its
+/// latest update, as `update_my_latest_profile` does.
 #[hdk_extern]
-pub fn delete_my_profile() -> ExternResult<()> {
-    delete_entry(my_action(UnitEntryTypes::Profile, ActionType::Create)?)?;
+pub fn update_my_latest_personal_information(personal: PersonalInformation) -> ExternResult<()> {
+    let latest = my_action(UnitEntryTypes::PersonalInformation, ActionType::Update)?;
+    update_entry(latest, EntryTypes::PersonalInformation(personal))?;
     Ok(())
 }
 
-/// The latest action of this kind on this agent's own chain for that entry type.
+/// Tries to delete this agent's own profile.
+#[hdk_extern]
+pub fn delete_my_profile() -> ExternResult<()> {
+    delete_entry(my_original(UnitEntryTypes::Profile)?)?;
+    Ok(())
+}
+
+/// The Create this agent's account of that entry type started with.
+fn my_original(entry_type: UnitEntryTypes) -> ExternResult<ActionHash> {
+    my_action(entry_type, ActionType::Create)
+}
+
+/// The latest action of this kind on this agent's own chain for that entry
+/// type. Validation allows one Create per entry type, so for a Create the
+/// latest is also the first.
 fn my_action(entry_type: UnitEntryTypes, action_type: ActionType) -> ExternResult<ActionHash> {
     let records = query(
         ChainQueryFilter::new()
             .entry_type(entry_type.try_into()?)
-            .action_type(action_type.clone()),
+            .action_type(action_type),
     )?;
     records
         .last()
         .map(|record| record.action_address().clone())
-        .ok_or(wasm_error!(WasmErrorInner::Guest(format!("This agent has no {entry_type:?} {action_type:?}"))))
+        .ok_or(wasm_error!(WasmErrorInner::Guest("This agent has nothing of that kind to change yet".into())))
 }
 
 #[derive(Serialize, Deserialize, Debug)]

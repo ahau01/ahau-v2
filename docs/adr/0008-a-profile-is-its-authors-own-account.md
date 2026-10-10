@@ -55,7 +55,7 @@ update through a test zome pin the validation rule, not an app feature.
 ### Alternative 2: Design and ship editing now
 - **Pros**: the allowed update is also offered.
 - **Cons**: grows #14 after all its sub-issues closed.
-- **Why not**: editing gets its own issue, which also settles the read rule above for other people's profiles.
+- **Why not**: editing gets its own issue (#47), which builds the read for other people's profiles on the rule above rather than deciding it again.
 
 ### Alternative 3: Let an update point at the previous version
 - **Pros**: each version names the one it replaces.

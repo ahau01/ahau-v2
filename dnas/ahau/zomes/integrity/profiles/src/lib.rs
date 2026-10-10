@@ -148,7 +148,7 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
             ..
         }) => validate_update(&action),
         // Personal information is private, so these ops carry no contents;
-        // only who may change it can be checked.
+        // only who changed it and what the change points at can be checked.
         FlatOp::StoreRecord(OpRecord::UpdatePrivateEntry {
             app_entry_type: UnitEntryTypes::PersonalInformation,
             action,
@@ -561,6 +561,27 @@ mod tests {
         mock_host(vec![], Some(Action::Create(create_personal_information(OWNER))));
         let op = s_entry(EntryCreationAction::Update(update_profile(OWNER, ah(9))), profile_entry());
         assert_eq!(validate(op).unwrap(), invalid(UPDATE_MUST_POINT_AT_ORIGINAL));
+    }
+
+    #[test]
+    fn store_record_refuses_a_profile_update_that_points_at_an_earlier_update() {
+        mock_host(vec![], Some(Action::Update(update_profile(OWNER, ah(9)))));
+        let op = s_record(Action::Update(update_profile(OWNER, ah(8))), RecordEntry::Present(profile_entry()));
+        assert_eq!(validate(op).unwrap(), invalid(UPDATE_MUST_POINT_AT_ORIGINAL));
+    }
+
+    #[test]
+    fn register_update_refuses_a_profile_update_that_points_at_an_earlier_update() {
+        mock_host(vec![], Some(Action::Update(update_profile(OWNER, ah(9)))));
+        let op = r_update(update_profile(OWNER, ah(8)), Some(profile_entry()));
+        assert_eq!(validate(op).unwrap(), invalid(UPDATE_MUST_POINT_AT_ORIGINAL));
+    }
+
+    #[test]
+    fn register_update_refuses_a_profile_update_by_someone_else() {
+        mock_host(vec![], Some(Action::Create(create_profile(OWNER))));
+        let op = r_update(update_profile(OTHER, ah(9)), Some(profile_entry()));
+        assert_eq!(validate(op).unwrap(), invalid(NOT_THE_AUTHOR));
     }
 
     #[test]
