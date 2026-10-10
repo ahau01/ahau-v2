@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import { completeProfile, type NewProfile, type ProfileClient } from '../profile/client.js'
-import { createFirstLaunch, emptyProfileForm, type ProfileForm } from './first-launch.js'
+import { createFirstLaunch, emptyProfileForm, type FirstLaunch, type ProfileForm } from './first-launch.js'
 
 /**
  * Which first-launch screen to show, decided without Holochain. The client
@@ -69,7 +69,7 @@ test('first launch: starting again does not knock the screen backwards', async (
   firstLaunch.begin()
   await firstLaunch.submit(formWith({ name: 'Mere' }))
 
-  assert.deepEqual(firstLaunch.state, { kind: 'ready', profile: completeProfile({ name: 'Mere' }) })
+  assert.deepEqual(firstLaunch.state, { kind: 'has-profile', profile: completeProfile({ name: 'Mere' }) })
   assert.equal(lookups, 1)
 })
 
@@ -102,12 +102,12 @@ test('first launch: cancelling the profile form goes back to the welcome, saving
   assert.equal(calls.count, 0)
 })
 
-test('first launch: a returning agent goes straight in', async () => {
+test('first launch: a returning agent sees their avatar step, not the shell', async () => {
   const firstLaunch = createFirstLaunch(stubClient({ getMyProfile: async () => completeProfile({ name: 'Mere' }) }))
 
   await firstLaunch.start()
 
-  assert.deepEqual(firstLaunch.state, { kind: 'ready', profile: completeProfile({ name: 'Mere' }) })
+  assert.deepEqual(firstLaunch.state, { kind: 'has-profile', profile: completeProfile({ name: 'Mere' }) })
 })
 
 test('first launch: if Holochain cannot say whether this agent has a profile, it failed to start', async () => {
@@ -123,14 +123,14 @@ test('first launch: if Holochain cannot say whether this agent has a profile, it
   })
 })
 
-test('first launch: creating a profile lets the person in', async () => {
+test('first launch: creating a profile leads to the avatar step', async () => {
   const firstLaunch = createFirstLaunch(stubClient())
   await firstLaunch.start()
   firstLaunch.begin()
 
   await firstLaunch.submit(formWith({ name: 'Mere' }))
 
-  assert.deepEqual(firstLaunch.state, { kind: 'ready', profile: completeProfile({ name: 'Mere' }) })
+  assert.deepEqual(firstLaunch.state, { kind: 'has-profile', profile: completeProfile({ name: 'Mere' }) })
 })
 
 test('first launch: if saving fails, the person can try again without retyping', async () => {
@@ -265,7 +265,7 @@ test('first launch: every field the person filled in is saved', async () => {
       country: 'Aotearoa'
     }
   })
-  assert.equal(firstLaunch.state.kind, 'ready')
+  assert.equal(firstLaunch.state.kind, 'has-profile')
 })
 
 // The old app's rules (ahau-monorepo apps/ahau/ui/src/lib/date-helpers.mjs,
@@ -369,7 +369,97 @@ test('first launch: a screen can follow each state as it changes', async () => {
   firstLaunch.begin()
   await firstLaunch.submit(formWith({ name: 'Mere' }))
 
-  assert.deepEqual(seen, ['starting', 'welcome', 'needs-profile', 'saving', 'ready'])
+  firstLaunch.enter()
+
+  assert.deepEqual(seen, ['starting', 'welcome', 'needs-profile', 'saving', 'has-profile', 'ready'])
+})
+
+test('first launch: going in from the avatar step reaches the shell with the same profile', async () => {
+  const mere = completeProfile({ name: 'Mere', gender: 'female' })
+  const firstLaunch = createFirstLaunch(stubClient({ getMyProfile: async () => mere }))
+  await firstLaunch.start()
+
+  firstLaunch.enter()
+
+  assert.deepEqual(firstLaunch.state, { kind: 'ready', profile: mere })
+})
+
+test('first launch: going in does nothing from any state but the avatar step', async () => {
+  const states: Array<[string, () => Promise<FirstLaunch>]> = [
+    ['starting', async () => {
+      const firstLaunch = createFirstLaunch(stubClient({ waitUntilReady: never }))
+      void firstLaunch.start()
+      return firstLaunch
+    }],
+    ['failed-to-start', async () => {
+      const firstLaunch = createFirstLaunch(stubClient({ waitUntilReady: async () => ({ status: 'failed', reason: 'no' }) }))
+      await firstLaunch.start()
+      return firstLaunch
+    }],
+    ['welcome', async () => {
+      const firstLaunch = createFirstLaunch(stubClient())
+      await firstLaunch.start()
+      return firstLaunch
+    }],
+    ['needs-profile', async () => {
+      const firstLaunch = createFirstLaunch(stubClient())
+      await firstLaunch.start()
+      firstLaunch.begin()
+      return firstLaunch
+    }],
+    ['saving', async () => {
+      const firstLaunch = createFirstLaunch(stubClient({ createMyProfile: never }))
+      await firstLaunch.start()
+      firstLaunch.begin()
+      void firstLaunch.submit(formWith({ name: 'Mere' }))
+      return firstLaunch
+    }],
+    ['ready', async () => {
+      const firstLaunch = createFirstLaunch(stubClient({ getMyProfile: async () => completeProfile({ name: 'Mere' }) }))
+      await firstLaunch.start()
+      firstLaunch.enter()
+      return firstLaunch
+    }]
+  ]
+
+  for (const [kind, reach] of states) {
+    const firstLaunch = await reach()
+    assert.equal(firstLaunch.state.kind, kind)
+    const before = firstLaunch.state
+    const seen: unknown[] = []
+    const stop = firstLaunch.subscribe(state => seen.push(state))
+
+    firstLaunch.enter()
+
+    stop()
+    assert.strictEqual(firstLaunch.state, before, kind)
+    assert.equal(seen.length, 1, `${kind}: no change announced`)
+  }
+})
+
+test('first launch: going in is not a login; it calls nothing', async () => {
+  // Every client method fails once launch has read the profile, and is
+  // recorded, as an async method's throw would otherwise go unnoticed.
+  let launched = false
+  const callsAfterLaunch: string[] = []
+  const guard = (name: string) => {
+    if (!launched) return
+    callsAfterLaunch.push(name)
+    throw new Error(`${name} called after launch`)
+  }
+  const firstLaunch = createFirstLaunch({
+    waitUntilReady: async () => { guard('waitUntilReady'); return { status: 'ready' } },
+    getMyProfile: async () => { guard('getMyProfile'); return completeProfile({ name: 'Mere' }) },
+    createMyProfile: async () => { guard('createMyProfile'); throw new Error('unreachable') },
+    close: async () => { guard('close') }
+  })
+  await firstLaunch.start()
+  launched = true
+
+  firstLaunch.enter()
+
+  assert.equal(firstLaunch.state.kind, 'ready')
+  assert.deepEqual(callsAfterLaunch, [])
 })
 
 test('first launch: a screen that stops following hears no more', async () => {

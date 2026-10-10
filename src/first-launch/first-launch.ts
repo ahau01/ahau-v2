@@ -4,6 +4,8 @@
  * only on the profile client interface and the zome's own messages.
  *
  * There is no login. "Returning" means this agent key already has a profile.
+ * Going in from the avatar step records nothing: it only moves the screen
+ * from launch into the shell.
  */
 
 import { BIRTH_ORDER_INVALID, type Gender, type NewProfile, type PersonalInformation, type Profile, type ProfileClient } from '../profile/client.js'
@@ -14,15 +16,20 @@ export type FirstLaunchState =
   | { kind: 'welcome' }
   | { kind: 'needs-profile', form: ProfileForm, errors?: ProfileFormErrors }
   | { kind: 'saving', form: ProfileForm }
+  /** This agent has a profile; the launch screen shows its avatar step. */
+  | { kind: 'has-profile', profile: Profile }
   | { kind: 'ready', profile: Profile }
 
-/** States the launch screen shows: Holochain starting or failed to, or the welcome. */
-export type LaunchState = Extract<FirstLaunchState, { kind: 'starting' | 'failed-to-start' | 'welcome' }>
+/**
+ * States the launch screen shows: Holochain starting or failed to, the
+ * welcome, or the avatar step for an agent with a profile.
+ */
+export type LaunchState = Extract<FirstLaunchState, { kind: 'starting' | 'failed-to-start' | 'welcome' | 'has-profile' }>
 /** States the create-profile screen shows: filling in the form, or saving it. */
 export type CreateProfileState = Extract<FirstLaunchState, { kind: 'needs-profile' | 'saving' }>
 
 export function isLaunchState (state: FirstLaunchState): state is LaunchState {
-  return state.kind === 'starting' || state.kind === 'failed-to-start' || state.kind === 'welcome'
+  return state.kind === 'starting' || state.kind === 'failed-to-start' || state.kind === 'welcome' || state.kind === 'has-profile'
 }
 
 export function isCreateProfileState (state: FirstLaunchState): state is CreateProfileState {
@@ -87,6 +94,11 @@ export interface FirstLaunch {
   /** Save this person's profile from the form. */
   submit (form: ProfileForm): Promise<void>
   /**
+   * From the avatar step: the person goes in. Writes nothing and calls
+   * nothing; identity is the agent key, not a login.
+   */
+  enter (): void
+  /**
    * Follow the state: called now with the current state, then on each change.
    * Returns a function that stops following. Matches Svelte's store contract.
    */
@@ -118,7 +130,7 @@ export function createFirstLaunch (client: ProfileClient): FirstLaunch {
       set({ kind: 'failed-to-start', reason: err instanceof Error ? err.message : String(err) })
       return
     }
-    set(profile ? { kind: 'ready', profile } : { kind: 'welcome' })
+    set(profile ? { kind: 'has-profile', profile } : { kind: 'welcome' })
   }
 
   return {
@@ -147,6 +159,10 @@ export function createFirstLaunch (client: ProfileClient): FirstLaunch {
       if (state.kind === 'needs-profile') set({ kind: 'welcome' })
     },
 
+    enter () {
+      if (state.kind === 'has-profile') set({ kind: 'ready', profile: state.profile })
+    },
+
     async submit (form) {
       // Only the create-profile screen can save, and only once at a time.
       if (state.kind !== 'needs-profile') return
@@ -159,7 +175,7 @@ export function createFirstLaunch (client: ProfileClient): FirstLaunch {
       set({ kind: 'saving', form })
       const result = await client.createMyProfile(read.profile)
       if (result.status === 'created') {
-        set({ kind: 'ready', profile: result.profile })
+        set({ kind: 'has-profile', profile: result.profile })
       } else {
         set({ kind: 'needs-profile', form, errors: { save: result.reason } })
       }

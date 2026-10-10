@@ -30,7 +30,7 @@ async function devClient (player: PlayerApp) {
   })
 }
 
-test('first launch on Holochain: a new agent creates a profile and goes in', async () => {
+test('first launch on Holochain: a new agent creates a profile, sees the avatar step and goes in', async () => {
   await runScenario(async scenario => {
     const player = await scenario.addPlayerWithApp({
       appBundleSource: { type: 'path', value: happ }
@@ -43,12 +43,15 @@ test('first launch on Holochain: a new agent creates a profile and goes in', asy
     firstLaunch.begin()
 
     await firstLaunch.submit({ ...emptyProfileForm(), name: 'Mere' })
+    assert.deepEqual(firstLaunch.state, { kind: 'has-profile', profile: completeProfile({ name: 'Mere' }) })
+
+    firstLaunch.enter()
     assert.deepEqual(firstLaunch.state, { kind: 'ready', profile: completeProfile({ name: 'Mere' }) })
     await client.close()
   })
 })
 
-test('first launch on Holochain: opening the app again as the same agent goes straight in', async () => {
+test('first launch on Holochain: opening the app again as the same agent shows the avatar step, then goes in', async () => {
   await runScenario(async scenario => {
     const player = await scenario.addPlayerWithApp({
       appBundleSource: { type: 'path', value: happ }
@@ -58,12 +61,16 @@ test('first launch on Holochain: opening the app again as the same agent goes st
     await firstOpen.start()
     firstOpen.begin()
     await firstOpen.submit({ ...emptyProfileForm(), name: 'Mere' })
+    firstOpen.enter()
     await first.close()
 
     // A reload: a new page, new connection details, the same agent key.
     const again = await devClient(player)
     const reopened = createFirstLaunch(again)
     await reopened.start()
+    assert.deepEqual(reopened.state, { kind: 'has-profile', profile: completeProfile({ name: 'Mere' }) })
+
+    reopened.enter()
     assert.deepEqual(reopened.state, { kind: 'ready', profile: completeProfile({ name: 'Mere' }) })
     await again.close()
   })

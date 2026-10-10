@@ -22,6 +22,31 @@ in `ahau-monorepo` rather than adopted.
 | dialog-save | `#2196f3` | `DialogContainer.vue` — `color="blue"`, Vuetify 2's `blue` (#19) |
 | dialog surface, text, outline, divider | white; black at 0.87 / 0.6 / 0.38 / 0.12 | `DialogContainer.vue` renders `:light="!dark"`, so these are Vuetify 2's light-theme defaults, as the dark-theme text values are (#19) |
 
+### Shell (pages after launch, #61)
+
+Confirmed against `github.com/ahau01/ahau` (`main`, `eb4fb4887018574f874e33c082dedc9dcc166a25`), the same commit the #61 captures came from — not `ahau-monorepo`, which has no `app bar`/`ui/src` layout change relevant here. Paths are relative to that repo's `ui/src/`.
+
+| Token | Value | Confirmed in |
+|---|---|---|
+| shell-overlay | `linear-gradient(to right, rgba(255,255,255,.8), rgba(255,255,255,.7))` over `niho.svg` | `views/ProfileShow.vue` `.niho-bg` |
+| shell-header-band | the triangular dark gradient pattern, in full | `components/profile/ProfileHeader.vue` `.header-bg`: shown behind a header image, and the only thing shown when there is none. v2 has no header-image upload (#43), so this is always what shows, not the old app's default photo (`nzheader.webp`) — a deliberate difference |
+| shell-app-bar | `#303030` | `components/menu/Appbar.vue` — `v-app-bar color` |
+| shell-nav-active | `#b02425` | `components/button/WhakapapaIcon.vue` `.icon.is-active, .icon.is-red`; `components/menu/SideNavMenu.vue` inline `color:#B02425` on the active label. **Not** `--ahau-secondary` (`#b12526`): close but a different value, as design.md already notes |
+| shell-nav-inactive | `#000000` | `components/menu/SideNavMenu.vue`, the `'black'` branch of each nav item's active/inactive colour ternary |
+| shell-section-heading | `#000000` | `components/profile/Profile.vue` `.profile-info-label` |
+| shell-field-label | `rgba(0,0,0,.6)` | `components/profile/ProfileInfoItem.vue` `.profile-label` |
+| shell-card-border | `rgba(0,0,0,.3)` | `components/profile/ProfileInfoCard.vue`, `components/profile/ProfileCard.vue` `.rounded-border` |
+| shell-text, shell-text-muted | black at 0.87 / 0.6 | Vuetify 2 light-theme defaults, as `--ahau-dialog-text` already uses for the create-profile form, which renders on the same light theme |
+
+Not carried into tokens.css: the avatar's dark-green circular background seen in
+`docs/old-app-capture/10-returning-launch.png` and `11a-own-profile-desktop.png`.
+It comes from the theme service's bundled avatar assets
+(`lib/theme/theme-service.mjs`, `getThemeAssetUrl('avatarFemaleAdult')` etc.),
+a different asset set from the gender-picker silhouettes
+(`tane.svg`/`wahine.svg`/`account-fill.svg`, `PROVENANCE.md`) that design D7
+reuses for every avatar in this slice. Theming is open (above); the silhouette
+avatar is a recorded, deliberate difference (`docs/design-parity.md`).
+
 ## Corrected
 
 **Life-status colours were attributed backwards.** `ahau-styles` labels

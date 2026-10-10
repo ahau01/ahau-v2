@@ -31,3 +31,18 @@ delete, camera). The old app showed these through `@mdi/font` `^5.9.55`
 (`apps/ahau/ui/package.json`). Their path data is copied from `@mdi/svg`
 5.9.55 (`svg/<name>.svg`, npm tarball), the same icon set and version.
 Licence: Apache-2.0 / Pictogrammers Free License.
+
+## Shell nav icons (#61)
+
+`src/app/shell/ProfileIcon.svelte`, `ArchiveIcon.svelte` and
+`WhakapapaIcon.svelte` hold path data copied from the old app's own bespoke
+icon components (not MDI): `components/button/UserIcon.vue`,
+`ArchiveIcon.vue` and `WhakapapaIcon.vue`.
+
+- **Repo:** `github.com/ahau01/ahau`
+- **Commit:** `eb4fb4887018574f874e33c082dedc9dcc166a25` (`main`), the same
+  commit the #61 captures came from.
+- **Licence:** AGPL-3.0, as `ui/` declares. Same unresolved question as above (#21).
+
+Used for the side nav's Profile, Archive and Whakapapa links, in the narrow
+layout where a label row doesn't fit (`navigation` spec, design D9).
