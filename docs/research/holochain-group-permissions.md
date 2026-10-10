@@ -1,8 +1,9 @@
 # Holochain group permissions: primitives, patterns, data-flow models
 
 > **Research note, not a decision.** Written 2026-10-03 for the first
-> Holochain slice ([plans/group-permissions.md](../plans/group-permissions.md),
-> [ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)). It
+> Holochain slice ([plans/group-permissions.md](../plans/group-permissions.md)),
+> the single Holochain adapter being built and evaluated against a
+> capability-specific exit criterion. It
 > collects what Holochain's primary sources say about group permissions and
 > sets out data-flow options against the kaupapa constraints in
 > [CLAUDE.md](../../CLAUDE.md). Under "flag, don't decide", choices are left
@@ -34,7 +35,7 @@ Markdown source at a pinned commit; the live page is
    gate who can write to, or read from, the shared DHT **[V]**
    ([capabilities][dp-cap]). Group permissions are enforced by
    **integrity-zome validation plus a membrane** **[V]**
-   ([validation concepts][dp-c7-usecases]). ADR-0003's exit criterion is
+   ([validation concepts][dp-c7-usecases]). The Holochain exit criterion is
    worded around "Holochain's capability-grant system". **Flag (§6, Q1).**
 2. **Every member of a DNA can read every public entry in it.** A DNA is a
    network with one shared DHT. "Private" entry visibility is per-author, not
@@ -252,8 +253,8 @@ Markdown source at a pinned commit; the live page is
   [countersigning][dp-cs-unstable]).
 - It could make "kaitiaki A and B jointly remove C" a single atomic record.
   But it needs both online at once and an unstable feature. That fails
-  offline-first, and under ADR-0003 relying on an unstable feature leans
-  towards the falsification signal **[I]**.
+  offline-first, and relying on an unstable feature leans towards the
+  Holochain exit criterion's falsification signal **[I]**.
 
 ### 1.8 Identity and devices
 
@@ -420,7 +421,7 @@ members only, and members copy forward or re-reference what they keep.
 | No central authority (rule 3) | Yes, if multi-kaitiaki roots | Yes, same | Key-rotation coordinator needed | Each holder is the authority over their own data | Who starts an epoch? Concurrent epochs fork |
 | Multi-device (rule 4) | Each device key needs a certificate and role | Role per device key | Each device key needs the group key | Grant per device key | Re-certify every device |
 | Offline-first | Good | Good | Good after key receipt | **Poor** (holder online) | Epoch change needs a live certificate handover |
-| Protocol risk (ADR-0003) | Low: documented features | Low | Low–medium: crypto design is on us | Low | Medium: migration is app-built; `unstable-migration` exists but is unstable ([Cargo.toml][hc-unstable-mig]) |
+| Protocol risk | Low: documented features | Low | Low–medium: crypto design is on us | Low | Medium: migration is app-built; `unstable-migration` exists but is unstable ([Cargo.toml][hc-unstable-mig]) |
 
 ### 4.2 How Āhau's plan maps, and the gaps
 
@@ -448,7 +449,7 @@ members only, and members copy forward or re-reference what they keep.
   CLAUDE.md rule 1. Nothing in Holochain forces last-write-wins here **[I]**.
 - **"Removed member's already-synced data"** (Open Questions). Holochain
   can't recall it ([entries][dp-entries-delete]). The UI copy should say so.
-- **ADR-0003 exit criterion** names capability grants. The enforcement
+- **The Holochain exit criterion** names capability grants. The enforcement
   mechanism is actually validation plus membrane (§1.5). See §6, Q1.
 - **Kaitiaki identity across devices.** Kaitiaki on several devices means
   several keys with separate grants. Revoking a person means revoking every
@@ -505,7 +506,7 @@ members only, and members copy forward or re-reference what they keep.
 
 ## 6. Open questions: flag, don't decide
 
-1. **ADR-0003's exit criterion names capability grants.** Should it be
+1. **The Holochain exit criterion names capability grants.** Should it be
    restated as "validation rules plus membrane deliver enforced permissions
    without protocol workarounds"? As written, a literal reading tests the
    wrong primitive.
@@ -532,7 +533,7 @@ members only, and members copy forward or re-reference what they keep.
    profile, invitations) without exposing a group's seed or membership?
 9. **Unstable features.** Should using `unstable-countersigning`,
    `unstable-migration` or `unstable-sharding` count as a "protocol
-   workaround" under ADR-0003?
+   workaround" against the Holochain exit criterion?
 10. **Verification gaps in this note.** Live developer.holochain.org, docs.rs
     and the whitepaper weren't reachable. I read docs source, not rendered
     pages. The partition recipe in §5 is inferred and should be confirmed in

@@ -12,7 +12,6 @@ It is vendored rather than read across repositories so this repo is
 self-contained: the manifest derivation and the coverage gate both run from a
 fresh clone with no sibling checkout.
 
-**Frozen snapshot**
-([ADR-0006](../docs/adr/0006-capability-driven-redesign-not-behaviour-replication.md)).
+**Frozen snapshot.**
 The `ahau` repo it came from is superseded, so this copy is now the record.
 Don't refresh or hand-edit it.

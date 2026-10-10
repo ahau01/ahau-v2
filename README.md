@@ -3,11 +3,9 @@
 A rebuild of Āhau, the whakapapa app, on [Holochain](https://www.holochain.org/).
 
 The original Āhau runs on Secure Scuttlebutt (SSB). Its plugins are no longer
-maintained, and small features had started needing big fixes underneath
-([ADR-0002](docs/adr/0002-rewrite-instead-of-continuing-to-patch-ssb-architecture.md)).
+maintained, and small features had started needing big fixes underneath.
 Āhau v2 rebuilds the app so it does what people need, in the way that suits
-Holochain, rather than copying how the old app did things
-([ADR-0006](docs/adr/0006-capability-driven-redesign-not-behaviour-replication.md)).
+Holochain, rather than copying how the old app did things.
 
 ## Status
 
@@ -17,8 +15,7 @@ Holochain, rather than copying how the old app did things
   typed record of everything the old app's data layer could do (see "What's
   in this repo").
 - **Next:** group permissions on Holochain
-  ([ADR-0003](docs/adr/0003-holochain-as-leg-2-protocol-candidate.md),
-  [plan](docs/plans/group-permissions.md)) — and listing what people actually
+  ([plan](docs/plans/group-permissions.md)) — and listing what people actually
   do with Āhau ([#13](https://github.com/ahau01/ahau-v2/issues/13)).
 
 ## What stays the same

@@ -1,11 +1,10 @@
 # Group Permissions (Kaitiaki Role Management)
 
-> **Functional spec for the first Holochain slice** — the feature
-> [ADR-0003](../adr/0003-holochain-as-leg-2-protocol-candidate.md)'s exit
-> criterion is tested against, built directly on Holochain per
-> [ADR-0006](../adr/0006-capability-driven-redesign-not-behaviour-replication.md).
-> The evidence below describes the old SSB-based app. It is kept as the
-> reason this feature matters, not as a design to copy.
+> **Functional spec for the first Holochain slice** — the feature the
+> Holochain capability-grant exit criterion is tested against, built
+> directly on Holochain around user capabilities rather than ported from the
+> old app. The evidence below describes the old SSB-based app. It is kept as
+> the reason this feature matters, not as a design to copy.
 
 ## Problem
 Groups ("tribes") in Āhau have a single binary role — kaitiaki (admin) vs.
@@ -52,7 +51,7 @@ enforced by the backend rather than only hidden in the UI.
 | Kaitiaki/member removal is enforced | Yes | Holochain test against a real conductor: after removal, the removed agent's writes to the group are rejected by validation |
 | One per-content-type permission is enforced | Yes | Holochain test: with whakapapa record creation set to "Kaitiaki only", a member's create is rejected by validation — not just hidden in the UI |
 | No unfinished permission UI ships unlabelled | Yes | Code review: anything not wired to real enforcement is labelled "not implemented" |
-| No protocol workarounds | Yes | Per ADR-0003: nothing above requires patching Holochain or relying on undocumented conductor behaviour. If it does, the slice fails regardless of how close it feels |
+| No protocol workarounds | Yes | Nothing above requires patching Holochain or relying on undocumented conductor behaviour. If it does, the slice fails regardless of how close it feels |
 
 ## Scope
 **MVP** — pending the product decisions in Open Questions:
@@ -64,8 +63,8 @@ enforced by the backend rather than only hidden in the UI.
 - Verified credentials / DID issuance and acceptance.
 - Permission concepts beyond the existing matrix (e.g. custom roles), unless a
   stakeholder explicitly asks for them.
-- Two-devices-offline-then-sync validation — deferred to the second validation
-  pass per ADR-0003 (see Open Questions).
+- Two-devices-offline-then-sync validation — deferred to the second,
+  committed validation pass (see Open Questions).
 
 ## Delivery Milestones
 <!-- Business outcomes, not engineering tasks. /plan turns each into a plan. -->
