@@ -8,5 +8,6 @@
 | [0005](0005-clean-slate-ssb-data-migration-stance.md) | No SSB-to-v2 data migration for MVP; GEDCOM export/import remains an acknowledged, uncommitted future need | accepted | 2026-09-23 |
 | [0006](0006-capability-driven-redesign-not-behaviour-replication.md) | Redesign around user capabilities on Holochain; freeze the Leg 1 contract as SSB-era reference | accepted | 2026-10-03 |
 | [0007](0007-personal-information-is-a-private-entry.md) | A person's contact details are a private entry on their own source chain | accepted | 2026-10-09 |
+| [0008](0008-a-profile-is-its-authors-own-account.md) | A profile is its author's own account, which only its author can add versions to | accepted | 2026-10-10 |
 
 Numbering starts at 0002: 0001 was `ahau-monorepo`'s own ADR (plugin consolidation) and lives in that repo.
