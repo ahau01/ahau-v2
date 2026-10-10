@@ -130,6 +130,11 @@ export const ZOME = 'profiles'
 export const PROFILE_FUNCTIONS = ['get_my_profile', 'create_my_profile'] as const
 type ProfileFunction = typeof PROFILE_FUNCTIONS[number]
 
+/**
+ * For a launcher, which may still be starting the conductor. Dev overrides
+ * it with a much shorter wait (dev-connection.ts), as its conductor is
+ * already up by the time the page connects.
+ */
 const DEFAULT_TIMEOUT_MS = 30_000
 const RETRY_MS = 250
 
