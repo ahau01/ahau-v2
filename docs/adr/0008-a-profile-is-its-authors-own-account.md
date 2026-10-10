@@ -42,7 +42,7 @@ between peers). A reader that has seen only some updates shows an older
 version: that's history, not an error or a conflict.
 
 The app offers no editing yet: there is no coordinator update function until
-an editing issue designs it, screen included. The conductor tests that
+an editing issue (#47) designs it, screen included. The conductor tests that
 update through a test zome pin the validation rule, not an app feature.
 
 ## Alternatives Considered
