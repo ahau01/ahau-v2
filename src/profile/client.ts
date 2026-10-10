@@ -47,8 +47,13 @@ export interface Profile {
   personal: PersonalInformation
 }
 
-/** `unknown` is an answer the person chose, unlike `null` (no answer). */
-export type Gender = 'male' | 'female' | 'other' | 'unknown'
+/**
+ * Every gender the profiles integrity zome accepts (its `Gender` enum); a
+ * conductor test keeps the two equal. `unknown` is an answer the person
+ * chose, unlike `null` (no answer).
+ */
+export const GENDERS = ['male', 'female', 'other', 'unknown'] as const
+export type Gender = typeof GENDERS[number]
 
 /** Contact details kept on the person's own chain, never published. */
 export interface PersonalInformation {

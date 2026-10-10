@@ -8,7 +8,7 @@
  * local conductor (see dev-connection.ts).
  */
 
-import { ALREADY_HAS_PROFILE, completeProfile, type Gender, type PersonalInformation, type Profile, type ProfileClient } from './client.js'
+import { ALREADY_HAS_PROFILE, GENDERS, completeProfile, type Gender, type PersonalInformation, type Profile, type ProfileClient } from './client.js'
 
 export interface PretendProfileClientOptions {
   /** Where the pretend agent's profile is kept between reloads. */
@@ -82,13 +82,12 @@ function readSaved (saved: string | null): Profile | null {
 }
 
 const PERSONAL_FIELDS: ReadonlyArray<keyof PersonalInformation> = ['email', 'phone', 'address', 'postcode', 'city', 'country']
-const GENDERS: readonly unknown[] = ['male', 'female', 'other', 'unknown'] satisfies Gender[]
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isText = (v: unknown): v is string => typeof v === 'string'
 const isTextList = (v: unknown): v is string[] => Array.isArray(v) && v.every(isText)
 const isBirthOrder = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 1
-const isGender = (v: unknown): v is Gender => GENDERS.includes(v)
+const isGender = (v: unknown): v is Gender => (GENDERS as readonly unknown[]).includes(v)
 
 /** The named fields of `from` that pass `check`; the rest are left out. */
 function fieldsThat<K extends string, T> (from: Record<string, unknown>, keys: readonly K[], check: (v: unknown) => v is T): Partial<Record<K, T>> {

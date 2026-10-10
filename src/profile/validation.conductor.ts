@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 
 import { dhtSync, runScenario, type PlayerApp } from '@holochain/tryorama'
 
-import { BIRTH_ORDER_INVALID, completeProfile } from './client.js'
+import { BIRTH_ORDER_INVALID, GENDERS, completeProfile } from './client.js'
 import { cellOf, happ, readyClient, rogueHapp } from './conductor-harness.js'
 
 /**
@@ -267,6 +267,23 @@ test('promise: a profile with invalid fields is refused, even bypassing the app'
     await assert.rejects(write({ name: 'Mere', dateOfBirth: '01/01/1990' }), /Date of birth must be a real date/)
     // The form shows this same message before saving, so the two can't drift.
     await assert.rejects(write({ name: 'Mere', birthOrder: 0 }), (err: Error) => err.message.includes(BIRTH_ORDER_INVALID))
+  })
+})
+
+test('promise: the zome takes exactly the genders the app offers, even bypassing the app', async () => {
+  await runScenario(async scenario => {
+    const [, rogue] = await twoAgentsOnOneNetwork(scenario)
+    const write = (fnName: string, gender: string) => cellOf(rogue).callZome({
+      zome_name: 'rogue_profiles',
+      fn_name: fnName,
+      payload: { name: 'Mere', gender }
+    })
+
+    // One profile per agent, so the first gender creates it and the rest change it.
+    const [first, ...rest] = GENDERS
+    await write('create_profile', first)
+    for (const gender of rest) await write('update_my_profile', gender)
+    await assert.rejects(write('update_my_profile', 'tane'))
   })
 })
 
