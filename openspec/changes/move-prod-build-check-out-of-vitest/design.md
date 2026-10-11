@@ -132,9 +132,11 @@ appeared in, and the likely cause (a lost `import.meta.env.DEV` guard in
   → those are the same thing only because `main.ts` is the sole importer. If
   a second importer appears outside the `DEV` guard, the module stays and
   the check goes red, which is again the right direction.
-- **~4s of build time moves from every local `npm test` to each CI run** →
-  CI gains no net time, because the check replaces `npm run build:app`
-  rather than joining it.
+- **Removing the build test may not measurably reduce end-to-end local test
+  time** → in a controlled comparison, `npm test` took 21.42s with the test
+  restored and 21.27s without it; the remaining Vitest work dominates the
+  overall run. CI gains no net time because the dedicated check replaces
+  `npm run build:app` rather than joining it.
 - **Vite config loading is implicit** → the script calls `build()` with no
   explicit `configFile`, so it picks up `vite.config.ts` the same way
   `npm run build:app` does. Keeping that implicit is intentional: the check

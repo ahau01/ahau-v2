@@ -45,8 +45,11 @@ means the CI workflow's step list is written once rather than amended.
   fast CI job instead, where it *replaces* `npm run build:app` rather than
   joining it — `build:app` exists in that job to catch Vite breakage, and a
   build that must succeed before its assertion runs catches the same
-  breakage at the same cost. Net effect: `npm test` gets about 4s faster, CI
-  gains no time, and all four problems above are resolved rather than three.
+  breakage at the same cost. A controlled local comparison showed no
+  measurable end-to-end speedup: `npm test` took 21.42s with the Vitest
+  build test restored and 21.27s without it. The remaining Vitest work
+  dominates the overall run. CI gains no time, and all four problems above
+  are resolved rather than three.
 
 The trade accepted here: the check no longer runs on a developer's machine
 during `npm test`, so a regression surfaces in CI rather than locally. The
