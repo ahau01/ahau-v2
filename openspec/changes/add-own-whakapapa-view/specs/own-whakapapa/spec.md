@@ -39,6 +39,21 @@ The tree SHALL show each `partner-of` assertion as the two people beside each ot
 - **WHEN** this agent asserts `sibling-of(Mere, Anaru)` and asserts no parent for either of them
 - **THEN** Anaru is shown beside Mere
 
+### Requirement: A relationship is shown as the kind its source asserted
+A relationship SHALL carry the kind of relationship its source asserted — for a parent, one of birth, whāngai, adopted or unknown, and whether an adoption was legal; for a partner, one of partners, married, divorced or unknown — and SHALL be shown as that kind. A kind no source has asserted SHALL NOT be shown or read as any kind, and in particular SHALL NOT read as birth.
+
+#### Scenario: A whāngai relationship
+- **WHEN** this agent asserts `parent-of(Hine, Mere)` as whāngai
+- **THEN** the relationship is shown as whāngai, and not as birth
+
+#### Scenario: A kind nobody asserted
+- **WHEN** this agent asserts `parent-of(Hine, Mere)` without saying what kind it is
+- **THEN** the relationship is shown with no kind, and not as birth, adopted, whāngai or unknown
+
+#### Scenario: Correcting a kind does not rewrite it
+- **WHEN** this agent asserted a birth relationship and now says it is whāngai
+- **THEN** the change is a retraction of the first assertion plus a new assertion, and the first assertion is still on the record with its original kind
+
 ### Requirement: Each tree starts from a focus ancestor
 A tree SHALL start from a focus ancestor: a person this source asserts no parent for. Where the source's active assertions have more than one such person, each SHALL start its own tree, and none SHALL be chosen over the others.
 
@@ -115,7 +130,7 @@ The details shown for any person in a whakapapa SHALL exclude every Personal inf
 - **THEN** no email, phone, address, postcode, city or country appears in the whakapapa
 
 ### Requirement: A correction is a retraction, and the original record stays
-A source SHALL correct its own assertion by appending a retraction that names the assertion it retracts, and may append a replacement assertion. The retracted assertion SHALL remain on the record. No assertion SHALL be changed in place or removed.
+A source SHALL correct its own assertion by appending a retraction that names the assertion it retracts, may give a reason for it, and may append a replacement assertion. The retracted assertion and any reason given SHALL remain on the record. No assertion SHALL be changed in place or removed.
 
 #### Scenario: Correcting a parent
 - **WHEN** this agent asserted `parent-of(Hine, Mere)`, then retracted it and asserted `parent-of(Rangi, Mere)`
@@ -125,6 +140,10 @@ A source SHALL correct its own assertion by appending a retraction that names th
 #### Scenario: An assertion cannot be rewritten
 - **WHEN** a change to a stored assertion's people or kind is attempted
 - **THEN** it is refused, so a correction can only be a new retraction and a new assertion
+
+#### Scenario: A reason given for a retraction is kept
+- **WHEN** this agent retracts an assertion and gives a reason for it
+- **THEN** the reason is still on the record afterwards, with the retraction it belongs to
 
 ### Requirement: A retraction binds only the source that made it
 A retraction SHALL affect only the projection of the source that authored it. A retraction of one source's assertion SHALL NOT be accepted from another source, and SHALL NOT remove any other source's assertion from their account.

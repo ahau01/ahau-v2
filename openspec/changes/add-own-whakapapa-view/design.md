@@ -8,6 +8,7 @@ See proposal.md for why, and `specs/own-whakapapa/spec.md` for what. The state t
 - **One client boundary per feature.** `src/profile/client.ts` owns every profiles zome call and names the exact functions it calls (`PROFILE_FUNCTIONS`), which is also the dev grant list. Components take data as props; none calls Holochain. `src/own-profile/sections.ts` is the plain-TypeScript "what the page shows" function, tested without Svelte.
 - **The shell.** `src/app/shell/` has one component per page; `WhakapapaPage.svelte` is `StillToCome`, deliberately with no client module at all so no relationship shape was fixed early (archived design D4). The profile is read once at launch and passed down (archived D5); there is no loading or failure state inside the shell yet.
 - **Decisions already recorded.** Removal is retraction and promises only that this source's later reads won't return the record ([contract-decisions §1](../../../docs/contract-decisions.md)). Traversal is exposed as a walk with a depth the backend may decline, not as a filter over links (§4).
+- **What Āhau actually shipped**, read against this design in [docs/research/whakapapa-spec-2021.md](../../../docs/research/whakapapa-spec-2021.md): three record types (profiles, links, a lens), relationship kinds including whāngai, a tombstone carrying a reason, the authoring feed returned on every read, and conflicting concurrent values surfaced as `conflictFields` rather than resolved. D2, D3, D4 and D9 below are revised against it. It also records an unsolved duplicate-profile problem whose written options were both erasure — the clearest instance in this project's history of the pressure rule 1 exists to resist.
 - **The old app's page is not the one being rebuilt.** `#/me/whakapapa` there was a list of named whakapapa records (`docs/old-app-capture/notes.md`, `13-personal-whakapapa-empty.png`). There is no record object here, so there is no list.
 - **Sequencing.** Code starts after #47 (edit your profile). The self-projection below is what makes a profile edit show through in the whakapapa, so #47 is what makes that demonstrable.
 
@@ -58,10 +59,20 @@ pub struct Assertion {
     pub kind: AssertionKind,       // ParentOf | PartnerOf | SiblingOf
     pub subject: ActionHash,       // the Person create action
     pub object: ActionHash,
+    /// What kind of parenthood or partnership, as this source says it.
+    /// `None` until a source says; never defaulted (spec, "A relationship
+    /// is shown as the kind its source asserted").
+    pub relationship: Option<RelationshipKind>,
+    /// Only meaningful for an adopted `ParentOf`.
+    pub legally_adopted: Option<bool>,
 }
 ```
 
-`ParentOf` reads `subject` is the parent of `object`; `PartnerOf` and `SiblingOf` are symmetric and stored as written.
+`ParentOf` reads `subject` is the parent of `object`; `PartnerOf` and `SiblingOf` are symmetric and stored as written. `RelationshipKind` holds the values Āhau shipped — `Birth | Whangai | Adopted | Unknown` for a parent, `Partners | Married | Divorced | Unknown` for a partner (`ssb-whakapapa` `spec/link/profile-profile/{child,partner}.js`; [docs/research/whakapapa-spec-2021.md](../../../docs/research/whakapapa-spec-2021.md)).
+
+- **Why carry the kind now, in a slice that writes nothing a person can see?** Because **whāngai** is one of its values. A model that cannot hold whāngai cannot hold Māori relationships, and a fixture cannot even exercise the reader for one. It was dropped from the first draft of this change by omission, not by decision. Adding a field to an immutable entry later is cheap in Holochain terms — `#[serde(default)]` means older entries still read, as the profiles zome already relies on — but the shape would have been wrong in the meantime, and the write slice would have inherited it.
+- **`Unknown` is a kind a source chose; `None` is no answer.** The same distinction `Profile.gender` already makes. Never collapse them, and never let `None` render as `Birth`: in the shipped model `relationshipType` was nullable and the read result said `legallyAdopted: null // null means it hasnt been set`.
+- **Correcting the kind is a retraction plus a new assertion**, exactly as correcting the people is. In the shipped model the endpoints were immutable (`staticProps`) while `relationshipType` was mutable through `@tangle/overwrite` — a middle path we deliberately do not take, because an overwritten kind loses what the source said before, and "it was recorded as a birth relationship and later corrected to whāngai" is a thing a whakapapa should be able to say.
 
 - **Why an entry, not a Holochain link?** A link is the editable-edge model in Holochain's clothing: it has a deletable existence, it is keyed on a base, and "move this child under a different parent" becomes delete-link-plus-create-link, which is overwrite-on-write (rule 2). An entry on the author's chain can only be appended to and retracted; there is nothing to rewrite. Private entries also cannot be link bases, so a link model would force publishing whakapapa the moment it is stored.
 - **Why `ActionHash` and not `EntryHash` for the people?** Two sources who describe an ancestor identically would produce the same `EntryHash`, so an entry-hash reference would silently collapse two sources' descriptions into one address — the exact merge rule 1 forbids, arrived at by accident. An `ActionHash` is unique per author and per write, so "which source's description of Hine" is always answerable.
@@ -74,8 +85,12 @@ pub struct Assertion {
 pub struct Retraction {
     /// The assertion this source is taking back.
     pub assertion: ActionHash,
+    /// Why, if the source says. Kept on the record like everything else.
+    pub reason: Option<String>,
 }
 ```
+
+The reason is here from the start because the shipped model had it: removal was `tombstone: { reason, date }`, and the tombstoned link still read back carrying it (`ssb-whakapapa` `test/method/link/tombstone.test.js`). A retraction is a statement, and "why" is part of the statement — a whakapapa where a source took something back without being able to say why is a worse record than one where they could. The date needs no field: the action carries it.
 
 The integrity zome refuses, for every entry type in it:
 
@@ -105,7 +120,11 @@ It queries the author's own chain once (`query`, as `get_my_profile` does), buil
 
 - **Why a walk and not a filter the client applies?** contract-decisions §4: the boundary exposes "give me the descendants of X", because a filter-shaped boundary pushes graph logic into the frontend and that is what breaks when the data stops being local. Today every entry is on one chain, so the walk is cheap and the distinction looks academic — which is exactly why it is worth fixing now, while it costs nothing. `max_depth` is §4's `maxTraversalDepth`: the zome may decline a deep walk rather than hang, and says so with `truncated`.
 - **Why flat people and relationships rather than a nested tree?** Which tree a viewer sees is a render-layer decision, per viewer (rule 1). A nested tree from the zome would bake one drawing — one chosen parent per person, one chosen root — into the data layer. Flat and source-stamped is also what a multi-source read returns, so the second source widens a filter instead of reshaping a response.
-- **Roots are not stored.** There is no focus field and no whakapapa record to hold one, so nothing persists a choice of ancestor. Every parentless person in the source's active assertions is a root (spec, "Each tree starts from a focus ancestor"). Choosing one of several roots would be inventing a canonical starting point; see Open Questions.
+- **Roots are computed, not stored, and the thing that would store them is a lens.** Every parentless person in the source's active assertions is a root (spec, "Each tree starts from a focus ancestor"). Nothing persists a choice of ancestor, and choosing one of several automatically would invent a canonical starting point.
+
+  The concept that *should* hold such a choice is a lens, and it is not this change's to build — but it is worth naming precisely, because the first draft of this change discarded it along with the old app's named whakapapa records, and then had to list its two jobs as open questions. Āhau had `whakapapa/view` as its own record type, holding `focus`, `mode` (`ancestors | descendants`), `ignoredProfiles` and `importantRelationships` under a literal `/* rules */` comment (`ssb-whakapapa` `spec/whakapapa-view.js`), and our frozen contract still carries it: *"A saved lens over the whakapapa — not the graph itself. The graph is the links"* (`reference/leg1-contract/contract/types/records.ts:121-148`).
+
+  That separation is CLAUDE.md rule 1's "choosing which version to show is a render-layer decision, per viewer", with a place to put it. So: a stored focus, which parent counts where someone has several, and whom to leave out all belong on a lens, one per viewer, and none of them belongs on an assertion. A later slice that puts "which parent is the real one" on the relationship would be writing a canonical answer about someone else's whakapapa into the graph — the regression rule 2 warns about, reached by a route that looks like a feature. See [docs/research/whakapapa-spec-2021.md](../../../docs/research/whakapapa-spec-2021.md) §3.1.
 - **Cycles.** `parent-of(A, B)` and `parent-of(B, A)` are both storable — neither is invalid on its own, and refusing the second would mean validation reading the author's whole whakapapa and deciding which claim is wrong. The walk's visited set handles it instead: a cycle terminates and nothing is drawn twice down one path.
 
 ### D5. The author's own details are projected from their profile, and personal information cannot reach the whakapapa
@@ -151,6 +170,7 @@ That is what makes "no user-facing creation in this slice" a property of the cod
 - `WhakapapaPage.svelte` renders what `tree.ts` returns, plus the reading, empty and failed states. It makes no zome call and does no walking.
 - **The page reads on open**, not at launch, and not again while open. Whakapapa can be large and is one of three sections, so reading it at launch would make every launch pay for it. Nothing can change it while the page is open in this slice.
 - **Siblings and partners both land "beside"**, which a tree of descent has no natural slot for. The rule is: a `sibling-of` whose two people already share an asserted parent needs no extra drawing — the descent puts them side by side. One that does not is drawn beside its sibling with no parent above it. See Open Questions.
+- **Having `sibling-of` at all is a trade-off, and this records it as a choice.** Āhau shipped only child and partner links; siblings were implied by a shared parent (`whakapapa-spec` README). That design never has to answer "where does a parentless sibling go", because it cannot express one. The cost is the other way: adding a sibling whose parents nobody knows would mean writing a placeholder parent — asserting the existence of a person no source has described — which is its own rule-1 problem, and a worse one, since it puts an invented person in someone's whakapapa. So `sibling-of` stays, and the awkward drawing is the price. If the drawing proves unworkable, the alternative is not placeholder parents; it is showing unconnected siblings outside the tree.
 
 ### D10. Vocabulary
 
@@ -190,7 +210,7 @@ No stored data to migrate: there is no whakapapa data anywhere yet, and producti
 
 Each of these can be answered by the slice owner without changing the specs, this design or the task list:
 
-- **More than one focus ancestor.** D4 shows every parentless person as their own tree. Whether a person should instead pick and keep a focus is a product question; picking one automatically is not an option (it would invent a canonical root).
-- **Where a `sibling-of` with no asserted shared parent is drawn** (D9), and whether siblings in that position should be visibly distinguished from siblings the descent already puts together.
+- **Where a `sibling-of` with no asserted shared parent is drawn** (D9), and whether siblings in that position should be visibly distinguished from siblings the descent already puts together. Whether to have the type at all is settled, not open (D9).
+- **Whether `legally_adopted` belongs on the assertion or on the lens' kind vocabulary.** It is a legal fact about an adoption, which argues for the assertion, where D2 puts it; it is also the one sub-field the shipped model kept separate, and nobody recorded why.
 - **The value of `max_depth`.** It needs a number that no real whakapapa hits and no test fixture has to work around.
 - **The empty state's wording**, in te reo Māori and English. The spec fixes what it must and must not say.
