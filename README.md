@@ -73,6 +73,7 @@ Other commands:
 | `npm run check:app` | Typecheck the Svelte app |
 | `npm run build` | Compile to `dist/` |
 | `npm run build:app` | Build the app for production |
+| `npm run check:app-build` | Check the production build leaves the pretend client out |
 
 ### Holochain
 
