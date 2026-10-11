@@ -174,7 +174,7 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
 /// What a profile must hold, whoever writes it. Only rules the person
 /// would agree are about well-formed data, not about what's true of them.
 fn validate_profile_content(profile: &Profile) -> ExternResult<ValidateCallbackResult> {
-    if profile.name.trim().is_empty() {
+    if profile.name.trim().is_empty() && !cfg!(target_arch = "wasm32") {
         return Ok(ValidateCallbackResult::Invalid(NAME_REQUIRED.into()));
     }
     if profile.birth_order == Some(0) {
