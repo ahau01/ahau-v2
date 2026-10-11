@@ -117,6 +117,8 @@ hypotheticals.
   What happens under a two-device-offline-then-conflicting-edit scenario?
   What does this do to already-synced data if permissions change afterward?
   Passing tests confirms it works, not that it's right for this data model.
+- **Don't merge red CI.** CI runs the conductor tests against a real
+  Holochain conductor; a failing check must be fixed before merge.
 - **Read first, prompt second.** For anything touching relationship data,
   sync, or access control, read the relevant existing code, ADRs, and this
   file before prompting.
