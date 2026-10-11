@@ -188,22 +188,43 @@ export function createFirstLaunch (client: ProfileClient): FirstLaunch {
  * blank boxes left out. Or why it can't be saved yet.
  */
 function readForm (form: ProfileForm): { profile: NewProfile } | { errors: ProfileFormErrors } {
+  const validation = validateForm(form)
+  if ('errors' in validation) return validation
+
+  return { profile: constructProfile(form, validation.values) }
+}
+
+interface ValidatedForm {
+  name: string
+  birthOrder?: number
+  dateOfBirth?: string
+}
+
+function validateForm (form: ProfileForm): { values: ValidatedForm } | { errors: ProfileFormErrors } {
   // A name of only spaces is no name. The zome refuses it too.
   const name = form.name.trim()
-  const birthOrder = form.birthOrder.trim()
+  const birthOrderText = form.birthOrder.trim()
   const dateOfBirth = readDate(form.dateOfBirth)
 
   // Every problem at once, so the person isn't sent back field by field.
   const errors: ProfileFormErrors = {}
   if (!name) errors.name = 'Please enter a name.'
-  if (birthOrder && !/^[1-9]\d*$/.test(birthOrder)) errors.birthOrder = BIRTH_ORDER_INVALID
+  if (birthOrderText && !/^[1-9]\d*$/.test(birthOrderText)) errors.birthOrder = BIRTH_ORDER_INVALID
   if ('error' in dateOfBirth) errors.dateOfBirth = dateOfBirth.error
-  // `'error' in dateOfBirth` changes nothing at runtime (that case set an
-  // error above); it tells TypeScript the date was read, for below.
   if (Object.keys(errors).length > 0 || 'error' in dateOfBirth) return { errors }
 
+  return {
+    values: {
+      name,
+      ...(birthOrderText ? { birthOrder: Number(birthOrderText) } : {}),
+      ...(dateOfBirth.date ? { dateOfBirth: dateOfBirth.date } : {})
+    }
+  }
+}
+
+function constructProfile (form: ProfileForm, values: ValidatedForm): NewProfile {
   const profile: NewProfile = {
-    name,
+    name: values.name,
     ...text('fullName', form.fullName),
     ...text('placeOfBirth', form.placeOfBirth),
     ...text('description', form.description),
@@ -212,9 +233,9 @@ function readForm (form: ProfileForm): { profile: NewProfile } | { errors: Profi
     ...list('skills', form.skills),
     ...list('education', form.education)
   }
-  if (birthOrder) profile.birthOrder = Number(birthOrder)
+  if (values.birthOrder !== undefined) profile.birthOrder = values.birthOrder
   if (form.gender) profile.gender = form.gender
-  if (dateOfBirth.date) profile.dateOfBirth = dateOfBirth.date
+  if (values.dateOfBirth) profile.dateOfBirth = values.dateOfBirth
 
   const personal: Partial<PersonalInformation> = {}
   for (const [key, value] of Object.entries(form.personal) as Array<[keyof PersonalInformation, string]>) {
@@ -222,7 +243,7 @@ function readForm (form: ProfileForm): { profile: NewProfile } | { errors: Profi
   }
   if (Object.keys(personal).length > 0) profile.personal = personal
 
-  return { profile }
+  return profile
 }
 
 /**
@@ -231,14 +252,23 @@ function readForm (form: ProfileForm): { profile: NewProfile } | { errors: Profi
  * a year alone or a year and month is a date; a gap before a picked part isn't.
  */
 function readDate ({ day, month, year }: ProfileForm['dateOfBirth']): { date: string } | { error: string } {
-  if (year && month && day) return { date: `${year}-${month}-${day}` }
-  if (year && month) return { date: `${year}-${month}` }
-  if (year && !day) return { date: year }
-  if (!year && !month && !day) return { date: '' }
-  if (year) return { error: 'Please specify a month' }
-  if (month && day) return { error: 'Please specify a year' }
-  if (day) return { error: 'Please specify a year and month' }
-  return { error: 'Please specify a year' }
+  const hasYear = Boolean(year)
+  const hasMonth = Boolean(month)
+  const hasDay = Boolean(day)
+
+  if (!hasYear) {
+    if (hasMonth) return { error: 'Please specify a year' }
+    if (hasDay) return { error: 'Please specify a year and month' }
+    return { date: '' }
+  }
+
+  if (!hasMonth) {
+    if (hasDay) return { error: 'Please specify a month' }
+    return { date: year }
+  }
+
+  if (!hasDay) return { date: `${year}-${month}` }
+  return { date: `${year}-${month}-${day}` }
 }
 
 function text<K extends string> (key: K, value: string): Partial<Record<K, string>> {
