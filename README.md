@@ -75,6 +75,17 @@ Other commands:
 | `npm run build:app` | Build the app for production |
 | `npm run check:app-build` | Check the production build leaves the pretend client out |
 
+## Continuous integration
+
+Pull requests run two jobs in parallel. The **fast** job runs on a clean
+GitHub-hosted runner without Nix: it installs Node from `.nvmrc`, runs
+`npm ci`, `npm test`, `npm run check:app`, and `npm run check:app-build`.
+The **holochain** job installs Node from `.nvmrc` before entering the Nix
+development shell, then runs `npm ci`, the zome tests, and the conductor
+tests against a real Holochain conductor. The fast job deliberately needs no
+Nix; the Holochain job uses the pinned Holonix environment and Holochain's
+public package cache.
+
 ### Holochain
 
 The Holochain tools (`holochain`, `hc`, `lair-keystore`, Rust) come from
