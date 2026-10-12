@@ -86,6 +86,9 @@ export const BIRTH_ORDER_INVALID = 'Order of birth must be a whole number, from 
  */
 export const ALREADY_HAS_PROFILE = 'This agent already has a profile'
 
+/** The coordinator refuses to change a profile that has not been created. */
+export const NO_PROFILE_TO_UPDATE = 'This agent has nothing of that kind to change yet'
+
 /**
  * The profile a NewProfile saves as: unfilled fields empty, as the zome
  * stores them. Conductor tests compare what the zome reads back with this,
@@ -120,6 +123,9 @@ export type CreateProfileResult =
   | { status: 'created', profile: Profile }
   | { status: 'failed', reason: string }
 
+/** An updated profile uses the same result shape as the initial save. */
+export type UpdateProfileResult = CreateProfileResult
+
 export type Readiness =
   | { status: 'ready' }
   | { status: 'failed', reason: string }
@@ -131,6 +137,8 @@ export interface ProfileClient {
   getMyProfile (): Promise<Profile | null>
   /** Save this agent's profile. Each agent key has one profile. */
   createMyProfile (profile: NewProfile): Promise<CreateProfileResult>
+  /** Add a version of this agent's existing profile. */
+  updateMyProfile (profile: NewProfile): Promise<UpdateProfileResult>
   /** Release the connection to Holochain. */
   close (): Promise<void>
 }
@@ -140,7 +148,7 @@ export const APP_ID = 'ahau'
 export const ROLE = 'ahau'
 export const ZOME = 'profiles'
 /** Every profiles zome function this client calls; grants list exactly these. */
-export const PROFILE_FUNCTIONS = ['get_my_profile', 'create_my_profile'] as const
+export const PROFILE_FUNCTIONS = ['get_my_profile', 'create_my_profile', 'update_my_profile'] as const
 type ProfileFunction = typeof PROFILE_FUNCTIONS[number]
 
 /**
@@ -206,6 +214,15 @@ export function createProfileClient (options: ProfileClientOptions = {}): Profil
     async createMyProfile (profile) {
       try {
         const saved = await callProfiles<Profile>('create_my_profile', profile)
+        return { status: 'created', profile: saved }
+      } catch (err) {
+        return { status: 'failed', reason: plainReason(err) }
+      }
+    },
+
+    async updateMyProfile (profile) {
+      try {
+        const saved = await callProfiles<Profile>('update_my_profile', profile)
         return { status: 'created', profile: saved }
       } catch (err) {
         return { status: 'failed', reason: plainReason(err) }

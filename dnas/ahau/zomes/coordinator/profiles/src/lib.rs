@@ -28,6 +28,29 @@ pub fn create_my_profile(input: MyProfile) -> ExternResult<MyProfile> {
     Ok(input)
 }
 
+/// Adds a new version of this agent's profile and personal information.
+///
+/// The original action hashes are resolved on this agent's chain rather than
+/// accepted from the caller: they are source-chain facts, and using the latest
+/// update would be refused because every version must point at the first one.
+/// Personal information is created when this agent has none yet, matching the
+/// empty fallback in `get_my_profile` for profiles written before that entry
+/// type existed.
+#[hdk_extern]
+pub fn update_my_profile(input: MyProfile) -> ExternResult<MyProfile> {
+    let profile_original = original_on_my_chain(UnitEntryTypes::Profile)?
+        .ok_or(wasm_error!(WasmErrorInner::Guest("This agent has nothing of that kind to change yet".into())))?;
+    update_entry(profile_original, EntryTypes::Profile(input.profile.clone()))?;
+
+    if let Some(personal_original) = original_on_my_chain(UnitEntryTypes::PersonalInformation)? {
+        update_entry(personal_original, EntryTypes::PersonalInformation(input.personal.clone()))?;
+    } else {
+        create_entry(EntryTypes::PersonalInformation(input.personal.clone()))?;
+    }
+
+    Ok(input)
+}
+
 /// This agent's profile, or None if they haven't created one.
 #[hdk_extern]
 pub fn get_my_profile() -> ExternResult<Option<MyProfile>> {
@@ -38,6 +61,16 @@ pub fn get_my_profile() -> ExternResult<Option<MyProfile>> {
     let personal = latest_on_my_chain::<PersonalInformation>(UnitEntryTypes::PersonalInformation)?
         .unwrap_or_default();
     Ok(Some(MyProfile { profile, personal }))
+}
+
+/// The first Create of this entry type on this agent's own chain, if any.
+fn original_on_my_chain(entry_type: UnitEntryTypes) -> ExternResult<Option<ActionHash>> {
+    let records = query(
+        ChainQueryFilter::new()
+            .entry_type(entry_type.try_into()?)
+            .action_type(ActionType::Create),
+    )?;
+    Ok(records.first().map(|record| record.action_address().clone()))
 }
 
 /// The latest entry of this type on the agent's own chain.

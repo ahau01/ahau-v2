@@ -185,6 +185,7 @@ export function createDevProfileClient (options: DevProfileClientOptions = {}): 
 
     async getMyProfile () { return await connected().getMyProfile() },
     async createMyProfile (profile) { return await connected().createMyProfile(profile) },
+    async updateMyProfile (profile) { return await connected().updateMyProfile(profile) },
     async close () { await client?.close() }
   }
 }

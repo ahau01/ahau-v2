@@ -51,7 +51,8 @@ describe('create profile: fields', () => {
 
     expect(screen.getByRole('heading', { name: 'Skills and qualifications' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Personal information' })).toBeTruthy()
-    expect(screen.getByText('Upload profile photo')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Upload profile photo' }).hasAttribute('disabled')).toBe(true)
+    expect(screen.getByText('Only you can see this.')).toBeTruthy()
   })
 
   test('"About" names the person once they have typed their name', async () => {

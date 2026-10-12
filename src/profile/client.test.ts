@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { createProfileClient } from './client.js'
+import { createProfileClient, PROFILE_FUNCTIONS } from './client.js'
 
 /**
  * Profile client behaviour that needs no conductor. TypeScript client
@@ -24,4 +24,8 @@ test('promise: createMyProfile before waitUntilReady reports failed, not a valid
     await client.createMyProfile({ name: 'Mere' }),
     { status: 'failed', reason: NOT_CONNECTED }
   )
+})
+
+test('the dev signing grant lists exactly the profile functions the client calls', () => {
+  assert.deepEqual(PROFILE_FUNCTIONS, ['get_my_profile', 'create_my_profile', 'update_my_profile'])
 })
