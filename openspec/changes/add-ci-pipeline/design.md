@@ -231,11 +231,14 @@ are looked up against each action's repository when the workflow is written.
 
 ## Risks / Trade-offs
 
-- **Cold Nix download and the Sweettest run together dominate the first
-  run** → one `holochain` job with Holochain's Cachix substituter, and a
-  **60**-minute timeout. 30 was the original figure, set before any
-  measurement; #86's cold Sweettest run took 43m40s, so 30 would have timed
-  out. Raised on evidence, as the original design said it would be.
+- **A cold run is far more expensive than #86's figure suggested** → the
+  timeout is **90** minutes. The history is worth keeping, because each
+  number was wrong for a different reason: 30 predated any measurement; 60
+  came from #86's 43m40s cold Sweettest run, which excluded `test:zomes`
+  entirely; the first real cold run of the consolidated job measured
+  **54m35s**, a 9% margin against 60. A cold run recurs on any `flake.lock`
+  or `Cargo.lock` change, so 9% is not a margin. Raised on evidence twice,
+  as the original design said it would be.
 - **Conforming to #86 made CI slower, and the change should say so** →
   Sweettest measures 43m40s cold and 16m05s warm, against Tryorama's 13m45s
   and 9m07s; test execution alone is 800s against 449s. The justification
@@ -243,15 +246,40 @@ are looked up against each action's repository when the workflow is written.
   Holochain 0.6, so it is dependency risk being retired, not time. Recording
   the regression is deliberate: an archived change claiming CI got faster
   would mislead whoever next tries to speed it up.
-- **`test:zomes` may no longer be cheap** → #86 added `holochain` with
-  `features = ["test_utils"]` to the `profiles` crate's `dev-dependencies`.
-  Cargo resolves dev-dependencies per package, so `cargo test --workspace`
-  may now build that dependency tree even though the `sweettest` test target
-  is `required-features`-gated out. Under Tryorama, `Test zomes` ran in 12s
-  warm. #86's workflow never ran `test:zomes`, so there is no CI evidence
-  either way — task 3.4 measures it. Inside one job with a warm Rust cache
-  the compile is paid once regardless, so this affects whether `test:zomes`
-  could ever move to the `fast` job, not the `holochain` job's total.
+- **`test:zomes` is no longer cheap — measured, not predicted** → #86 added
+  `holochain` with `features = ["test_utils"]` to the `profiles` crate's
+  `dev-dependencies`. Cargo resolves dev-dependencies per package, so
+  `cargo test --workspace` compiles that whole tree even though the
+  `sweettest` test target is `required-features`-gated out of it. Under
+  Tryorama `Test zomes` ran in 12s warm; on the first cold run of this job
+  it took **2279s**, roughly 70% of the 54m35s total.
+
+  #86 merged without this surfacing: its `sweettest.yml` never ran
+  `test:zomes`, and its PR body reports only that the script "passed
+  locally". The claim that it keeps `test:zomes` independent of conductor
+  startup is true about conductors and false about cost.
+
+  The compile itself is not waste — `Run Sweettest serially` needs the same
+  artefacts and reuses them from the shared `target/`, which is decision 9's
+  whole point. What it does settle is the open question about moving
+  `test:zomes` into the `fast` job: no.
+
+### 6a. The Rust cache is namespaced by job name
+
+Found while explaining the 54m35s run, and worth writing down because it
+looks like a cache bug and is not one. `Swatinem/rust-cache` defaults to
+`add-job-id-key: true`, so the job name is part of the cache key. #86's
+workflow warmed its cache under the job name `sweettest`; this job is named
+`holochain` (decision 9a) and cannot read it. The log shows
+`Cache hit for restore-key: holonix-...-holochain-...` — a partial fallback
+to the 248 MB Tryorama-era cache, not an exact hit — so the Holochain crate
+tree compiled from scratch.
+
+This is a one-off cost of consolidating two workflows into one, paid on the
+first run under the surviving job name. It is not a reason to rename the job
+to match #86's, which would cost a ruleset `PUT` (decision 9a) to save a
+single cold compile. Later runs under this name should approach #86's warm
+figure, where the compile was 52s.
 - **`rust-cache` and the Nix toolchain disagree** → decision 6; the
   hand-rolled `actions/cache` fallback is identified in advance so it is not
   designed under pressure.
@@ -310,7 +338,7 @@ Still open, and neither changes the approach or the task breakdown:
 - Whether the `fast` job needs `actions/setup-node`'s `cache: npm`. `fast`
   runs in 1m04s–1m14s without it, well inside its 10-minute budget, so this
   is now a question of taste rather than headroom.
-- Whether `test:zomes` is still cheap after #86's `dev-dependencies` change,
-  and so whether it could move to the `fast` job and give a Rust signal
-  without Nix. Task 3.4 takes the measurement; acting on it would be a
-  separate change.
+- ~~Whether `test:zomes` is still cheap after #86's `dev-dependencies`
+  change, and so whether it could move to the `fast` job.~~ **No.** 2279s
+  cold against 12s warm under Tryorama. It stays in the `holochain` job,
+  where the compile it pays for is reused by the Sweettest step.

@@ -67,7 +67,7 @@ point in the project's life to add it.
     no Nix, proving the README's claim that the app's checks need no
     Holochain: Node from `.nvmrc`, `npm ci`, `npm test`,
     `npm run check:app`, `npm run check:app-build`.
-  - **`holochain`** (`timeout-minutes: 60`): Nix with Holochain's public
+  - **`holochain`** (`timeout-minutes: 90`): Nix with Holochain's public
     Cachix substituter, Node from `.nvmrc` **before** `nix develop` (the
     Holonix shell provides no Node and inherits it from `PATH`), `npm ci`,
     a Rust cache, then `nix develop --command npm run test:zomes` and
@@ -121,7 +121,9 @@ than the Tryorama suite it replaced, on every measurement:
 | Warm run | 9m07s | 16m05s |
 | Test execution | 449s | 800s |
 
-So `timeout-minutes` goes from 30 to 60. The justification for Sweettest is
+So `timeout-minutes` goes from 30 to 90: the first cold run of the
+consolidated job measured 54m35s, because `Test zomes` now carries the whole
+Holochain crate compile (design.md, second risk and 6a). The justification for Sweettest is
 dependency risk — Tryorama is no longer an official package in Holochain
 0.6 — not speed, and this change records that rather than implying CI got
 faster.

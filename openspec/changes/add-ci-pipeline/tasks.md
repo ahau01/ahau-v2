@@ -64,9 +64,11 @@ pipeline that no longer exists. See design.md — Migration Plan.
   its duration: #86 added `holochain`/`test_utils` to the `profiles` crate's
   `dev-dependencies`, which may no longer be cheap (design.md, third risk).
   It was 12s warm under Tryorama.
-- [ ] 3.5 Add `nix develop --command npm run test:sweettest` as its own,
+- [x] 3.5 Add `nix develop --command npm run test:sweettest` as its own,
   separate step. Verify it passes, and that a failure in it is reported
-  against this step and not the zome step.
+  against this step and not the zome step. Both confirmed: it passed in 855s
+  on PR #81, and on probe PR #87 the failure was reported against
+  `Run Sweettest serially` while `Test zomes` stayed green.
 - [x] 3.6 Record free disk space on the runner during the first green run
   (design.md decision 7, given `target/` is 3.1 GB locally). Verify there is
   headroom; if not, add a disk-reclaiming step and note it.
@@ -115,7 +117,7 @@ pipeline that no longer exists. See design.md — Migration Plan.
 
 ## 5. Proving it catches what it is for
 
-- [ ] 5.1 Open a throwaway PR that deliberately breaks a profile validation
+- [x] 5.1 Open a throwaway PR that deliberately breaks a profile validation
   rule in the `profiles` integrity zome. Verify the `holochain` job turns
   red **at the Sweettest step**, link the failed run on #36, then close the
   PR without merging. A green run here means the job is not exercising
@@ -130,6 +132,15 @@ pipeline that no longer exists. See design.md — Migration Plan.
   when validation weakens" is a property of the step, not of the assertions.
   Reuse #83's wasm-only approach: it is what kept the two layers
   distinguishable.
+
+  **Done for Sweettest.** PR #87
+  ([run 38202919424](https://github.com/ahau01/ahau-v2/actions/runs/38202919424))
+  weakened profile-field validation in wasm builds only. `Test zomes` passed
+  natively in 1696s; `Run Sweettest serially` failed after 876s with
+  `15 passed; 1 failed`, the single failure being
+  `invalid_profile_fields_are_rejected` at `sweettest.rs:39`. A sharper
+  signal than #83's, which failed two cases: exactly one assertion moved,
+  and it was the one aimed at the weakened rule.
 - [x] 5.2 Record the exact check-run names both jobs report, taken from a
   real run rather than assumed from the job ids (design.md decision 10).
 
@@ -198,10 +209,38 @@ since `test:sweettest` does not exist on this branch's base until the rebase.
   it, are `fast` and `holochain`. They match, so no second `PUT`. Neither
   job carries a `name:` key, which is what keeps the check-run name equal to
   the job id — adding one would silently break the required check.
-- [ ] 7.4 Confirm on the PR that both `fast` and `holochain` report and pass,
-  and record the warm `holochain` duration. Expect roughly 16 minutes against
-  Tryorama's 9m07s; the point of recording it is that this change makes CI
-  slower, and the archived record should say so (design.md, second risk).
+- [x] 7.4 Confirm on the PR that both `fast` and `holochain` report and pass,
+  and record the `holochain` duration. Both pass on PR #81: `fast` 1m02s,
+  `holochain` **54m35s**
+  ([run 38202857090](https://github.com/ahau01/ahau-v2/actions/runs/38202857090)).
+  That is a cold run, far above the ~16 minutes expected, and the cause is
+  worth recording rather than retrying away:
+
+  | Step | PR #81 | PR #87 probe |
+  | --- | --- | --- |
+  | Setup through Node-in-Nix | 73s | 62s |
+  | `Test zomes` | **2279s** | 1696s |
+  | `Run Sweettest serially` | 855s | 876s (failed) |
+
+  `Test zomes` was 12s warm under Tryorama. It is now 70% of the job, because
+  #86 added `holochain`/`test_utils` to the `profiles` crate's
+  `dev-dependencies` and Cargo resolves those per package, so
+  `cargo test --workspace` compiles the whole Holochain tree.
+
+  The compile is not wasted — `Run Sweettest serially` needs it and reuses
+  it from the shared `target/`. What made this run cold is that
+  `Swatinem/rust-cache` defaults to `add-job-id-key: true`, so its key is
+  namespaced by job name. The log shows
+  `Cache hit for restore-key: holonix-...-holochain-...`, a partial fallback
+  to the 248 MB Tryorama-era cache, not an exact hit: #86 warmed a cache
+  under the job name `sweettest`, which this job cannot read. Later runs
+  under this job name should approach #86's warm figure, where the compile
+  was 52s.
+
+  Hence `timeout-minutes` goes to **90**, not the 60 this change planned from
+  #86's 43m40s cold figure — which excluded `test:zomes` entirely. 54m35s
+  against 60 is a 9% margin, and a cold run recurs on any `flake.lock` or
+  `Cargo.lock` change.
 
 ## Workflow follow-up
 
