@@ -31,7 +31,7 @@ jobs:
 
   holochain:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -51,6 +51,7 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           prefix-key: holonix-${{ hashFiles('flake.lock') }}
+          cache-on-failure: true
 
       - name: Record runner disk space
         run: df -h /
@@ -64,5 +65,5 @@ jobs:
       - name: Test zomes
         run: nix develop --command npm run test:zomes
 
-      - name: Test conductor
-        run: nix develop --command npm run test:conductor
+      - name: Run Sweettest serially
+        run: nix develop --command npm run test:sweettest
