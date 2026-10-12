@@ -231,7 +231,10 @@ async fn coordinator_updates_both_sections_twice_from_their_original_versions() 
     let saved: Option<MyProfile> = network.call(0, "profiles", "get_my_profile", ()).await;
     let saved = saved.unwrap();
     assert_eq!(saved.profile.name, "Mere Rangi-Williams");
-    assert_eq!(saved.personal.email.as_deref(), Some("mere.williams@example.com"));
+    assert_eq!(
+        saved.personal.email.as_deref(),
+        Some("mere.williams@example.com")
+    );
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

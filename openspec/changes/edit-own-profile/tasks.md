@@ -179,6 +179,13 @@ sections remain unchanged. These are the remaining non-blocking gaps in
 direct scenario assertions, not observed implementation failures. They do
 not change the completed task count.
 
+- **Toolchain warnings:** `nix develop` reports that crane requires at
+  least nixpkgs 26.05 while this environment supplies 25.11. Cargo also
+  reports that `proc-macro-error2 2.0.1` may be rejected by a future Rust
+  version. Both checks continue past these warnings.
+- **Formatting:** workspace-wide `cargo fmt --all -- --check` reports
+  differences in unchanged Rust files. The coordinator files changed here
+  pass focused `rustfmt --edition 2021 --check`.
 - **Earlier versions remain on the chain:** extend coverage to confirm the
   original and intermediate versions remain after successive changes.
 - **Clearing a field affects only the new version:** add coverage confirming

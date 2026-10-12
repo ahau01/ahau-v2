@@ -38,12 +38,16 @@ pub fn create_my_profile(input: MyProfile) -> ExternResult<MyProfile> {
 /// type existed.
 #[hdk_extern]
 pub fn update_my_profile(input: MyProfile) -> ExternResult<MyProfile> {
-    let profile_original = original_on_my_chain(UnitEntryTypes::Profile)?
-        .ok_or(wasm_error!(WasmErrorInner::Guest("This agent has nothing of that kind to change yet".into())))?;
+    let profile_original = original_on_my_chain(UnitEntryTypes::Profile)?.ok_or(wasm_error!(
+        WasmErrorInner::Guest("This agent has nothing of that kind to change yet".into())
+    ))?;
     update_entry(profile_original, EntryTypes::Profile(input.profile.clone()))?;
 
     if let Some(personal_original) = original_on_my_chain(UnitEntryTypes::PersonalInformation)? {
-        update_entry(personal_original, EntryTypes::PersonalInformation(input.personal.clone()))?;
+        update_entry(
+            personal_original,
+            EntryTypes::PersonalInformation(input.personal.clone()),
+        )?;
     } else {
         create_entry(EntryTypes::PersonalInformation(input.personal.clone()))?;
     }
@@ -70,7 +74,9 @@ fn original_on_my_chain(entry_type: UnitEntryTypes) -> ExternResult<Option<Actio
             .entry_type(entry_type.try_into()?)
             .action_type(ActionType::Create),
     )?;
-    Ok(records.first().map(|record| record.action_address().clone()))
+    Ok(records
+        .first()
+        .map(|record| record.action_address().clone()))
 }
 
 /// The latest entry of this type on the agent's own chain.
@@ -90,7 +96,9 @@ where
                 .entry()
                 .to_app_option::<T>()
                 .map_err(|e| wasm_error!(e))?
-                .ok_or(wasm_error!(WasmErrorInner::Guest(format!("Malformed {entry_type:?} entry"))))
+                .ok_or(wasm_error!(WasmErrorInner::Guest(format!(
+                    "Malformed {entry_type:?} entry"
+                ))))
         })
         .transpose()
 }
