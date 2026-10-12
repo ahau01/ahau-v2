@@ -25,11 +25,11 @@ to `both` or `commands`, `openspec update` regenerates
   Delta specs merge in here when a change is archived.
 - **`openspec/changes/archive/`**: finished changes, kept for their
   reasoning — the decision record that replaced `docs/adr/`.
-- **`openspec/config.yaml`**: the compact constraint subset the OpenSpec
-  CLI injects into artifact instructions, not a second full narrative.
-  Update it only when a constraint actually changes.
-- **`CLAUDE.md`** and **`CONTEXT.md`**: `CLAUDE.md` holds the full kaupapa
-  rules and working norms and is the source of truth for the subset
+- **`openspec/config.yaml`**: the compact context and constraint subset the
+  OpenSpec CLI injects into artifact instructions, not a second full narrative.
+  Update it when that subset changes.
+- **`CLAUDE.md`** and **`CONTEXT.md`**: `CLAUDE.md` holds project-wide care
+  and engineering practices and is the source for the subset
   `openspec/config.yaml` carries; `CONTEXT.md` holds domain vocabulary.
 - **GitHub issues**: the backlog and intake (see
   [issue-tracker.md](issue-tracker.md)). Nothing about a change's scope or

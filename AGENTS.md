@@ -1,6 +1,6 @@
 # Codex instructions
 
-Read `CLAUDE.md` for the authoritative kaupapa rules and working norms, and
+Read `CLAUDE.md` for project-wide kaupapa principles and working practices, and
 `CONTEXT.md` for domain vocabulary. Follow `docs/agents/openspec.md` for the
 OpenSpec workflow. OpenSpec owns scope, design, requirements and change tasks.
 

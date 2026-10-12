@@ -4,11 +4,24 @@ version = "0.0.0"
 edition = "2021"
 publish = false
 
+[features]
+sweettest = []
+
 [lib]
 crate-type = ["cdylib", "rlib"]
+
+[[test]]
+name = "sweettest"
+path = "tests/sweettest.rs"
+required-features = ["sweettest"]
 
 [dependencies]
 hdk = { workspace = true }
 serde = { workspace = true }
 holochain_serialized_bytes = { workspace = true }
 profiles_integrity = { path = "../../integrity/profiles" }
+
+[dev-dependencies]
+holochain = { version = "=0.6.3", features = ["test_utils"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

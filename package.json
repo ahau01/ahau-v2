@@ -10,10 +10,11 @@
     "test": "npm run build && node --test dist && vitest run",
     "build:happ": "cargo build --release --target wasm32-unknown-unknown && hc dna pack dnas/ahau/workdir && hc app pack workdir",
     "test:zomes": "cargo test --workspace",
-    "test:conductor": "npm run build:happ && hc dna pack dnas/ahau/test/workdir && hc app pack workdir/rogue && rm -rf dist && npm run build && files=$(find dist -name '*.conductor.js') && { [ -n \"$files\" ] || { echo 'no conductor tests found in dist' >&2; exit 1; }; } && node --test --test-concurrency=1 $files",
+    "test:sweettest": "npm run build:happ && hc dna pack dnas/ahau/test/workdir && hc app pack workdir/rogue && cargo test -p profiles --features sweettest --test sweettest -- --test-threads=1",
     "conductor": "npm run build:happ && hc sandbox clean && echo pass | hc sandbox --piped -f=4444 generate workdir/ahau.happ --app-id ahau --run=8888 network mem",
     "dev": "vite",
     "build:app": "vite build",
+    "check:app-build": "node scripts/check-app-build.mjs",
     "check:app": "svelte-check --tsconfig ./tsconfig.app.json --threshold error",
     "test:app": "vitest run"
   },
@@ -23,7 +24,6 @@
   "devDependencies": {
     "@fission-ai/openspec": "1.14.1",
     "@holochain/client": "0.20.8",
-    "@holochain/tryorama": "0.19.2",
     "@sveltejs/vite-plugin-svelte": "^5.1.1",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/svelte": "^5.4.2",

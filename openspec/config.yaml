@@ -1,54 +1,32 @@
 schema: spec-driven
 
-# Compact constraint subset the OpenSpec CLI injects into artifact
-# instructions. CLAUDE.md remains the full source of truth; update this
-# block only when one of its constraints actually changes.
+# Compact context for OpenSpec artifacts. CLAUDE.md remains the source for
+# project-wide care and engineering practices; keep this subset aligned.
 context: |
-  Āhau v2 rebuilds the Āhau whakapapa app directly on Holochain. It encodes
-  kaupapa Māori principles (data sovereignty, non-erasure of contested
-  authority, decentralisation) into its architecture. The conventional
-  pattern is often wrong for this data model.
+  Āhau v2 is a whakapapa app built on Holochain. Its data can be personal,
+  collective, culturally significant, sensitive or contested. Consider data
+  sovereignty, consent, privacy, provenance, context and human authority when
+  shaping how information is collected, stored, shared or presented.
 
-  Four things not to do:
-  1. No canonical version of relationship or identity data. No
-     last-write-wins, single-source-of-truth, or overwrite-on-conflict,
-     including during sync and in how entries are updated or linked. The
-     answer is usually "represent both"; choosing which version to show is a
-     render-layer decision, per viewer.
-  2. Relationships are assertions from a source ("source X asserts
-     relationship Y"), with multiple sources coexisting, not editable edges.
-  3. No assumed central authority. No primary database, centralised storage,
-     or single node/agent as source of truth.
-  4. Identity is not session auth. No email/password, sessions, JWT or OAuth.
-     Identity is an agent's public key; a device holding a key is not "a
-     logged-in user", and multi-device use must hold.
+  Integrity zomes define data types and validation; coordinator zomes expose
+  workflows. Source chains record authored actions, while DHT data propagates
+  across peers and may be partially or temporarily unavailable. Design for
+  Holochain's model rather than assuming a centralized, globally current
+  database.
 
-  Holochain is not a database: DHT reads can be stale or incomplete, and
-  nothing is erased (removal is retraction). Zome calls stay inside
-  per-feature client modules; components never call Holochain directly.
-
-  The typed contract in reference/leg1-contract/contract/ is frozen reference,
-  a checklist of what the old app could do. It is not the spec,
-  and new code must not match it operation-for-operation.
-
-  GitHub issues (ahau01/ahau-v2) are the backlog; a change's scope and
-  design live in the change, not on the issue.
+  `openspec/specs/` describes current behavior. An active change owns its
+  scope, requirements, design and tasks. `CLAUDE.md` carries project-wide
+  care and engineering practices; `CONTEXT.md` carries domain vocabulary.
 
 rules:
   proposal:
-    - Link the GitHub issue the change comes from, if there is one
-    - If the change touches relationship or identity data, sync, or access control, say so up front and name which of the four rules it bears on
-    - If the change touches relationship storage, state how multi-source assertions are preserved
-    - Anything outside the change's explicit scope goes under a "Flagged, not done" heading rather than into the plan
-    - If a requirement seems to need a canonical value or a central authority, flag it as an open question instead of designing for it
+    - Link the originating GitHub issue, when there is one
+    - For changes involving sensitive data, describe who is affected and any unresolved questions about access, authority or use
+    - Keep adjacent concerns visible for review rather than quietly expanding scope
   specs:
-    - Where sources can disagree, write scenarios in which conflicting assertions from two sources both survive
-    - Permission requirements must hold at sync time and cache time, not just read time
+    - Describe observable behavior and relevant expectations for privacy, authorship, provenance and access
   design:
-    - For merge-sensitive mutations, explain why not the conventional alternative (e.g. update as replace-the-latest)
-    - Describe what happens when two devices go offline, make conflicting edits, then sync
-    - Describe what happens to already-synced data if permissions change afterward, including a revoked member's local copy
-    - Enforce permissions in validation rules and capability grants, not only in the UI or client
+    - Explain relevant Holochain effects on validation, source-chain writes, DHT distribution, visibility and existing data
+    - Surface consequential assumptions and tradeoffs that need human direction
   tasks:
-    - Conflict-handling and permission logic need tests against a real conductor (Tryorama or Sweettest), not mocked sync state
-    - Include explicit two-devices-offline-then-sync test tasks where sync or conflict behaviour is involved
+    - Choose checks that match the behavior; use conductor-backed tests when correctness depends on Holochain validation, synchronization or access semantics

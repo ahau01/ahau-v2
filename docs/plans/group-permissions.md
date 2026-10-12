@@ -80,11 +80,12 @@ enforced by the backend rather than only hidden in the UI.
   Milestone 2.
 - [ ] What happens to a removed member's **already-synced** data? Removal stops
   future writes; it doesn't make their copy disappear. Decide what the group
-  expects, and say so plainly in the UI (see CLAUDE.md, Access control).
+  expects, and say so plainly in the UI (see CLAUDE.md's project-wide care
+  principles).
 - [ ] What if two kaitiaki remove each other while both are offline? This is a
-  sync conflict: it must not be settled by last-write-wins without a
-  deliberate decision (CLAUDE.md rule 1). Deferred to the second validation
-  pass, but the data model shouldn't rule out a good answer.
+  sync conflict: do not settle it through a familiar default without a
+  deliberate decision. Deferred to the second validation pass, but the data
+  model shouldn't rule out a good answer.
 
 ## Risks
 | Risk | Likelihood | Impact | Mitigation |
