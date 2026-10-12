@@ -69,18 +69,45 @@ pipeline that no longer exists. See design.md — Migration Plan.
 
 ## 4. Docs and norms
 
-- [ ] 4.1 Add a CI section to `README.md` describing both jobs, what runs
+- [x] 4.1 Add a CI section to `README.md` describing both jobs, what runs
   where, and that the `fast` job deliberately runs without Nix. The existing
   section says the `holochain` job runs "the conductor tests against a real
   Holochain conductor"; reword it for the Sweettest step. Verify the
   section's description of each job matches `ci.yml` step for step.
-- [ ] 4.2 Add the working norm to `CLAUDE.md` — don't merge red; CI runs the
+
+  Rewritten. Checking it step for step turned up that the old wording also
+  omitted the `holochain` job's three diagnostic steps (`df -h /`,
+  `nix develop --command true`, `nix develop --command node --version`), so
+  those are now described too. The section also says plainly that nothing
+  named a conductor runs in the job any more and that the name is kept
+  because branch protection matches on it — otherwise a reader hits a job
+  called `holochain` containing no conductor and no explanation.
+
+  **Beyond what the task asked, flagged for a reviewer to strike:** the
+  section had been inserted between `## Setup` and Setup's own
+  `### Holochain` subsection, which left the Holochain install instructions
+  and the first-launch demo sitting under a heading about CI. It is moved to
+  before `## Where to start reading`. This is a defect in this change's own
+  diff rather than adjacent cleanup, which is why it was fixed rather than
+  only flagged.
+- [x] 4.2 Add the working norm to `CLAUDE.md` — don't merge red; CI runs the
   Sweettest cases against a real conductor — without softening the existing
   statement that passing tests confirm code works rather than that it is
   right for this data model (design.md, last risk). The norm currently at
   line 120 says "CI runs the conductor tests", which no longer names anything
   that exists. Verify by re-reading the Working norms section as a whole for
   consistency.
+
+  The norm now names the `holochain` job and the Sweettest cases. The
+  adjacent statement that passing tests confirm code works rather than that
+  it is right for this data model is untouched; the norm points at it
+  instead, so green CI reads as a floor and not as sign-off.
+
+  Found while re-reading, **not fixed, needs an issue**: the High-risk areas
+  section still offers "(Tryorama or Sweettest)" as the choice of framework
+  for two-devices-offline-then-sync coverage. Tryorama was removed in #86,
+  so that is #86's residue rather than this change's, and editing it is
+  outside this task.
 
 ## 5. Proving it catches what it is for
 
@@ -129,17 +156,33 @@ Last, and only once tasks 1–5 are green. See design.md decision 10.
 Added after #86 merged as `c49e3b7`. Do 7.1 before the reopened tasks above,
 since `test:sweettest` does not exist on this branch's base until the rebase.
 
-- [ ] 7.1 Rebase `chore/35-ci-pipeline` onto the post-#86 `main`. Expect a
+- [x] 7.1 Rebase `chore/35-ci-pipeline` onto the post-#86 `main`. Expect a
   conflict in `README.md`, which both #86 and task 4.1 edit; resolve by
   keeping #86's content and reapplying the CI section on top. Verify
   `git log origin/main..HEAD` contains only this change's commits, and that
   `npm run test:sweettest` is present in `package.json` afterwards.
-- [ ] 7.2 Delete `.github/workflows/sweettest.yml`, folding its job into
+
+  **The predicted conflict did not happen.** The rebase onto `c49e3b7` was
+  clean. #86's only `README.md` edit was one table row in the Holochain
+  commands table — `test:conductor` → `test:sweettest` — about 30 lines below
+  where this change inserted its CI section, so the hunks never overlapped.
+  Both verifications pass: `git log origin/main..HEAD` is this change's six
+  commits and nothing else, and `test:sweettest` is in `package.json`.
+- [x] 7.2 Delete `.github/workflows/sweettest.yml`, folding its job into
   `ci.yml` as the `holochain` job's Sweettest step (design.md decision 9).
   Verify `.github/workflows/` contains only `ci.yml`, and that the deleted
   file's configuration — the flake feature flags, the Cachix substituter and
   key, and `prefix-key: holonix-${{ hashFiles('flake.lock') }}` — is all
   present in `ci.yml`, since #86 reproduced those from this change's design.
+
+  `.github/workflows/` contains only `ci.yml`. All three named items carried
+  over, and all four action SHAs were byte-identical between the two files.
+  One piece of config the task list did **not** name also carried over:
+  `cache-on-failure: true` on `rust-cache`, which #86 added in its own
+  commit "ci: allow the cold Sweettest job to seed its cache". It is
+  load-bearing precisely because of task 5.1 — the probe deliberately makes
+  this job go red, and without the flag a 43-minute cold Nix and cargo build
+  is discarded on every red run.
 - [ ] 7.3 Verify the `holochain` check still reports under that exact name
   after the rebase, so ruleset `24758236` needs no second `PUT`
   (design.md decision 9a). Confirm from a real run on the PR, not from the
