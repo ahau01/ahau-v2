@@ -38,7 +38,7 @@ pipeline that no longer exists. See design.md — Migration Plan.
 
 ## 3. The holochain job
 
-- [ ] 3.1 Add a `holochain` job to the same workflow at
+- [x] 3.1 Add a `holochain` job to the same workflow at
   `timeout-minutes: 60` — raised from 30, because #86's cold Sweettest run
   measured 43m40s and would have timed out — with
   `cachix/install-nix-action` configured per
@@ -46,6 +46,10 @@ pipeline that no longer exists. See design.md — Migration Plan.
   Holochain's `extra-substituters` and `extra-trusted-public-keys`, no
   secret. Verify `nix develop --command true` succeeds in the job, proving
   flakes are enabled and the shell evaluates.
+
+  `timeout-minutes` is 60. The `Check Nix development shell` step
+  (`nix develop --command true`) passed on run
+  [38202857090](https://github.com/ahau01/ahau-v2/actions/runs/38202857090).
 - [x] 3.2 Add `actions/setup-node` with `node-version-file: .nvmrc` **before**
   any `nix develop` step, then `npm ci` (design.md decisions 3 and 4).
   Verify `nix develop --command node --version` reports the `.nvmrc` version,
@@ -183,10 +187,17 @@ since `test:sweettest` does not exist on this branch's base until the rebase.
   load-bearing precisely because of task 5.1 — the probe deliberately makes
   this job go red, and without the flag a 43-minute cold Nix and cargo build
   is discarded on every red run.
-- [ ] 7.3 Verify the `holochain` check still reports under that exact name
+- [x] 7.3 Verify the `holochain` check still reports under that exact name
   after the rebase, so ruleset `24758236` needs no second `PUT`
   (design.md decision 9a). Confirm from a real run on the PR, not from the
   job id in the file.
+
+  Confirmed from the check-runs API on PR #81's head commit `4909b74`, not
+  from `ci.yml`: the two check runs report as `fast` and `holochain`. The
+  ruleset's `required_status_checks` contexts, read back without modifying
+  it, are `fast` and `holochain`. They match, so no second `PUT`. Neither
+  job carries a `name:` key, which is what keeps the check-run name equal to
+  the job id — adding one would silently break the required check.
 - [ ] 7.4 Confirm on the PR that both `fast` and `holochain` report and pass,
   and record the warm `holochain` duration. Expect roughly 16 minutes against
   Tryorama's 9m07s; the point of recording it is that this change makes CI
