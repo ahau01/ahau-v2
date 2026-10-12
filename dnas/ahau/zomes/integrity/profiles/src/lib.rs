@@ -1,6 +1,6 @@
 //! A person's own profile: their account of themselves, written by their
-//! agent key. It is not the canonical record of that person; other people's
-//! whakapapa records about them live elsewhere (CLAUDE.md rule 1).
+//! agent key. It is that person's account of themselves; other people's
+//! whakapapa records about them live elsewhere.
 //!
 //! The owner is the agent who authored the entry. There is no owner field,
 //! so a profile cannot claim to belong to someone other than its author.
@@ -311,8 +311,8 @@ fn created_earlier(action: &Create, of: UnitEntryTypes) -> ExternResult<bool> {
     }))
 }
 
-/// A profile is its author's own account of themselves (CLAUDE.md rule 1),
-/// so only that author may change it. A change adds a version and points at
+/// A profile is its author's own account of themselves, so only that author
+/// may change it. A change adds a version and points at
 /// the first one, so every version hangs off one place and none can be
 /// orphaned on a fork of updates (ADR-0008).
 fn validate_update(action: &Update) -> ExternResult<ValidateCallbackResult> {
