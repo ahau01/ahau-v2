@@ -4,8 +4,9 @@ import assert from 'node:assert/strict'
 import { createProfileClient } from './client.js'
 
 /**
- * Profile client behaviour that needs no conductor. Real-conductor tests
- * live in `client.conductor.ts`.
+ * Profile client behaviour that needs no conductor. TypeScript client
+ * integration tests against a real conductor are deferred; Sweettest covers
+ * the Rust zome guarantees separately.
  */
 
 const NOT_CONNECTED = 'Not connected to Holochain: call waitUntilReady first'

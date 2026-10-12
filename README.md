@@ -107,7 +107,7 @@ below; `npm test` and `npm run dev` with `?pretend` work without it.
 | Command | What it does |
 |---|---|
 | `npm run build:happ` | Pack the DNA and hApp into `workdir/ahau.happ` |
-| `npm run test:conductor` | Run the tests against a real Holochain conductor |
+| `npm run test:sweettest` | Run the Rust profile integration tests against real Holochain conductors, one case at a time |
 | `npm run conductor` | Run a local dev conductor with the hApp: admin port 4444, apps connect on port 8888 |
 
 4. To connect to the dev conductor from your own Node script, you need an app

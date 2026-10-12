@@ -7,7 +7,7 @@ This test-infrastructure change exercises profile authorship and private persona
 ## What Changes
 
 - Replace the 16 zome-validation scenarios in `src/profile/validation.conductor.ts` with Rust Sweettest coverage, preserving the zome-side authorization, privacy, validation, update and deletion guarantees.
-- Run these tests in parallel with isolated conductor/agent state through a separate `npm run test:sweettest` command and a dedicated CI job. Record old and new runtimes without making a specific speed threshold an acceptance gate.
+- Run these tests serially, with isolated conductor/agent state, through a separate `npm run test:sweettest` command and a dedicated CI job. Serial execution avoids the CPU contention observed when many conductors start together. Record old and new runtimes without making a specific speed threshold an acceptance gate.
 - Remove the Tryorama dependency and the current TypeScript conductor suites from the active test command. Keep the existing fast TypeScript and Rust unit tests.
 - Keep the Holochain dependency line pinned to 0.6.3.
 

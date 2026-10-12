@@ -11,7 +11,7 @@ The Rust workspace already includes the production profiles coordinator and a te
 **Goals:**
 
 - Execute the coordinator-facing validation scenarios through Sweettest against real Holochain conductors, including rogue calls that bypass the production coordinator.
-- Keep each case independent so cases can run concurrently without sharing source chains, agents, or app state.
+- Keep each case independent so cases can run serially without sharing source chains, agents, or app state.
 - Make the Sweettest suite an explicit command and CI job, separate from fast Rust unit tests and the default test command.
 
 **Non-Goals:**
@@ -39,26 +39,37 @@ Do not share a parity data file between Rust and TypeScript. The gender enum tes
 
 **Alternative considered:** Keep the TypeScript validation suite while adding equivalent Rust cases. That would retain the Tryorama dependency and two competing sources for the same conductor-level guarantees. The migration removes the TypeScript conductor suites from the active command and keeps only the Rust Sweettest coverage for these guarantees.
 
-### Give every test isolated conductor and agent state
+### Give every test isolated conductor and agent state, and serialize cases
 
 Each Sweettest case creates its own conductor(s), installs its own app(s), and uses fresh agent keys. Multi-agent authorization/privacy cases use the smallest setup that proves the guarantee; DHT-dependent assertions wait for synchronization before reading from the other agent. Tests must not depend on execution order or shared mutable state.
 
-Run the Rust tests concurrently under Cargo's normal test runner. Isolation is the concurrency boundary; do not add shared conductor reuse or serialize the suite to manage shared state.
+Run one Rust test case at a time with Cargo's `--test-threads=1` option. Each case still creates its own conductor(s), app(s), and agent keys. This avoids saturating CPU when many conductors start together while retaining clear state isolation; do not share conductors or app state between cases.
 
-**Alternative considered:** A single shared conductor or shared app state is cheaper to start but couples uniqueness and update history across cases, makes parallel execution unsafe, and obscures which agent signed a write.
+**Alternative considered:** A single shared conductor or shared app state is cheaper to start but couples uniqueness and update history across cases and obscures which agent signed a write. Parallel case execution was tried and caused CPU saturation, so the dedicated suite serializes cases instead.
 
 ### Separate command and CI execution
 
-Add `npm run test:sweettest` to build the required hApp fixture and invoke the coordinator crate's Sweettest tests through Cargo. Keep `npm run test:zomes` as the fast Rust workspace unit-test command and keep Sweettest out of `npm test`. Remove `test:conductor`, the Tryorama package, and the old TypeScript conductor files from active test execution.
+Add `npm run test:sweettest` to build the required hApp fixture and invoke the coordinator crate's Sweettest tests through Cargo with `--test-threads=1`. Keep `npm run test:zomes` as the fast Rust workspace unit-test command and keep Sweettest out of `npm test`. Remove `test:conductor`, the Tryorama package, and the old TypeScript conductor files from active test execution.
 
-Add a dedicated CI job that provisions the pinned Holochain 0.6.3 toolchain and runs `npm run test:sweettest`. Record before/after runtime in the change or CI summary for comparison, but do not make a speed threshold a pass condition. No CI workflow file is present in this checkout, so implementation should identify the repository's actual CI configuration before adding the job; if CI is configured externally, document the command in the repo's test instructions and wire the job at its owning configuration.
+Add a dedicated CI job that provisions the pinned Holochain 0.6.3 toolchain and runs `npm run test:sweettest`. The base checkout has no CI workflow; the general CI pipeline is being introduced separately in PR #81, so this change adds a focused Sweettest workflow using the same pinned actions and Nix cache configuration. Record before/after runtime in the change or CI summary for comparison, but do not make a speed threshold a pass condition.
 
 **Alternative considered:** Add Sweettest to `test:zomes` or `npm test`. That would make the default/fast test path start conductors, contrary to the agreed dedicated-job boundary.
+
+### Runtime observation
+
+Measured on 2026-10-12 in the same checkout and Nix dev shell, with Node 20.20.2, Rust/Cargo 1.94.0, and 16 reported CPUs. Both measurements include the full npm command, hApp build/package steps, and test execution; build artifacts were warm. Timings are informational and have no pass threshold.
+
+| Command | Cases | Elapsed |
+| --- | ---: | ---: |
+| `npm run test:conductor` | 31 TypeScript tests, including the now-deferred client and first-launch suites | 167.930 s |
+| `npm run test:sweettest` (Cargo `--test-threads=1`) | 16 Rust Sweettest cases | 130.110 s |
+
+These suites have different coverage after the agreed deferrals, so the elapsed times are observations rather than a like-for-like speed claim.
 
 ## Risks / Trade-offs
 
 - **The rogue fixture may drift from the production DNA** → Build tests from the existing rogue test hApp and verify it shares the production profiles integrity zome/DNA; keep fixture packaging in the explicit Sweettest command.
-- **Parallel conductor startup can consume substantial CPU or ports** → Give every case independent state and rely on ephemeral ports/conductor-managed isolation; observe the dedicated job runtime and resource behavior without introducing a speed threshold.
+- **Conductor startup can consume substantial CPU** → Run only one case at a time and rely on ephemeral ports/conductor-managed isolation; observe the dedicated job runtime without introducing a speed threshold.
 - **Sweettest APIs or fixture packaging may differ from assumptions for Holochain 0.6.3** → Use APIs and feature flags from the pinned 0.6.3 toolchain, and keep this version unchanged.
 - **Removing client and first-launch real-conductor tests temporarily reduces integration coverage** → Keep their deferred scope explicit in the proposal's “Flagged, not done” section so a later change can restore real `AppWebsocket` integration coverage.
 - **Runtime comparison can be noisy across machines** → Record environment and command for both measurements; treat timing as observational, not as an acceptance gate.
@@ -67,7 +78,7 @@ Add a dedicated CI job that provisions the pinned Holochain 0.6.3 toolchain and 
 
 1. Add Sweettest dev dependencies and conductor tests while retaining the old TypeScript suite during development.
 2. Map and review all 16 existing validation scenarios against Rust tests, preserving the zome-side guarantees and the adversarial fixture setup.
-3. Add `test:sweettest`, run the suite with parallel cases, and record baseline and new runtimes in comparable environments.
+3. Add `test:sweettest`, run the suite serially, and record baseline and new runtimes in comparable environments.
 4. Add the dedicated CI job and update README test instructions.
 5. Remove Tryorama, `test:conductor`, and the three TypeScript conductor suites; regenerate the npm lockfile and verify the fast test commands still work.
 

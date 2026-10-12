@@ -51,9 +51,9 @@
     <header>
       <h2 id="personal-section-heading">Personal information</h2>
       <!-- Enforced by Personal information being a private entry (ADR-0007),
-           not by this page. Covered by validation.conductor.ts "promise:
-           another agent cannot read my personal information, even bypassing
-           the app" (own-profile spec, "Personal information stays private"). -->
+           not by this page. The profiles Sweettest verifies another agent
+           cannot read its contents (own-profile spec, "Personal information
+           stays private"). -->
       <p class="visibility">Only you can see this.</p>
     </header>
     {@render items(sections.personal)}
