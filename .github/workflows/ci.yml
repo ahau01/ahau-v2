@@ -2,9 +2,12 @@ name: CI
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -29,7 +32,107 @@ jobs:
       - run: npm run check:app
       - run: npm run check:app-build
 
+  changes:
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      holochain_required: ${{ steps.detect.outputs.holochain_required }}
+    steps:
+      - id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import PurePosixPath
+          from urllib.request import Request, urlopen
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          pull_request = os.environ["PR_NUMBER"]
+          token = os.environ["GH_TOKEN"]
+          if "/" not in repository or not pull_request.isdecimal() or not token:
+              raise RuntimeError("Pull request event details are unavailable")
+
+          api_root = f"https://api.github.com/repos/{repository}"
+
+          def get_json(path):
+              request = Request(
+                  f"{api_root}/{path}",
+                  headers={
+                      "Accept": "application/vnd.github+json",
+                      "Authorization": f"Bearer {token}",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                      "User-Agent": "ahau-ci-change-detector",
+                  },
+              )
+              with urlopen(request, timeout=30) as response:
+                  return json.load(response)
+
+          metadata = get_json(f"pulls/{pull_request}")
+          expected_files = metadata.get("changed_files")
+          if isinstance(expected_files, bool) or not isinstance(expected_files, int) or expected_files < 0:
+              raise RuntimeError("GitHub returned an unknown changed-file count")
+
+          required = True
+          if 0 < expected_files <= 300:
+              changed_paths = []
+              listed_files = 0
+              for page in range(1, 4):
+                  page_files = get_json(f"pulls/{pull_request}/files?per_page=100&page={page}")
+                  if not isinstance(page_files, list):
+                      raise RuntimeError("GitHub returned an unknown pull-request file list")
+                  listed_files += len(page_files)
+                  for item in page_files:
+                      filename = item.get("filename") if isinstance(item, dict) else None
+                      if not isinstance(filename, str):
+                          raise RuntimeError("GitHub returned a file without a name")
+                      changed_paths.append(filename)
+                      previous_filename = item.get("previous_filename")
+                      if previous_filename is not None:
+                          if not isinstance(previous_filename, str):
+                              raise RuntimeError("GitHub returned an unknown previous file name")
+                          changed_paths.append(previous_filename)
+                  if len(page_files) < 100:
+                      break
+
+              if listed_files != expected_files:
+                  raise RuntimeError("GitHub's pull-request file list was incomplete")
+
+              documentation_roots = {"docs", "openspec", ".agents"}
+
+              def is_documentation(path):
+                  candidate = PurePosixPath(path)
+                  if candidate.suffix.lower() not in {".md", ".markdown"}:
+                      return False
+                  return len(candidate.parts) == 1 or candidate.parts[0] in documentation_roots
+
+              required = any(not is_documentation(path) for path in changed_paths)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"holochain_required={str(required).lower()}\n")
+          print(f"Holochain required: {required}")
+          PY
+
   holochain:
+    needs: changes
+    if: >-
+      always() &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event_name == 'pull_request' &&
+          !github.event.pull_request.draft &&
+          (
+            needs.changes.result != 'success' ||
+            needs.changes.outputs.holochain_required != 'false'
+          )
+        )
+      )
     runs-on: ubuntu-latest
     # 90, not 60. A cold run measured 54m35s: rust-cache namespaces its key
     # by job name, so this job cannot read the cache #86's `sweettest` job
