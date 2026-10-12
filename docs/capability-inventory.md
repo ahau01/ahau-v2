@@ -27,9 +27,10 @@ submissions) get one line each here. Later sections can expand them.
   - **partial**: the code shows a visible gap or bug
   - **unverified**: the code exists, but nobody has watched it work
   - **works**: only used where it was seen in the running app
-- **Kaupapa flag** uses CLAUDE.md's four areas: **relationship**, **identity**,
-  **permissions**, **sync**. "none" means none of the four seemed to apply.
-  CLAUDE.md's rules apply to any flagged row when it is rebuilt.
+- **Kaupapa flag** uses the inventory's working categories: **relationship**,
+  **identity**, **permissions**, **sync**. "none" means none seemed to apply.
+  Rebuilding a flagged capability should follow the current requirements and
+  project-wide practices, not infer a design from these categories.
 - **Keep?** is left blank on purpose. Prioritisation is a separate review.
 
 Three terms the code uses:
