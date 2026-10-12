@@ -1,169 +1,49 @@
 # Āhau v2
 
-A rebuild of Āhau, the whakapapa app, on [Holochain](https://www.holochain.org/).
+Āhau is a whakapapa app for whānau, hapū and iwi. This repository is rebuilding it on [Holochain](https://www.holochain.org/) around what people need to do, rather than copying the old app's SSB implementation.
 
-The original Āhau runs on Secure Scuttlebutt (SSB). Its plugins are no longer
-maintained, and small features had started needing big fixes underneath.
-Āhau v2 rebuilds the app so it does what people need, in the way that suits
-Holochain, rather than copying how the old app did things.
+The current working slice covers first launch, personal profiles and the app shell. More capabilities are still being scoped. See [`openspec/specs/`](openspec/specs/) for what works today.
 
-## Status
-
-- **Done:** first launch on Holochain ([#14](https://github.com/ahau01/ahau-v2/issues/14)).
-  A new person sees a launch screen, creates their profile, and it is saved
-  to Holochain under their agent key. Next time they go straight in. Also a
-  typed record of everything the old app's data layer could do (see "What's
-  in this repo").
-- **Done:** landing and a navigable shell ([#59](https://github.com/ahau01/ahau-v2/issues/59)).
-  After launch, a person lands on their own profile with a shell for
-  Profile, Archive, Whakapapa and the tribe list. Specs: `openspec/specs/launch`,
-  `openspec/specs/navigation`, `openspec/specs/own-profile`.
-- **Next:** group permissions on Holochain, not started — see the draft
-  problem statement at [docs/plans/group-permissions.md](docs/plans/group-permissions.md)
-  — and listing what people actually do with Āhau
-  ([#13](https://github.com/ahau01/ahau-v2/issues/13)).
-
-## What stays the same
-
-Whatever the backend, Āhau keeps these rules (full detail in [CLAUDE.md](CLAUDE.md)):
-
-1. **No single "true" version.** People can hold different accounts of the same
-   relationship. All are kept; none wins automatically.
-2. **Relationships come from someone.** Each one is recorded as "this person
-   says this relationship exists", not as a plain line between two people.
-3. **No central server.** No one machine holds the master copy.
-4. **Identity is a key, not a login.** No email/password or sessions.
-
-## What's in this repo
-
-| Path | What it is |
-|---|---|
-| `src/app/` | The Svelte app: the first-launch screens. In dev it runs against the local conductor, or a pretend client with `?pretend`. |
-| `src/first-launch/` | Which first-launch screen to show, in plain TypeScript, tested without Svelte or Holochain. |
-| `src/profile/` | The profile client module: the only code that talks to Holochain about profiles. Also the dev-only connection to the local conductor, and a pretend client for running the app without Holochain. |
-| `dnas/ahau/` | The Holochain DNA, with the profiles zome: the rules for who can write a profile (`zomes/integrity/`) and the functions the app calls (`zomes/coordinator/`). |
-| `workdir/` | The hApp manifest that bundles the DNA. |
-| `flake.nix`, `flake.lock` | The pinned Holochain dev environment. |
-| `reference/leg1-contract/` | **Frozen reference, not part of the build.** A typed list of the 69 actions the old SSB app's data layer supported, the review it was derived from, its conformance tests and in-memory fixture backend. Used as a checklist so nothing gets lost in the rebuild; new code doesn't have to match it. See its own README. |
-| `openspec/` | Where specs, in-flight changes and decisions live: `specs/` (what the system does now), `changes/` (work in flight), `changes/archive/` (finished changes, kept for their reasoning). |
-| `docs/` | Supporting evidence, research and history — not authoritative for current specs or decisions. Start at [docs/INDEX.md](docs/INDEX.md). |
-
-## Setup
+## Try it
 
 Requires Node 20 (see `.nvmrc`).
 
-```bash
+```sh
 npm install
-npm run dev     # serve the app at http://localhost:5173
-npm test        # build and run all tests
+npm run dev
 ```
 
-`npm run dev` connects to the local conductor from `npm run conductor` (see
-[Demo: first launch on Holochain](#demo-first-launch-on-holochain)). Without
-Holochain, open http://localhost:5173/?pretend to run against a pretend profile
-client kept in the browser's localStorage: create a profile, then reload to see
-a returning person go straight in. Clear site data to start over.
-`?pretend=fail-start` or `?pretend=fail-save` shows the failure screens.
+Open [http://localhost:5173/?pretend](http://localhost:5173/?pretend) to try the profile flow without Holochain. The pretend profile is kept in browser storage; clear site data to start over.
 
-Other commands:
+## Develop with Holochain
 
-| Command | What it does |
+Install Nix using [Holochain's setup guide](https://developer.holochain.org/get-started/). From the repository root, enter the pinned development environment and start a local conductor:
+
+```sh
+nix develop
+npm run conductor
+```
+
+In another terminal, run `npm run dev` and open [http://localhost:5173](http://localhost:5173). The conductor is for development; restarting it creates a fresh sandbox and agent.
+
+Useful checks:
+
+| Command | Purpose |
 |---|---|
-| `npm run typecheck` | Typecheck the TypeScript |
-| `npm run check:app` | Typecheck the Svelte app |
-| `npm run build` | Compile to `dist/` |
-| `npm run build:app` | Build the app for production |
-| `npm run check:app-build` | Check the production build leaves the pretend client out |
+| `npm test` | Run the JavaScript and TypeScript tests without Holochain |
+| `npm run check:app` | Check the Svelte app |
+| `npm run check:app-build` | Verify the production build excludes the pretend client |
+| `npm run test:sweettest` | Run profile integration tests against Holochain (inside `nix develop`) |
 
-### Holochain
+## CI
 
-The Holochain tools (`holochain`, `hc`, `lair-keystore`, Rust) come from
-[Holonix](https://developer.holochain.org/get-started/), pinned in
-`flake.lock` to Holochain 0.6. You only need this for the Holochain commands
-below; `npm test` and `npm run dev` with `?pretend` work without it.
+GitHub Actions runs the Sweettest integration suite on pull requests and pushes to `main`, using the pinned Holochain environment.
 
-1. Install Nix with Holochain's package cache. Run this **once** per machine,
-   then open a new terminal:
+## Project docs
 
-   ```bash
-   bash <(curl https://holochain.github.io/holochain/setup.sh)
-   ```
+- [`CLAUDE.md`](CLAUDE.md): kaupapa rules and working norms.
+- [`openspec/specs/`](openspec/specs/): current behavior.
+- [`docs/INDEX.md`](docs/INDEX.md): supporting research and history.
+- [`reference/leg1-contract/`](reference/leg1-contract/): frozen checklist of the old app's data-layer capabilities; it is not a spec for new code.
 
-2. From the repo root, enter the dev shell (the first run downloads a lot):
-
-   ```bash
-   nix develop
-   holochain --version   # holochain 0.6.x
-   ```
-
-   The dev shell loads your `.bashrc`, so your prompt can look exactly as it
-   did before. To check you're in it, run `echo $IN_NIX_SHELL`: it prints
-   `impure` inside the dev shell and nothing outside. You can also skip the
-   interactive shell and run one command in it, for example
-   `nix develop -c npm run conductor`.
-
-3. Inside the dev shell, using Node 20 from `.nvmrc` as above:
-
-| Command | What it does |
-|---|---|
-| `npm run build:happ` | Pack the DNA and hApp into `workdir/ahau.happ` |
-| `npm run test:sweettest` | Run the Rust profile integration tests against real Holochain conductors, one case at a time |
-| `npm run conductor` | Run a local dev conductor with the hApp: admin port 4444, apps connect on port 8888 |
-
-4. To connect to the dev conductor from your own Node script, you need an app
-   authentication token. It lets a local process reach the hApp. It is not a
-   login, and identity stays the agent key. Keep `npm run conductor` running,
-   then in a second terminal:
-
-   ```bash
-   node scripts/issue-app-token.mjs 4444   # prints the token as a JSON byte array
-   ```
-
-   The token is dev-only: it can be reused and doesn't expire. Restarting
-   `npm run conductor` creates a new sandbox, so you need a new token. Zome
-   calls also need signing credentials; `src/profile/dev-connection.ts` shows
-   how the app gets both.
-
-### Demo: first launch on Holochain
-
-1. In the dev shell, start the conductor and leave it running. It is ready
-   when it prints `Conductor launched`:
-
-   ```bash
-   npm run conductor
-   ```
-
-2. In a second terminal (the dev shell isn't needed), serve the app and open
-   http://localhost:5173:
-
-   ```bash
-   npm run dev
-   ```
-
-3. You see the launch screen, then create profile. Enter a name and save to
-   land in the app.
-4. Reload the page: you go straight in, because this agent key already has a
-   profile.
-5. Stop the conductor and reload: you see the failed-to-start message. Start
-   it again and reload to carry on. Restarting `npm run conductor` makes a new
-   sandbox and a new agent, so you start from create profile again.
-
-The dev server reaches the conductor's admin port (4444) and gives the page an
-app token and a signing key that can only call the profile functions. The page
-never gets admin access. Set `AHAU_ADMIN_PORT` if you run the conductor on
-another admin port. This is for development only; a launcher does this job
-outside dev.
-
-## Where to start reading
-
-- [CLAUDE.md](CLAUDE.md) — the rules above, and how to work in this repo (including with AI tools)
-- [openspec/specs/](openspec/specs/) — what the system does now, the only live spec
-- [openspec/changes/archive/](openspec/changes/archive/) — the decision record that replaced ADRs
-- [docs/contract-decisions.md](docs/contract-decisions.md) — lessons from the contract that still apply on Holochain (e.g. removing something is a "retraction", not a delete)
-- [docs/history/](docs/history/) — background on the original Āhau
-
-## Licence
-
-Not yet decided. The original Āhau is AGPL-3.0 under Āhau Ltd.; ownership and
-licensing of this rebuild are still open (see
-`docs/history/leg1/ahau-v2-repo-foundation.prd.md`).
+No license has been chosen for this rebuild yet.
