@@ -1,12 +1,13 @@
 # Tasks
 
-**Prerequisite:** `move-prod-build-check-out-of-vitest` (#53) must be merged
-first, so `npm run check:app-build` exists for task 1.1. See design.md
-decision 5.
+**Prerequisites, both now merged:** `move-prod-build-check-out-of-vitest`
+(#53, `b6ddafb`) for `npm run check:app-build`, and #86 (`c49e3b7`) for
+`npm run test:sweettest`. See design.md decisions 5 and 9.
 
-See design.md for why each choice below is what it is. The two open
-questions there affect only a timeout number and an optional cache, so
-neither blocks this list.
+Groups 1, 2 and 6 are complete and verified. Group 7 is the conformance pass
+after #86: five previously-verified tasks were proven against Tryorama and no
+longer hold, so they are reopened below rather than left ticked against a
+pipeline that no longer exists. See design.md — Migration Plan.
 
 ## 1. The fast job
 
@@ -37,8 +38,10 @@ neither blocks this list.
 
 ## 3. The holochain job
 
-- [x] 3.1 Add a `holochain` job to the same workflow at
-  `timeout-minutes: 30`, with `cachix/install-nix-action` configured per
+- [ ] 3.1 Add a `holochain` job to the same workflow at
+  `timeout-minutes: 60` — raised from 30, because #86's cold Sweettest run
+  measured 43m40s and would have timed out — with
+  `cachix/install-nix-action` configured per
   design.md decision 8 — `experimental-features = nix-command flakes`,
   Holochain's `extra-substituters` and `extra-trusted-public-keys`, no
   secret. Verify `nix develop --command true` succeeds in the job, proving
@@ -53,8 +56,11 @@ neither blocks this list.
   one with a touched `flake.lock`.
 - [x] 3.4 Add `nix develop --command npm run test:zomes` as its own step.
   Verify it passes and that `rogue_profiles` is among the crates tested,
-  since `Cargo.toml`'s workspace covers `dnas/*/test/zomes/*`.
-- [x] 3.5 Add `nix develop --command npm run test:conductor` as its own,
+  since `Cargo.toml`'s workspace covers `dnas/*/test/zomes/*`. Also record
+  its duration: #86 added `holochain`/`test_utils` to the `profiles` crate's
+  `dev-dependencies`, which may no longer be cheap (design.md, third risk).
+  It was 12s warm under Tryorama.
+- [ ] 3.5 Add `nix develop --command npm run test:sweettest` as its own,
   separate step. Verify it passes, and that a failure in it is reported
   against this step and not the zome step.
 - [x] 3.6 Record free disk space on the runner during the first green run
@@ -63,22 +69,36 @@ neither blocks this list.
 
 ## 4. Docs and norms
 
-- [x] 4.1 Add a CI section to `README.md` describing both jobs, what runs
-  where, and that the `fast` job deliberately runs without Nix. Verify the
+- [ ] 4.1 Add a CI section to `README.md` describing both jobs, what runs
+  where, and that the `fast` job deliberately runs without Nix. The existing
+  section says the `holochain` job runs "the conductor tests against a real
+  Holochain conductor"; reword it for the Sweettest step. Verify the
   section's description of each job matches `ci.yml` step for step.
-- [x] 4.2 Add the working norm to `CLAUDE.md` — CI runs the conductor tests,
-  don't merge red — without softening the existing statement that passing
-  tests confirm code works rather than that it is right for this data model
-  (design.md, last risk). Verify by re-reading the Working norms section as
-  a whole for consistency.
+- [ ] 4.2 Add the working norm to `CLAUDE.md` — don't merge red; CI runs the
+  Sweettest cases against a real conductor — without softening the existing
+  statement that passing tests confirm code works rather than that it is
+  right for this data model (design.md, last risk). The norm currently at
+  line 120 says "CI runs the conductor tests", which no longer names anything
+  that exists. Verify by re-reading the Working norms section as a whole for
+  consistency.
 
 ## 5. Proving it catches what it is for
 
-- [x] 5.1 Open a throwaway PR that deliberately breaks a profile validation
+- [ ] 5.1 Open a throwaway PR that deliberately breaks a profile validation
   rule in the `profiles` integrity zome. Verify the `holochain` job turns
-  red **at the conductor step**, link the failed run on #36, then close the
+  red **at the Sweettest step**, link the failed run on #36, then close the
   PR without merging. A green run here means the job is not exercising
   validation and the job is wrong, not the test.
+
+  Done once for Tryorama and reopened for Sweettest: PR #83 weakened
+  profile-name validation in wasm builds only, `Test zomes` stayed green on
+  native compilation, and `Test conductor` failed on
+  `a profile with invalid fields is refused, even bypassing the app`
+  ([run 38186080248](https://github.com/ahau01/ahau-v2/actions/runs/38186080248)).
+  The 16 Sweettest cases carry the same assertions, but "this step goes red
+  when validation weakens" is a property of the step, not of the assertions.
+  Reuse #83's wasm-only approach: it is what kept the two layers
+  distinguishable.
 - [x] 5.2 Record the exact check-run names both jobs report, taken from a
   real run rather than assumed from the job ids (design.md decision 10).
 
@@ -104,7 +124,39 @@ Last, and only once tasks 1–5 are green. See design.md decision 10.
   then close #35, #36 and #37. Verify #34 shows all three sub-issues
   complete.
 
+## 7. Conforming to #86
+
+Added after #86 merged as `c49e3b7`. Do 7.1 before the reopened tasks above,
+since `test:sweettest` does not exist on this branch's base until the rebase.
+
+- [ ] 7.1 Rebase `chore/35-ci-pipeline` onto the post-#86 `main`. Expect a
+  conflict in `README.md`, which both #86 and task 4.1 edit; resolve by
+  keeping #86's content and reapplying the CI section on top. Verify
+  `git log origin/main..HEAD` contains only this change's commits, and that
+  `npm run test:sweettest` is present in `package.json` afterwards.
+- [ ] 7.2 Delete `.github/workflows/sweettest.yml`, folding its job into
+  `ci.yml` as the `holochain` job's Sweettest step (design.md decision 9).
+  Verify `.github/workflows/` contains only `ci.yml`, and that the deleted
+  file's configuration — the flake feature flags, the Cachix substituter and
+  key, and `prefix-key: holonix-${{ hashFiles('flake.lock') }}` — is all
+  present in `ci.yml`, since #86 reproduced those from this change's design.
+- [ ] 7.3 Verify the `holochain` check still reports under that exact name
+  after the rebase, so ruleset `24758236` needs no second `PUT`
+  (design.md decision 9a). Confirm from a real run on the PR, not from the
+  job id in the file.
+- [ ] 7.4 Confirm on the PR that both `fast` and `holochain` report and pass,
+  and record the warm `holochain` duration. Expect roughly 16 minutes against
+  Tryorama's 9m07s; the point of recording it is that this change makes CI
+  slower, and the archived record should say so (design.md, second risk).
+
 ## Workflow follow-up
 
+- Merging this change is what finally puts `ci.yml` on `main`. Until then
+  the `required_status_checks` rule added in 6.1 requires `fast` and
+  `holochain` while `main` has neither, so PRs that do not carry `ci.yml`
+  cannot report those checks and need the owner's bypass to merge.
+- #86's two coverage gaps — the #54 gender TS/Rust parity regression and the
+  15 deleted client-boundary tests — are flagged in proposal.md and are
+  deliberately not fixed here. They need issues of their own.
 - Archive the change once the project's review requirements are satisfied,
   then verify the archived result.

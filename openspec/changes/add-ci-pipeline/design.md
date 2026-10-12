@@ -4,7 +4,10 @@
 
 See proposal.md — Why. The state this design has to fit:
 
-- No `.github/` directory exists. This is greenfield, not an amendment.
+- `.github/` existed nowhere when this change was planned. Since #86, `main`
+  has `.github/workflows/sweettest.yml` and nothing else, so `ci.yml` is
+  still new but `sweettest.yml` is now something to consolidate rather than
+  greenfield to fill.
 - `.nvmrc` pins Node `20.20.2`; `package.json` sets `engines.node: >=20 <21`.
 - `package-lock.json` exists, so `npm ci` is available.
 - `flake.nix` builds its dev shell from `holonix.devShells.default`
@@ -13,10 +16,15 @@ See proposal.md — Why. The state this design has to fit:
 - `Cargo.toml` is a workspace over `dnas/*/zomes/*/*` and
   `dnas/*/test/zomes/*`, so `cargo test --workspace` covers
   `rogue_profiles`.
-- `npm run test:conductor` does a lot: `build:happ` (cargo wasm release +
+- `npm run test:sweettest` does a lot: `build:happ` (cargo wasm release +
   `hc dna pack` + `hc app pack`), then `hc dna pack` on the test workdir,
-  `hc app pack workdir/rogue`, `rm -rf dist`, `npm run build` (tsc), then
-  `node --test --test-concurrency=1` over `dist/**/*.conductor.js`.
+  `hc app pack workdir/rogue`, then
+  `cargo test -p profiles --features sweettest --test sweettest -- --test-threads=1`.
+  The `sweettest` test target is `required-features`-gated in the `profiles`
+  crate, so `cargo test --workspace` does not build or run it.
+- `npm run test:conductor` no longer exists. #86 deleted it along with all
+  four Tryorama files, and added `.github/workflows/sweettest.yml` as a
+  standalone workflow because `ci.yml` was not yet on `main`.
 - `target/` is **3.1 GB** locally — #34 estimated 1.5 GB. Both debug and
   wasm-release profiles are present.
 - `.gitignore` covers `node_modules/`, `dist/`, `dist-app/`, `*.dna`,
@@ -69,14 +77,31 @@ Keying on `github.ref` means each PR branch cancels only itself. A cancelled
 run reports as cancelled, which is not success — harmless, because
 cancellation only happens when a newer run for the same ref has started.
 
-### 3. `npm ci` in **both** jobs
+### 3. `npm ci` in **both** jobs — and its reason has since expired
 
-#36's step list omits `npm ci` from the `holochain` job. As written that job
-fails: `test:conductor` runs `npm run build` (tsc) and then Tryorama, and
-both need `node_modules`. `test:zomes` is cargo-only and would pass, so the
-failure appears at the second step and looks like a conductor problem rather
-than a missing install. This is a correction to the ticket, not a scope
-addition.
+#36's step list omits `npm ci` from the `holochain` job. Against Tryorama
+that job failed: `test:conductor` ran `npm run build` (tsc) and then
+Tryorama, and both needed `node_modules`. `test:zomes` is cargo-only and
+would pass, so the failure appeared at the second step and looked like a
+conductor problem rather than a missing install. That correction was right,
+and it is why the job has an `npm ci` step today.
+
+#86 removed the need for it. `test:sweettest` is `build:happ` (cargo plus
+two `hc pack` calls) followed by `cargo test`; there is no tsc and no
+JavaScript dependency anywhere in it, so the `holochain` job no longer needs
+`node_modules` at all. #86's own `sweettest.yml` carries `npm ci` regardless,
+inherited from this design.
+
+The step stays, for a different and weaker reason: `npm ci` fails loudly on a
+`package-lock.json` that does not match `package.json`, which is worth four
+seconds on a job that already costs sixteen minutes. Recorded rather than
+quietly dropped, because the next person to read this job will otherwise
+reconstruct the old rationale and conclude the step is load-bearing.
+
+Note what did **not** expire: decision 4. `setup-node` is still required,
+and more clearly than before — Holonix provides no Node, so without it
+`nix develop --command npm run test:sweettest` has no `npm` to invoke at
+all, independently of whether anything needs `node_modules`.
 
 ### 4. Node is installed before `nix develop`, in the `holochain` job
 
@@ -141,14 +166,35 @@ Holochain's cache is public, so no secret and no Cachix auth step. #36 names
 the substituter and key but not the feature flags; without them `nix develop`
 fails immediately.
 
-### 9. Two steps, one job, for zomes then conductor
+### 9. Two steps, one job, for zomes then Sweettest
 
 Kept from #34, but for a different reason now that the team plan makes
-minutes less pressing: `test:conductor` runs `build:happ`, so the wasm
-artefacts the first step warmed are already on disk. Splitting the jobs would
-mean rebuilding them or passing them between jobs. Separate *steps* still
-give separate pass/fail lines, which satisfies #36's "zome and conductor
-failures show up as separate steps".
+minutes less pressing: `test:sweettest` runs `build:happ`, so the wasm
+artefacts and the Rust cache the first step warmed are already on disk.
+Splitting the jobs would mean rebuilding them or passing them between jobs.
+Separate *steps* still give separate pass/fail lines, which satisfies #36's
+"zome and conductor failures show up as separate steps" — the step names
+change, the property does not.
+
+The ordering matters more than it did. `test:zomes` is `cargo test
+--workspace`, which the `required-features` gate keeps away from the
+Sweettest target, so it tests zome logic natively with no conductor. Running
+it first means a plain Rust logic error fails before 16 conductor startups
+are paid for.
+
+### 9a. The `holochain` job keeps its name
+
+Ruleset `24758236` requires the checks `fast` and `holochain`, and required
+checks match on the check-run name — a job's `name:`, or its id when absent.
+Renaming the job to something that describes Sweettest would require editing
+the ruleset, and every ruleset edit is a `PUT` that replaces the whole
+`rules` array. That is the riskiest operation in this change, already
+performed once; a second one buys a better job name and risks silently
+dropping `pull_request`, `required_linear_history` and `non_fast_forward`.
+
+So the name is now an interface, not a description. `ci.yml`'s step names
+(`Test zomes`, `Run Sweettest serially`) carry the description instead, which
+is where someone reading a failed run actually looks.
 
 ### 10. Required status checks are added last, and by GET-modify-PUT
 
@@ -185,18 +231,36 @@ are looked up against each action's repository when the workflow is written.
 
 ## Risks / Trade-offs
 
-- **Cold Nix download dominates the first run** → one `holochain` job with
-  Holochain's Cachix substituter, and a 30-minute timeout. If the cold run
-  does not fit, the timeout is raised on evidence rather than the design
-  changing.
+- **Cold Nix download and the Sweettest run together dominate the first
+  run** → one `holochain` job with Holochain's Cachix substituter, and a
+  **60**-minute timeout. 30 was the original figure, set before any
+  measurement; #86's cold Sweettest run took 43m40s, so 30 would have timed
+  out. Raised on evidence, as the original design said it would be.
+- **Conforming to #86 made CI slower, and the change should say so** →
+  Sweettest measures 43m40s cold and 16m05s warm, against Tryorama's 13m45s
+  and 9m07s; test execution alone is 800s against 449s. The justification
+  for Sweettest is that Tryorama is no longer an official package in
+  Holochain 0.6, so it is dependency risk being retired, not time. Recording
+  the regression is deliberate: an archived change claiming CI got faster
+  would mislead whoever next tries to speed it up.
+- **`test:zomes` may no longer be cheap** → #86 added `holochain` with
+  `features = ["test_utils"]` to the `profiles` crate's `dev-dependencies`.
+  Cargo resolves dev-dependencies per package, so `cargo test --workspace`
+  may now build that dependency tree even though the `sweettest` test target
+  is `required-features`-gated out. Under Tryorama, `Test zomes` ran in 12s
+  warm. #86's workflow never ran `test:zomes`, so there is no CI evidence
+  either way — task 3.4 measures it. Inside one job with a warm Rust cache
+  the compile is paid once regardless, so this affects whether `test:zomes`
+  could ever move to the `fast` job, not the `holochain` job's total.
 - **`rust-cache` and the Nix toolchain disagree** → decision 6; the
   hand-rolled `actions/cache` fallback is identified in advance so it is not
   designed under pressure.
 - **Runner disk space** → decision 7.
-- **The conductor tests are flaky on a shared runner** → they already run
-  `--test-concurrency=1`. If flakiness appears, it is a finding about the
-  tests, not a reason to retry the job automatically; no retry wrapper is
-  added, because an auto-retried conductor test would defeat the purpose of
+- **The Sweettest cases are flaky on a shared runner** → they already run
+  `--test-threads=1`, which is also why the suite takes 800s: 16 conductor
+  startups, serially. If flakiness appears, it is a finding about the tests,
+  not a reason to retry the job automatically; no retry wrapper is added,
+  because an auto-retried validation test would defeat the purpose of
   running it at all.
 - **Required checks are added before the names are proven** → decision 10
   sequences this last, and the owner's `exempt` bypass is the escape hatch if
@@ -208,22 +272,45 @@ are looked up against each action's repository when the workflow is written.
 
 ## Migration Plan
 
-1. `ci.yml` and `dependabot.yml` land in a PR. CI is advisory on that PR,
-   because no rule requires it yet.
-2. Both jobs are confirmed green on that PR.
-3. #36's deliberate-breakage check runs on a throwaway PR, and the failed run
-   is linked on #36.
-4. Only then is `required_status_checks` added to ruleset `24758236`.
+Steps 1–4 were completed against Tryorama before #86 landed: `ci.yml` and
+`dependabot.yml` were written, both jobs went green, PR #83's
+deliberate-breakage probe turned `Test conductor` red, and
+`required_status_checks` was added to ruleset `24758236`. What remains is the
+conformance pass:
+
+1. Rebase `chore/35-ci-pipeline` onto the post-#86 `main` (`c49e3b7`).
+   Conflicts are expected in `README.md`, which both #86 and this change
+   edit.
+2. Point the `holochain` job's second step at `test:sweettest`, raise its
+   timeout to 60, and delete `.github/workflows/sweettest.yml`.
+3. Re-prove the probe against the Sweettest step, since what #83 established
+   was a property of `Test conductor`.
+4. Merge. The required check names are unchanged, so the ruleset is not
+   touched again — and merging is what finally puts `ci.yml` on `main`,
+   which is what lets any other PR report those checks at all.
 
 Rollback: delete the `required_status_checks` rule to return CI to advisory,
-or revert the PR to remove it entirely. Nothing in the repo depends on CI
-existing.
+or revert the PR. Note that the ordering trap is live until step 4 — the rule
+requires `fast` and `holochain` while `main` has neither, so every PR not
+carrying `ci.yml` is unmergeable without the owner's bypass. That is the
+cost of having added the rule before the workflow reached the default
+branch, which this design's decision 10 guarded against by name but not by
+this route.
 
 ## Open Questions
 
-Neither of these changes the approach or the task breakdown:
+Resolved since this design was written:
 
-- Whether the cold `holochain` run fits in 30 minutes. Measured on the first
-  run; only the timeout number moves.
-- Whether the `fast` job needs `actions/setup-node`'s `cache: npm`. Measured
-  once it has run; flagged in proposal.md.
+- ~~Whether the cold `holochain` run fits in 30 minutes.~~ **No.** Under
+  Tryorama it did, at 13m45s. Under Sweettest the cold run is 43m40s, so the
+  timeout is 60. Only the number moved, as predicted.
+
+Still open, and neither changes the approach or the task breakdown:
+
+- Whether the `fast` job needs `actions/setup-node`'s `cache: npm`. `fast`
+  runs in 1m04s–1m14s without it, well inside its 10-minute budget, so this
+  is now a question of taste rather than headroom.
+- Whether `test:zomes` is still cheap after #86's `dev-dependencies` change,
+  and so whether it could move to the `fast` job and give a Rust signal
+  without Nix. Task 3.4 takes the measurement; acting on it would be a
+  separate change.
