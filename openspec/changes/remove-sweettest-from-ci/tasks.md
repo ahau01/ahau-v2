@@ -12,6 +12,6 @@
 
 ## 3. Verify the policy and savings
 
-- [ ] 3.1 For the relevant implementation PR, run `nix develop --command npm run test:sweettest` against the final proposed changes before opening it, or have a maintainer record a waiver; verify the PR template records the applicable outcome.
+- [x] 3.1 For the relevant implementation PR, run `nix develop --command npm run test:sweettest` against the final proposed changes before opening it, or have a maintainer record a waiver; verify the PR template records the applicable outcome.
 - [ ] 3.2 Verify a relevant PR run keeps `holochain` successful with zome tests executed and Sweettest skipped, then manually dispatch CI on the selected ref and verify Sweettest executes; record whole-job and step-level durations to reconcile the archived warm-run timing discrepancy.
 - [x] 3.3 Run `openspec validate remove-sweettest-from-ci --strict` and verify the proposal, capability delta, design, and tasks validate together.
