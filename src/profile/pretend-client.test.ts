@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { ALREADY_HAS_PROFILE, NO_PROFILE_TO_UPDATE } from './client.js'
+import { ALREADY_HAS_PROFILE, NO_PROFILE_TO_UPDATE, completeProfile } from './client.js'
 import { createPretendProfileClient } from './pretend-client.js'
 
 const KEY = 'ahau:pretend-profile'
@@ -87,4 +87,13 @@ test('pretend client: updating before a profile exists is refused and writes not
     reason: NO_PROFILE_TO_UPDATE
   })
   assert.deepEqual(writes, [])
+})
+
+test('pretend client: updating a profile reports updated and returns the saved profile', async () => {
+  const client = createPretendProfileClient({ storage: storageHolding({ name: 'Mere' }) })
+
+  assert.deepEqual(await client.updateMyProfile({ name: 'Mere Rangi' }), {
+    status: 'updated',
+    profile: completeProfile({ name: 'Mere Rangi' })
+  })
 })

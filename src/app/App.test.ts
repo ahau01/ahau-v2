@@ -3,6 +3,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/svelt
 import userEvent from '@testing-library/user-event'
 
 import { completeProfile, type Profile, type ProfileClient } from '../profile/client.js'
+import { stubProfileClient } from '../test-support/profile-client.js'
 import wahine from './assets/wahine.svg'
 import App from './App.svelte'
 
@@ -25,7 +26,7 @@ function launchOnlyClient (profile: Profile | null) {
     callsAfterLaunch.push(name)
     throw new Error(`${name} called after launch`)
   }
-  const client: ProfileClient = {
+  const client: ProfileClient = stubProfileClient({
     waitUntilReady: async () => { guard('waitUntilReady'); return { status: 'ready' } },
     // Launch ends once the profile is known: read, or just created.
     getMyProfile: async () => {
@@ -40,10 +41,10 @@ function launchOnlyClient (profile: Profile | null) {
     },
     updateMyProfile: async updated => {
       guard('updateMyProfile')
-      return { status: 'created', profile: completeProfile(updated) }
+      return { status: 'updated', profile: completeProfile(updated) }
     },
     close: async () => { guard('close') }
-  }
+  })
   return { client, callsAfterLaunch }
 }
 
@@ -126,13 +127,13 @@ describe('app: sections still to come make no Holochain calls', () => {
 describe('app: editing your profile updates the shell', () => {
   test('a saved name and gender reach the heading and both shell avatars without reloading', async () => {
     const user = userEvent.setup()
-    const client: ProfileClient = {
+    const client: ProfileClient = stubProfileClient({
       waitUntilReady: async () => ({ status: 'ready' }),
       getMyProfile: async () => completeProfile({ name: 'Mere', gender: 'male' }),
       createMyProfile: async input => ({ status: 'created', profile: completeProfile(input) }),
-      updateMyProfile: async input => ({ status: 'created', profile: completeProfile(input) }),
+      updateMyProfile: async input => ({ status: 'updated', profile: completeProfile(input) }),
       close: async () => {}
-    }
+    })
     render(App, { client })
 
     await user.click(await screen.findByRole('button', { name: 'Mere' }))

@@ -34,7 +34,7 @@
     return await client.updateMyProfile(input)
   }
 
-  function saveProfile (saved: Profile) {
+  function applySavedProfile (saved: Profile) {
     profile = saved
   }
 
@@ -47,7 +47,7 @@
 </script>
 
 {#if current.kind === 'ready' && profile}
-  <Shell {profile} onupdate={updateProfile} onsave={saveProfile} />
+  <Shell {profile} onsave={updateProfile} onprofilesaved={applySavedProfile} />
 {:else}
   <main class="launch" style:--niho={`url(${niho})`}>
     {#if isLaunchState(current)}

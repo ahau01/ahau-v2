@@ -22,7 +22,7 @@ export interface ProfileEdit {
   subscribe (listener: (state: ProfileEditState) => void): () => void
 }
 
-export function createProfileEdit (update: (profile: NewProfile) => Promise<UpdateProfileResult>): ProfileEdit {
+export function createProfileEdit (saveProfile: (profile: NewProfile) => Promise<UpdateProfileResult>): ProfileEdit {
   let state: ProfileEditState = { kind: 'closed' }
   const listeners = new Set<(state: ProfileEditState) => void>()
 
@@ -60,11 +60,11 @@ export function createProfileEdit (update: (profile: NewProfile) => Promise<Upda
       set({ kind: 'saving', form })
       let result: UpdateProfileResult
       try {
-        result = await update(read.profile)
+        result = await saveProfile(read.profile)
       } catch (err) {
         result = { status: 'failed', reason: err instanceof Error ? err.message : String(err) }
       }
-      if (result.status === 'created') {
+      if (result.status === 'updated') {
         set({ kind: 'saved', profile: result.profile })
       } else {
         // A new errors object on each refusal lets the dialog announce a repeated message again.

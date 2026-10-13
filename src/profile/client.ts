@@ -119,16 +119,19 @@ export function completeProfile (input: NewProfile): Profile {
   }
 }
 
+export type ProfileFailure = { status: 'failed', reason: string }
+
 export type CreateProfileResult =
   | { status: 'created', profile: Profile }
-  | { status: 'failed', reason: string }
+  | ProfileFailure
 
-/** An updated profile uses the same result shape as the initial save. */
-export type UpdateProfileResult = CreateProfileResult
+export type UpdateProfileResult =
+  | { status: 'updated', profile: Profile }
+  | ProfileFailure
 
 export type Readiness =
   | { status: 'ready' }
-  | { status: 'failed', reason: string }
+  | ProfileFailure
 
 export interface ProfileClient {
   /** Wait until Holochain is reachable, or report that it failed to start. */
@@ -223,7 +226,7 @@ export function createProfileClient (options: ProfileClientOptions = {}): Profil
     async updateMyProfile (profile) {
       try {
         const saved = await callProfiles<Profile>('update_my_profile', profile)
-        return { status: 'created', profile: saved }
+        return { status: 'updated', profile: saved }
       } catch (err) {
         return { status: 'failed', reason: plainReason(err) }
       }

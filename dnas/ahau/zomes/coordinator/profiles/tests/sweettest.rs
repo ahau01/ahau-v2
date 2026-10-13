@@ -9,6 +9,10 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use profiles::MyProfile;
 
+#[path = "../../../../test/profile_history.rs"]
+mod profile_history;
+use profile_history::MyProfileHistory;
+
 struct TestNetwork {
     conductors: SweetConductorBatch,
     cells: Vec<SweetCell>,
@@ -136,6 +140,29 @@ fn my_profile(name: &str, email: &str) -> MyProfile {
     }
 }
 
+async fn create_profile_then_update(
+    network: &TestNetwork,
+    initial: MyProfile,
+    updates: Vec<MyProfile>,
+) {
+    network
+        .call::<_, MyProfile>(0, "profiles", "create_my_profile", initial)
+        .await;
+    for update in updates {
+        network
+            .call::<_, MyProfile>(0, "profiles", "update_my_profile", update)
+            .await;
+    }
+}
+
+fn profile_names(history: &MyProfileHistory) -> Vec<&str> {
+    history
+        .profiles
+        .iter()
+        .map(|profile| profile.name.as_str())
+        .collect()
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn another_agent_cannot_overwrite_a_profile() {
     let network = test_network(2).await;
@@ -200,33 +227,37 @@ async fn another_agent_cannot_overwrite_a_profile() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn coordinator_updates_both_sections_twice_from_their_original_versions() {
+async fn coordinator_updates_both_sections_twice_and_preserves_all_versions() {
     let network = test_network(1).await;
-    network
-        .call::<_, MyProfile>(
-            0,
-            "profiles",
-            "create_my_profile",
-            my_profile("Mere", "mere@example.com"),
-        )
-        .await;
-
-    network
-        .call::<_, MyProfile>(
-            0,
-            "profiles",
-            "update_my_profile",
+    create_profile_then_update(
+        &network,
+        my_profile("Mere", "mere@example.com"),
+        vec![
             my_profile("Mere Rangi", "mere.rangi@example.com"),
-        )
-        .await;
-    network
-        .call::<_, MyProfile>(
-            0,
-            "profiles",
-            "update_my_profile",
             my_profile("Mere Rangi-Williams", "mere.williams@example.com"),
-        )
+        ],
+    )
+    .await;
+
+    let history: MyProfileHistory = network
+        .call(0, "rogue_profiles", "get_my_profile_history", ())
         .await;
+    assert_eq!(
+        profile_names(&history),
+        ["Mere", "Mere Rangi", "Mere Rangi-Williams"]
+    );
+    assert_eq!(
+        history
+            .personal_information
+            .iter()
+            .map(|personal| personal.email.as_deref())
+            .collect::<Vec<_>>(),
+        [
+            Some("mere@example.com"),
+            Some("mere.rangi@example.com"),
+            Some("mere.williams@example.com")
+        ]
+    );
 
     let saved: Option<MyProfile> = network.call(0, "profiles", "get_my_profile", ()).await;
     let saved = saved.unwrap();
@@ -235,6 +266,33 @@ async fn coordinator_updates_both_sections_twice_from_their_original_versions() 
         saved.personal.email.as_deref(),
         Some("mere.williams@example.com")
     );
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn clearing_email_keeps_the_earlier_personal_information_version() {
+    let network = test_network(1).await;
+    create_profile_then_update(
+        &network,
+        my_profile("Mere", "mere@example.com"),
+        vec![MyProfile {
+            profile: profile("Mere Rangi"),
+            personal: PersonalInformation::default(),
+        }],
+    )
+    .await;
+
+    let history: MyProfileHistory = network
+        .call(0, "rogue_profiles", "get_my_profile_history", ())
+        .await;
+    assert_eq!(history.personal_information.len(), 2);
+    assert_eq!(
+        history.personal_information[0].email.as_deref(),
+        Some("mere@example.com")
+    );
+    assert_eq!(history.personal_information[1].email, None);
+
+    let latest: Option<MyProfile> = network.call(0, "profiles", "get_my_profile", ()).await;
+    assert_eq!(latest.unwrap().personal.email, None);
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

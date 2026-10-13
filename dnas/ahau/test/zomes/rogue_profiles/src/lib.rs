@@ -7,6 +7,10 @@
 use hdk::prelude::*;
 use profiles_integrity::*;
 
+#[path = "../../../profile_history.rs"]
+mod profile_history;
+use profile_history::MyProfileHistory;
+
 /// Writes a profile with no checks at all.
 #[hdk_extern]
 pub fn create_profile(profile: Profile) -> ExternResult<()> {
@@ -89,6 +93,44 @@ fn agent_action(agent: AgentPubKey, entry_type: UnitEntryTypes) -> ExternResult<
 pub fn update_my_profile(profile: Profile) -> ExternResult<()> {
     update_entry(my_original(UnitEntryTypes::Profile)?, EntryTypes::Profile(profile))?;
     Ok(())
+}
+
+/// Reads profile versions from this agent's own source chain for Sweettest.
+/// This test-only zome function does not publish private entry contents.
+#[hdk_extern]
+pub fn get_my_profile_history(_: ()) -> ExternResult<MyProfileHistory> {
+    Ok(MyProfileHistory {
+        profiles: queried_entries(UnitEntryTypes::Profile, "profile")?,
+        personal_information: queried_entries(UnitEntryTypes::PersonalInformation, "personal information")?,
+    })
+}
+
+fn queried_entries<T>(
+    entry_type: UnitEntryTypes,
+    label: &str,
+) -> ExternResult<Vec<T>>
+where
+    T: TryFrom<SerializedBytes, Error = SerializedBytesError>,
+{
+    query(
+        ChainQueryFilter::new()
+            .entry_type(entry_type.try_into()?)
+            .include_entries(true),
+    )?
+    .into_iter()
+    .enumerate()
+    .map(|(index, record)| {
+        record
+            .entry()
+            .to_app_option::<T>()
+            .map_err(|error| wasm_error!(error))?
+            .ok_or_else(|| {
+                wasm_error!(WasmErrorInner::Guest(format!(
+                    "Missing {label} entry at query result {index}"
+                )))
+            })
+    })
+    .collect()
 }
 
 /// Updates this agent's own personal information, as `update_my_profile` does.

@@ -2,23 +2,13 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import { completeProfile, type NewProfile, type ProfileClient } from '../profile/client.js'
+import { stubProfileClient } from '../test-support/profile-client.js'
 import { createFirstLaunch, emptyProfileForm, type FirstLaunch, type ProfileForm } from './first-launch.js'
 
 /**
  * Which first-launch screen to show, decided without Holochain. The client
  * is a stub of the real profile client interface.
  */
-
-function stubClient(overrides: Partial<ProfileClient> = {}): ProfileClient {
-  return {
-    waitUntilReady: async () => ({ status: 'ready' }),
-    getMyProfile: async () => null,
-    createMyProfile: async profile => ({ status: 'created', profile: completeProfile(profile) }),
-    updateMyProfile: async profile => ({ status: 'created', profile: completeProfile(profile) }),
-    close: async () => {},
-    ...overrides
-  }
-}
 
 const never = <T>() => new Promise<T>(() => {})
 
@@ -37,7 +27,7 @@ function countingCreate (answer: (profile: NewProfile) => ReturnType<ProfileClie
 const created = async (profile: NewProfile) => ({ status: 'created', profile: completeProfile(profile) }) as const
 
 test('first launch: while Holochain is not ready, it is starting', () => {
-  const firstLaunch = createFirstLaunch(stubClient({ waitUntilReady: never }))
+  const firstLaunch = createFirstLaunch(stubProfileClient({ waitUntilReady: never }))
 
   void firstLaunch.start()
 
@@ -45,7 +35,7 @@ test('first launch: while Holochain is not ready, it is starting', () => {
 })
 
 test('first launch: when Holochain fails to start, it says why', async () => {
-  const firstLaunch = createFirstLaunch(stubClient({
+  const firstLaunch = createFirstLaunch(stubProfileClient({
     waitUntilReady: async () => ({ status: 'failed', reason: 'Holochain did not start: connection refused' })
   }))
 
@@ -59,7 +49,7 @@ test('first launch: when Holochain fails to start, it says why', async () => {
 
 test('first launch: starting again does not knock the screen backwards', async () => {
   let lookups = 0
-  const firstLaunch = createFirstLaunch(stubClient({
+  const firstLaunch = createFirstLaunch(stubProfileClient({
     // The second lookup is slow and answers "no profile" after the person has saved.
     getMyProfile: async () => { lookups++; return lookups === 1 ? null : never() }
   }))
@@ -75,7 +65,7 @@ test('first launch: starting again does not knock the screen backwards', async (
 })
 
 test('first launch: an agent with no profile is welcomed and asked who they are', async () => {
-  const firstLaunch = createFirstLaunch(stubClient({ getMyProfile: async () => null }))
+  const firstLaunch = createFirstLaunch(stubProfileClient({ getMyProfile: async () => null }))
 
   await firstLaunch.start()
 
@@ -83,7 +73,7 @@ test('first launch: an agent with no profile is welcomed and asked who they are'
 })
 
 test('first launch: saying who you are opens an empty profile form', async () => {
-  const firstLaunch = createFirstLaunch(stubClient())
+  const firstLaunch = createFirstLaunch(stubProfileClient())
   await firstLaunch.start()
 
   firstLaunch.begin()
@@ -93,7 +83,7 @@ test('first launch: saying who you are opens an empty profile form', async () =>
 
 test('first launch: cancelling the profile form goes back to the welcome, saving nothing', async () => {
   const { createMyProfile, calls } = countingCreate(created)
-  const firstLaunch = createFirstLaunch(stubClient({ createMyProfile }))
+  const firstLaunch = createFirstLaunch(stubProfileClient({ createMyProfile }))
   await firstLaunch.start()
   firstLaunch.begin()
 
@@ -104,7 +94,7 @@ test('first launch: cancelling the profile form goes back to the welcome, saving
 })
 
 test('first launch: a returning agent sees their avatar step, not the shell', async () => {
-  const firstLaunch = createFirstLaunch(stubClient({ getMyProfile: async () => completeProfile({ name: 'Mere' }) }))
+  const firstLaunch = createFirstLaunch(stubProfileClient({ getMyProfile: async () => completeProfile({ name: 'Mere' }) }))
 
   await firstLaunch.start()
 
@@ -112,7 +102,7 @@ test('first launch: a returning agent sees their avatar step, not the shell', as
 })
 
 test('first launch: if Holochain cannot say whether this agent has a profile, it failed to start', async () => {
-  const firstLaunch = createFirstLaunch(stubClient({
+  const firstLaunch = createFirstLaunch(stubProfileClient({
     getMyProfile: async () => { throw new Error('Source chain error: database locked') }
   }))
 
@@ -125,7 +115,7 @@ test('first launch: if Holochain cannot say whether this agent has a profile, it
 })
 
 test('first launch: creating a profile leads to the avatar step', async () => {
-  const firstLaunch = createFirstLaunch(stubClient())
+  const firstLaunch = createFirstLaunch(stubProfileClient())
   await firstLaunch.start()
   firstLaunch.begin()
 
@@ -135,7 +125,7 @@ test('first launch: creating a profile leads to the avatar step', async () => {
 })
 
 test('first launch: if saving fails, the person can try again without retyping', async () => {
-  const firstLaunch = createFirstLaunch(stubClient({
+  const firstLaunch = createFirstLaunch(stubProfileClient({
     createMyProfile: async () => ({ status: 'failed', reason: 'Holochain did not answer' })
   }))
   await firstLaunch.start()
@@ -152,7 +142,7 @@ test('first launch: if saving fails, the person can try again without retyping',
 
 test('first launch: while saving, it shows saving and pressing save again does not save twice', async () => {
   const { createMyProfile, calls } = countingCreate(never)
-  const firstLaunch = createFirstLaunch(stubClient({ createMyProfile }))
+  const firstLaunch = createFirstLaunch(stubProfileClient({ createMyProfile }))
   await firstLaunch.start()
   firstLaunch.begin()
 
@@ -165,7 +155,7 @@ test('first launch: while saving, it shows saving and pressing save again does n
 
 test('first launch: a profile needs a name before it is saved', async () => {
   const { createMyProfile, calls } = countingCreate(created)
-  const firstLaunch = createFirstLaunch(stubClient({ createMyProfile }))
+  const firstLaunch = createFirstLaunch(stubProfileClient({ createMyProfile }))
   await firstLaunch.start()
   firstLaunch.begin()
 
@@ -176,7 +166,7 @@ test('first launch: a profile needs a name before it is saved', async () => {
 })
 
 test('first launch: refusing the same name twice is a new error each time, so the screen can tell', async () => {
-  const firstLaunch = createFirstLaunch(stubClient())
+  const firstLaunch = createFirstLaunch(stubProfileClient())
   await firstLaunch.start()
   firstLaunch.begin()
   const errors: unknown[] = []
@@ -191,7 +181,7 @@ test('first launch: refusing the same name twice is a new error each time, so th
 
 test('first launch: a name of only spaces is no name', async () => {
   const { createMyProfile, calls } = countingCreate(created)
-  const firstLaunch = createFirstLaunch(stubClient({ createMyProfile }))
+  const firstLaunch = createFirstLaunch(stubProfileClient({ createMyProfile }))
   await firstLaunch.start()
   firstLaunch.begin()
 
@@ -203,7 +193,7 @@ test('first launch: a name of only spaces is no name', async () => {
 
 test('first launch: a name is saved without surrounding spaces', async () => {
   let saved: NewProfile | undefined
-  const firstLaunch = createFirstLaunch(stubClient({
+  const firstLaunch = createFirstLaunch(stubProfileClient({
     createMyProfile: async profile => { saved = profile; return { status: 'created', profile: completeProfile(profile) } }
   }))
   await firstLaunch.start()
@@ -216,7 +206,7 @@ test('first launch: a name is saved without surrounding spaces', async () => {
 
 test('first launch: every field the person filled in is saved', async () => {
   let saved: NewProfile | undefined
-  const firstLaunch = createFirstLaunch(stubClient({
+  const firstLaunch = createFirstLaunch(stubProfileClient({
     createMyProfile: async profile => { saved = profile; return { status: 'created', profile: completeProfile(profile) } }
   }))
   await firstLaunch.start()
@@ -278,7 +268,7 @@ for (const [day, month, year, saved] of [
 ] as const) {
   test(`first launch: a date of birth of day '${day}', month '${month}', year '${year}' is saved as ${saved}`, async () => {
     let dateOfBirth: string | undefined
-    const firstLaunch = createFirstLaunch(stubClient({
+    const firstLaunch = createFirstLaunch(stubProfileClient({
       createMyProfile: async profile => { dateOfBirth = profile.dateOfBirth ?? undefined; return created(profile) }
     }))
     await firstLaunch.start()
@@ -298,7 +288,7 @@ for (const [day, month, year, message] of [
 ] as const) {
   test(`first launch: a date of birth of day '${day}', month '${month}', year '${year}' says "${message}"`, async () => {
     const { createMyProfile, calls } = countingCreate(created)
-    const firstLaunch = createFirstLaunch(stubClient({ createMyProfile }))
+    const firstLaunch = createFirstLaunch(stubProfileClient({ createMyProfile }))
     await firstLaunch.start()
     firstLaunch.begin()
     const form = formWith({ name: 'Mere', dateOfBirth: { day, month, year } })
@@ -313,7 +303,7 @@ for (const [day, month, year, message] of [
 for (const birthOrder of ['0', '-1', '1.5', 'abc']) {
   test(`first launch: an order of birth of '${birthOrder}' is refused`, async () => {
     const { createMyProfile, calls } = countingCreate(created)
-    const firstLaunch = createFirstLaunch(stubClient({ createMyProfile }))
+    const firstLaunch = createFirstLaunch(stubProfileClient({ createMyProfile }))
     await firstLaunch.start()
     firstLaunch.begin()
     const form = formWith({ name: 'Mere', birthOrder })
@@ -330,7 +320,7 @@ for (const birthOrder of ['0', '-1', '1.5', 'abc']) {
 }
 
 test('first launch: every problem with the form is reported at once', async () => {
-  const firstLaunch = createFirstLaunch(stubClient())
+  const firstLaunch = createFirstLaunch(stubProfileClient())
   await firstLaunch.start()
   firstLaunch.begin()
   const form = formWith({ name: ' ', birthOrder: '0', dateOfBirth: { day: '09', month: '', year: '' } })
@@ -350,7 +340,7 @@ test('first launch: every problem with the form is reported at once', async () =
 
 test('first launch: boxes added but left blank are not saved', async () => {
   let saved: NewProfile | undefined
-  const firstLaunch = createFirstLaunch(stubClient({
+  const firstLaunch = createFirstLaunch(stubProfileClient({
     createMyProfile: async profile => { saved = profile; return created(profile) }
   }))
   await firstLaunch.start()
@@ -362,7 +352,7 @@ test('first launch: boxes added but left blank are not saved', async () => {
 })
 
 test('first launch: a screen can follow each state as it changes', async () => {
-  const firstLaunch = createFirstLaunch(stubClient())
+  const firstLaunch = createFirstLaunch(stubProfileClient())
   const seen: string[] = []
   firstLaunch.subscribe(state => seen.push(state.kind))
 
@@ -377,7 +367,7 @@ test('first launch: a screen can follow each state as it changes', async () => {
 
 test('first launch: going in from the avatar step reaches the shell with the same profile', async () => {
   const mere = completeProfile({ name: 'Mere', gender: 'female' })
-  const firstLaunch = createFirstLaunch(stubClient({ getMyProfile: async () => mere }))
+  const firstLaunch = createFirstLaunch(stubProfileClient({ getMyProfile: async () => mere }))
   await firstLaunch.start()
 
   firstLaunch.enter()
@@ -388,35 +378,35 @@ test('first launch: going in from the avatar step reaches the shell with the sam
 test('first launch: going in does nothing from any state but the avatar step', async () => {
   const states: Array<[string, () => Promise<FirstLaunch>]> = [
     ['starting', async () => {
-      const firstLaunch = createFirstLaunch(stubClient({ waitUntilReady: never }))
+      const firstLaunch = createFirstLaunch(stubProfileClient({ waitUntilReady: never }))
       void firstLaunch.start()
       return firstLaunch
     }],
     ['failed-to-start', async () => {
-      const firstLaunch = createFirstLaunch(stubClient({ waitUntilReady: async () => ({ status: 'failed', reason: 'no' }) }))
+      const firstLaunch = createFirstLaunch(stubProfileClient({ waitUntilReady: async () => ({ status: 'failed', reason: 'no' }) }))
       await firstLaunch.start()
       return firstLaunch
     }],
     ['welcome', async () => {
-      const firstLaunch = createFirstLaunch(stubClient())
+      const firstLaunch = createFirstLaunch(stubProfileClient())
       await firstLaunch.start()
       return firstLaunch
     }],
     ['needs-profile', async () => {
-      const firstLaunch = createFirstLaunch(stubClient())
+      const firstLaunch = createFirstLaunch(stubProfileClient())
       await firstLaunch.start()
       firstLaunch.begin()
       return firstLaunch
     }],
     ['saving', async () => {
-      const firstLaunch = createFirstLaunch(stubClient({ createMyProfile: never }))
+      const firstLaunch = createFirstLaunch(stubProfileClient({ createMyProfile: never }))
       await firstLaunch.start()
       firstLaunch.begin()
       void firstLaunch.submit(formWith({ name: 'Mere' }))
       return firstLaunch
     }],
     ['ready', async () => {
-      const firstLaunch = createFirstLaunch(stubClient({ getMyProfile: async () => completeProfile({ name: 'Mere' }) }))
+      const firstLaunch = createFirstLaunch(stubProfileClient({ getMyProfile: async () => completeProfile({ name: 'Mere' }) }))
       await firstLaunch.start()
       firstLaunch.enter()
       return firstLaunch
@@ -465,7 +455,7 @@ test('first launch: going in is not a login; it calls nothing', async () => {
 })
 
 test('first launch: a screen that stops following hears no more', async () => {
-  const firstLaunch = createFirstLaunch(stubClient())
+  const firstLaunch = createFirstLaunch(stubProfileClient())
   const seen: string[] = []
   const unsubscribe = firstLaunch.subscribe(state => seen.push(state.kind))
 

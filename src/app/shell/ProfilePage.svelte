@@ -9,19 +9,20 @@
   // The profile this agent wrote about itself. Editing goes through App.svelte
   // callbacks; this page never imports the client. Header/photo controls stay
   // unavailable (#43).
-  let { profile, onupdate, onsave }: {
+  let { profile, onsave, onprofilesaved }: {
     profile: Profile
-    onupdate: (profile: NewProfile) => Promise<UpdateProfileResult>
-    onsave: (profile: Profile) => void
+    onsave: (profile: NewProfile) => Promise<UpdateProfileResult>
+    onprofilesaved: (profile: Profile) => void
   } = $props()
 
-  const edit = createProfileEdit(profile => onupdate(profile))
+  // Keep this closure so each save reads the latest Svelte callback prop.
+  const edit = createProfileEdit(profile => onsave(profile))
   let current = $state<ProfileEditState>(edit.state)
   const sections = $derived(profileSections(profile))
 
   $effect(() => edit.subscribe(next => {
     current = next
-    if (next.kind === 'saved') onsave(next.profile)
+    if (next.kind === 'saved') onprofilesaved(next.profile)
   }))
 
   function openEdit () {
