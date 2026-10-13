@@ -11,10 +11,10 @@
 
   // App owns the profile and calls the client. This shell passes save/result
   // callbacks; no shell component imports its runtime API (design D6).
-  let { profile, onSave, onProfileSaved }: {
+  let { profile, onsave, onprofilesaved }: {
     profile: Profile
-    onSave: (profile: NewProfile) => Promise<UpdateProfileResult>
-    onProfileSaved: (profile: Profile) => void
+    onsave: (profile: NewProfile) => Promise<UpdateProfileResult>
+    onprofilesaved: (profile: Profile) => void
   } = $props()
 
   const route = currentRoute()
@@ -30,7 +30,7 @@
         <main>
           <!-- Each page mounts afresh on navigating, so its heading takes focus. -->
           {#if $route.section === 'profile'}
-            <ProfilePage {profile} {onSave} {onProfileSaved} />
+            <ProfilePage {profile} {onsave} {onprofilesaved} />
           {:else if $route.section === 'archive'}
             <ArchivePage />
           {:else}

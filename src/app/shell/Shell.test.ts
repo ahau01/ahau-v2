@@ -22,8 +22,8 @@ async function showAt (hash: string, profile = mere) {
   await settle()
   render(Shell, {
     profile,
-    onSave: async input => ({ status: 'updated', profile: completeProfile(input) }),
-    onProfileSaved: () => {}
+    onsave: async input => ({ status: 'updated', profile: completeProfile(input) }),
+    onprofilesaved: () => {}
   })
   return userEvent.setup()
 }

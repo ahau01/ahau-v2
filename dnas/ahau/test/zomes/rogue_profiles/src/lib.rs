@@ -6,6 +6,11 @@
 
 use hdk::prelude::*;
 use profiles_integrity::*;
+use serde::de::DeserializeOwned;
+
+#[path = "../../../profile_history.rs"]
+mod profile_history;
+use profile_history::MyProfileHistory;
 
 /// Writes a profile with no checks at all.
 #[hdk_extern]
@@ -91,43 +96,39 @@ pub fn update_my_profile(profile: Profile) -> ExternResult<()> {
     Ok(())
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct MyProfileHistory {
-    pub profiles: Vec<Profile>,
-    pub personal_information: Vec<PersonalInformation>,
-}
-
 /// Reads profile versions from this agent's own source chain for Sweettest.
 /// This test-only zome function does not publish private entry contents.
 #[hdk_extern]
 pub fn get_my_profile_history(_: ()) -> ExternResult<MyProfileHistory> {
-    let profile_records = query(
-        ChainQueryFilter::new()
-            .entry_type(UnitEntryTypes::Profile.try_into()?)
-            .include_entries(true),
-    )?;
-    let profiles = profile_records
-        .into_iter()
-        .map(|record| record.entry().to_app_option::<Profile>().map_err(|error| wasm_error!(error)))
-        .collect::<ExternResult<Vec<_>>>()?
-        .into_iter()
-        .flatten()
-        .collect();
+    Ok(MyProfileHistory {
+        profiles: queried_entries(UnitEntryTypes::Profile, "profile")?,
+        personal_information: queried_entries(UnitEntryTypes::PersonalInformation, "personal information")?,
+    })
+}
 
-    let personal_records = query(
+fn queried_entries<T: DeserializeOwned>(
+    entry_type: UnitEntryTypes,
+    label: &str,
+) -> ExternResult<Vec<T>> {
+    query(
         ChainQueryFilter::new()
-            .entry_type(UnitEntryTypes::PersonalInformation.try_into()?)
+            .entry_type(entry_type.try_into()?)
             .include_entries(true),
-    )?;
-    let personal_information = personal_records
-        .into_iter()
-        .map(|record| record.entry().to_app_option::<PersonalInformation>().map_err(|error| wasm_error!(error)))
-        .collect::<ExternResult<Vec<_>>>()?
-        .into_iter()
-        .flatten()
-        .collect();
-
-    Ok(MyProfileHistory { profiles, personal_information })
+    )?
+    .into_iter()
+    .enumerate()
+    .map(|(index, record)| {
+        record
+            .entry()
+            .to_app_option::<T>()
+            .map_err(|error| wasm_error!(error))?
+            .ok_or_else(|| {
+                wasm_error!(WasmErrorInner::Guest(format!(
+                    "Missing {label} entry at query result {index}"
+                )))
+            })
+    })
+    .collect()
 }
 
 /// Updates this agent's own personal information, as `update_my_profile` does.

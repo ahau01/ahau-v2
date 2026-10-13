@@ -9,7 +9,7 @@
 ## 2. Make edit results and callbacks clear
 
 - [x] 2.1 Give `UpdateProfileResult` the `updated` success status, keep create success as `created`, and update real and pretend clients plus the edit state machine; verify focused profile client and edit tests pass with `npm run test:app`.
-- [x] 2.2 Rename the async profile write callback to `onSave` and the successful-result callback to `onProfileSaved` through `App.svelte`, `Shell.svelte` and `ProfilePage.svelte`; update affected component tests and verify `npm run test:app` and `npm run check:app` pass.
+- [x] 2.2 Rename the async profile write callback to `onsave` and the successful-result callback to `onprofilesaved` through `App.svelte`, `Shell.svelte` and `ProfilePage.svelte`; update affected component tests and verify `npm run test:app` and `npm run check:app` pass.
 
 ## 3. Verify the change
 
@@ -18,3 +18,10 @@
 ## Workflow follow-up
 
 - Archive the change after review is satisfied, then verify the archived result.
+
+## Review follow-ups
+
+- [x] 4.1 Use lowercase Svelte callback prop names and align the edit writer parameter name.
+- [x] 4.2 Share the test-only history response type and query/decode logic; report missing entries explicitly.
+- [x] 4.3 Extract repeated Sweettest history/setup helpers and share the standard TypeScript profile client test stub.
+- [ ] 4.4 Run the focused app and Sweettest checks and strict OpenSpec validation.

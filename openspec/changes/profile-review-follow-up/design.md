@@ -38,9 +38,21 @@ Alternative considered: keep the shared `created` success shape for symmetry bet
 
 ### Name callbacks after the operations they represent
 
-Rename the async callback that asks the client to write an edit to `onSave`. Rename the callback invoked with the successful profile to `onProfileSaved`. Thread those names through `App.svelte`, `Shell.svelte` and `ProfilePage.svelte` so the call path describes the remote save and the resulting local state update separately.
+Rename the async callback that asks the client to write an edit to `onsave`. Rename the callback invoked with the successful profile to `onprofilesaved`. Use lowercase Svelte callback prop names consistently with existing props such as `onsubmit` and `oncancel`. Thread those names through `App.svelte`, `Shell.svelte` and `ProfilePage.svelte` so the call path describes the remote save and the resulting local state update separately. Name the edit state machine's injected writer `onSave` as well.
 
-Alternative considered: retain `onupdate` and `onsave` and add comments. Rejected because the names themselves continue to imply the wrong responsibility at the component boundary.
+Alternative considered: retain the old `onupdate` and `onsave` roles and add comments. Rejected because the names themselves continue to imply the wrong responsibility at the component boundary. CamelCase component callback props were also considered, but rejected to match the app's established lowercase Svelte callback convention.
+
+### Keep test history inspection explicit and shared
+
+Use one shared test-only `MyProfileHistory` type in both the rogue zome and the Sweettest harness. Keep it outside the production zomes. Decode queried records through one generic helper and fail with the entry type and result position if a queried record has no entry, rather than silently dropping it. Reuse small Sweettest setup helpers for the repeated create-and-update scenario and history name extraction.
+
+Alternative considered: leave the response type duplicated because the harness cannot import a WebAssembly crate. Rejected because both sides can depend on a small shared test-only type module without importing the zome implementation.
+
+### Reuse profile client test defaults
+
+Provide a shared `ProfileClient` stub factory for app tests that need the standard successful create and update behavior. Keep test-specific overrides at each call site; do not abstract bespoke call counting or guard behavior.
+
+Alternative considered: leave full client stubs repeated in each test file. Rejected because the repeated default contract caused the update result migration to touch several otherwise unrelated fixtures.
 
 ## Risks / Trade-offs
 
