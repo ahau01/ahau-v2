@@ -59,7 +59,7 @@ export function createPretendProfileClient (options: PretendProfileClientOptions
       if (readSaved(storage.getItem(KEY)) === null) return { status: 'failed', reason: NO_PROFILE_TO_UPDATE }
       const saved = completeProfile(profile)
       storage.setItem(KEY, JSON.stringify(saved))
-      return { status: 'created', profile: saved }
+      return { status: 'updated', profile: saved }
     },
 
     async close () {}

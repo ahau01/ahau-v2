@@ -123,8 +123,9 @@ export type CreateProfileResult =
   | { status: 'created', profile: Profile }
   | { status: 'failed', reason: string }
 
-/** An updated profile uses the same result shape as the initial save. */
-export type UpdateProfileResult = CreateProfileResult
+export type UpdateProfileResult =
+  | { status: 'updated', profile: Profile }
+  | { status: 'failed', reason: string }
 
 export type Readiness =
   | { status: 'ready' }
@@ -223,7 +224,7 @@ export function createProfileClient (options: ProfileClientOptions = {}): Profil
     async updateMyProfile (profile) {
       try {
         const saved = await callProfiles<Profile>('update_my_profile', profile)
-        return { status: 'created', profile: saved }
+        return { status: 'updated', profile: saved }
       } catch (err) {
         return { status: 'failed', reason: plainReason(err) }
       }

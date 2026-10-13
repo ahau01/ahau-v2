@@ -14,7 +14,7 @@ function stubClient(overrides: Partial<ProfileClient> = {}): ProfileClient {
     waitUntilReady: async () => ({ status: 'ready' }),
     getMyProfile: async () => null,
     createMyProfile: async profile => ({ status: 'created', profile: completeProfile(profile) }),
-    updateMyProfile: async profile => ({ status: 'created', profile: completeProfile(profile) }),
+    updateMyProfile: async profile => ({ status: 'updated', profile: completeProfile(profile) }),
     close: async () => {},
     ...overrides
   }

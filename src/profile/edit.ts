@@ -64,7 +64,7 @@ export function createProfileEdit (update: (profile: NewProfile) => Promise<Upda
       } catch (err) {
         result = { status: 'failed', reason: err instanceof Error ? err.message : String(err) }
       }
-      if (result.status === 'created') {
+      if (result.status === 'updated') {
         set({ kind: 'saved', profile: result.profile })
       } else {
         // A new errors object on each refusal lets the dialog announce a repeated message again.

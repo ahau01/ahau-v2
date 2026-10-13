@@ -5,9 +5,15 @@ use holochain::{
     sweettest::{await_consistency, SweetCell, SweetConductorBatch},
 };
 use profiles_integrity::{Gender, PartialDate, PersonalInformation, Profile};
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use profiles::MyProfile;
+
+#[derive(Deserialize, Debug)]
+struct MyProfileHistory {
+    profiles: Vec<Profile>,
+    personal_information: Vec<PersonalInformation>,
+}
 
 struct TestNetwork {
     conductors: SweetConductorBatch,
@@ -228,6 +234,16 @@ async fn coordinator_updates_both_sections_twice_from_their_original_versions() 
         )
         .await;
 
+    let history: MyProfileHistory = network
+        .call(0, "rogue_profiles", "get_my_profile_history", ())
+        .await;
+    let profile_names = history
+        .profiles
+        .iter()
+        .map(|profile| profile.name.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(profile_names, ["Mere", "Mere Rangi", "Mere Rangi-Williams"]);
+
     let saved: Option<MyProfile> = network.call(0, "profiles", "get_my_profile", ()).await;
     let saved = saved.unwrap();
     assert_eq!(saved.profile.name, "Mere Rangi-Williams");
@@ -235,6 +251,80 @@ async fn coordinator_updates_both_sections_twice_from_their_original_versions() 
         saved.personal.email.as_deref(),
         Some("mere.williams@example.com")
     );
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_only_history_reader_returns_this_agents_authored_versions_in_chain_order() {
+    let network = test_network(1).await;
+    network
+        .call::<_, MyProfile>(
+            0,
+            "profiles",
+            "create_my_profile",
+            my_profile("Mere", "mere@example.com"),
+        )
+        .await;
+    network
+        .call::<_, MyProfile>(
+            0,
+            "profiles",
+            "update_my_profile",
+            my_profile("Mere Rangi", "rangi@example.com"),
+        )
+        .await;
+
+    let history: MyProfileHistory = network
+        .call(0, "rogue_profiles", "get_my_profile_history", ())
+        .await;
+    assert_eq!(
+        history.profiles.iter().map(|profile| profile.name.as_str()).collect::<Vec<_>>(),
+        ["Mere", "Mere Rangi"]
+    );
+    assert_eq!(
+        history
+            .personal_information
+            .iter()
+            .map(|personal| personal.email.as_deref())
+            .collect::<Vec<_>>(),
+        [Some("mere@example.com"), Some("rangi@example.com")]
+    );
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn clearing_email_keeps_the_earlier_personal_information_version() {
+    let network = test_network(1).await;
+    network
+        .call::<_, MyProfile>(
+            0,
+            "profiles",
+            "create_my_profile",
+            my_profile("Mere", "mere@example.com"),
+        )
+        .await;
+    network
+        .call::<_, MyProfile>(
+            0,
+            "profiles",
+            "update_my_profile",
+            MyProfile {
+                profile: profile("Mere Rangi"),
+                personal: PersonalInformation::default(),
+            },
+        )
+        .await;
+
+    let history: MyProfileHistory = network
+        .call(0, "rogue_profiles", "get_my_profile_history", ())
+        .await;
+    assert_eq!(history.personal_information.len(), 2);
+    assert_eq!(
+        history.personal_information[0].email.as_deref(),
+        Some("mere@example.com")
+    );
+    assert_eq!(history.personal_information[1].email, None);
+
+    let latest: Option<MyProfile> = network.call(0, "profiles", "get_my_profile", ()).await;
+    assert_eq!(latest.unwrap().personal.email, None);
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

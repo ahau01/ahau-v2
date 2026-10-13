@@ -9,9 +9,9 @@ describe('profile page: edit dialog', () => {
   test('opens with the saved values and cancelling writes nothing', async () => {
     const user = userEvent.setup()
     const profile = completeProfile({ name: 'Mere', profession: 'Kaiako' })
-    const onupdate = vi.fn(async input => ({ status: 'created' as const, profile: completeProfile(input) }))
-    const onsave = vi.fn()
-    render(ProfilePage, { profile, onupdate, onsave })
+    const onSave = vi.fn(async input => ({ status: 'updated' as const, profile: completeProfile(input) }))
+    const onProfileSaved = vi.fn()
+    render(ProfilePage, { profile, onSave, onProfileSaved })
 
     await user.click(screen.getByRole('button', { name: 'Edit profile' }))
 
@@ -23,15 +23,15 @@ describe('profile page: edit dialog', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
     await waitFor(() => { expect(screen.queryByRole('dialog')).toBeNull() })
-    expect(onupdate).not.toHaveBeenCalled()
-    expect(onsave).not.toHaveBeenCalled()
+    expect(onSave).not.toHaveBeenCalled()
+    expect(onProfileSaved).not.toHaveBeenCalled()
   })
 
   test('states that public changes add versions and earlier versions stay on the network', () => {
     render(ProfilePage, {
       profile: completeProfile({ name: 'Mere' }),
-      onupdate: async input => ({ status: 'created', profile: completeProfile(input) }),
-      onsave: () => {}
+      onSave: async input => ({ status: 'updated', profile: completeProfile(input) }),
+      onProfileSaved: () => {}
     })
 
     const profile = screen.getByRole('region', { name: 'Profile' })

@@ -9,12 +9,12 @@
   import TribesPage from './TribesPage.svelte'
   import WhakapapaPage from './WhakapapaPage.svelte'
 
-  // App owns the profile and calls the client. This shell passes update/save
+  // App owns the profile and calls the client. This shell passes save/result
   // callbacks; no shell component imports its runtime API (design D6).
-  let { profile, onupdate, onsave }: {
+  let { profile, onSave, onProfileSaved }: {
     profile: Profile
-    onupdate: (profile: NewProfile) => Promise<UpdateProfileResult>
-    onsave: (profile: Profile) => void
+    onSave: (profile: NewProfile) => Promise<UpdateProfileResult>
+    onProfileSaved: (profile: Profile) => void
   } = $props()
 
   const route = currentRoute()
@@ -30,7 +30,7 @@
         <main>
           <!-- Each page mounts afresh on navigating, so its heading takes focus. -->
           {#if $route.section === 'profile'}
-            <ProfilePage {profile} {onupdate} {onsave} />
+            <ProfilePage {profile} {onSave} {onProfileSaved} />
           {:else if $route.section === 'archive'}
             <ArchivePage />
           {:else}

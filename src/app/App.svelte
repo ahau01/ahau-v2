@@ -30,11 +30,11 @@
   }))
   $effect(() => { void firstLaunch.start() })
 
-  async function updateProfile (input: NewProfile): Promise<UpdateProfileResult> {
+  async function onSave (input: NewProfile): Promise<UpdateProfileResult> {
     return await client.updateMyProfile(input)
   }
 
-  function saveProfile (saved: Profile) {
+  function onProfileSaved (saved: Profile) {
     profile = saved
   }
 
@@ -47,7 +47,7 @@
 </script>
 
 {#if current.kind === 'ready' && profile}
-  <Shell {profile} onupdate={updateProfile} onsave={saveProfile} />
+  <Shell {profile} {onSave} {onProfileSaved} />
 {:else}
   <main class="launch" style:--niho={`url(${niho})`}>
     {#if isLaunchState(current)}

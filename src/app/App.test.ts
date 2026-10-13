@@ -40,7 +40,7 @@ function launchOnlyClient (profile: Profile | null) {
     },
     updateMyProfile: async updated => {
       guard('updateMyProfile')
-      return { status: 'created', profile: completeProfile(updated) }
+      return { status: 'updated', profile: completeProfile(updated) }
     },
     close: async () => { guard('close') }
   }
@@ -130,7 +130,7 @@ describe('app: editing your profile updates the shell', () => {
       waitUntilReady: async () => ({ status: 'ready' }),
       getMyProfile: async () => completeProfile({ name: 'Mere', gender: 'male' }),
       createMyProfile: async input => ({ status: 'created', profile: completeProfile(input) }),
-      updateMyProfile: async input => ({ status: 'created', profile: completeProfile(input) }),
+      updateMyProfile: async input => ({ status: 'updated', profile: completeProfile(input) }),
       close: async () => {}
     }
     render(App, { client })

@@ -91,6 +91,45 @@ pub fn update_my_profile(profile: Profile) -> ExternResult<()> {
     Ok(())
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MyProfileHistory {
+    pub profiles: Vec<Profile>,
+    pub personal_information: Vec<PersonalInformation>,
+}
+
+/// Reads profile versions from this agent's own source chain for Sweettest.
+/// This test-only zome function does not publish private entry contents.
+#[hdk_extern]
+pub fn get_my_profile_history(_: ()) -> ExternResult<MyProfileHistory> {
+    let profile_records = query(
+        ChainQueryFilter::new()
+            .entry_type(UnitEntryTypes::Profile.try_into()?)
+            .include_entries(true),
+    )?;
+    let profiles = profile_records
+        .into_iter()
+        .map(|record| record.entry().to_app_option::<Profile>().map_err(|error| wasm_error!(error)))
+        .collect::<ExternResult<Vec<_>>>()?
+        .into_iter()
+        .flatten()
+        .collect();
+
+    let personal_records = query(
+        ChainQueryFilter::new()
+            .entry_type(UnitEntryTypes::PersonalInformation.try_into()?)
+            .include_entries(true),
+    )?;
+    let personal_information = personal_records
+        .into_iter()
+        .map(|record| record.entry().to_app_option::<PersonalInformation>().map_err(|error| wasm_error!(error)))
+        .collect::<ExternResult<Vec<_>>>()?
+        .into_iter()
+        .flatten()
+        .collect();
+
+    Ok(MyProfileHistory { profiles, personal_information })
+}
+
 /// Updates this agent's own personal information, as `update_my_profile` does.
 #[hdk_extern]
 pub fn update_my_personal_information(personal: PersonalInformation) -> ExternResult<()> {

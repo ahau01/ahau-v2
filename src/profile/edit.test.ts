@@ -6,7 +6,7 @@ import { profileForm } from './form.js'
 import { createProfileEdit } from './edit.js'
 
 test('profile edit: opening seeds the form, saving returns the saved profile', async () => {
-  const edit = createProfileEdit(async profile => ({ status: 'created', profile: completeProfile(profile) }))
+  const edit = createProfileEdit(async profile => ({ status: 'updated', profile: completeProfile(profile) }))
   const saved = completeProfile({ name: 'Mere', profession: 'Kaiako' })
   edit.open(saved)
   assert.deepEqual(edit.state, { kind: 'open', form: profileForm(saved) })
