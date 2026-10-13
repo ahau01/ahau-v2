@@ -8,4 +8,5 @@ dist-app/
 *.dna
 *.happ
 .hc*
+.claude/worktrees
 target/
