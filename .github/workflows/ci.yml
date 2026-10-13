@@ -172,4 +172,5 @@ jobs:
         run: nix develop --command npm run test:zomes
 
       - name: Run Sweettest serially
+        if: github.event_name == 'workflow_dispatch'
         run: nix develop --command npm run test:sweettest

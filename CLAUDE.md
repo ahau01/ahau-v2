@@ -34,6 +34,12 @@ See the official [zome](https://developer.holochain.org/build/zomes/),
 
 ## Project guidance
 
+Before opening a Holochain-relevant pull request, run
+`nix develop --command npm run test:sweettest` after implementation and rerun it
+after relevant pre-PR changes. Documentation-only changes under the CI detector
+do not require Sweettest. If a maintainer waives the run, record the maintainer
+and reason on the pull request.
+
 OpenSpec owns scope, requirements, design and tasks: `openspec/specs/` describes
 current behavior and `openspec/changes/` holds active work. See
 [docs/agents/openspec.md](docs/agents/openspec.md), [CONTEXT.md](CONTEXT.md) for
