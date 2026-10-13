@@ -15,7 +15,8 @@
     onprofilesaved: (profile: Profile) => void
   } = $props()
 
-  const edit = createProfileEdit(onsave)
+  // Keep this closure so each save reads the latest Svelte callback prop.
+  const edit = createProfileEdit(profile => onsave(profile))
   let current = $state<ProfileEditState>(edit.state)
   const sections = $derived(profileSections(profile))
 

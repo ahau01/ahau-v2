@@ -3,7 +3,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/svelt
 import userEvent from '@testing-library/user-event'
 
 import { completeProfile, type Profile, type ProfileClient } from '../profile/client.js'
-import { stubProfileClient } from '../profile/test-client.js'
+import { stubProfileClient } from '../test-support/profile-client.js'
 import wahine from './assets/wahine.svg'
 import App from './App.svelte'
 

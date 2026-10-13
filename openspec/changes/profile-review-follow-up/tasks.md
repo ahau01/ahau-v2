@@ -24,4 +24,12 @@
 - [x] 4.1 Use lowercase Svelte callback prop names and align the edit writer parameter name.
 - [x] 4.2 Share the test-only history response type and query/decode logic; report missing entries explicitly.
 - [x] 4.3 Extract repeated Sweettest history/setup helpers and share the standard TypeScript profile client test stub.
-- [ ] 4.4 Run the focused app and Sweettest checks and strict OpenSpec validation.
+- [x] 4.4 Run the focused app and Sweettest checks and strict OpenSpec validation.
+
+## Review follow-ups 2
+
+- [x] 5.1 Give the `App.svelte` callback implementations and the edit state machine's injected writer behavior-based names; document why the Svelte callback forwarding closure is needed.
+- [x] 5.2 Share the common failure result variant across profile client result types.
+- [x] 5.3 Move the profile client stub factory into an explicit test-support directory.
+- [x] 5.4 Remove the duplicate history-reader Sweettest while preserving version-order assertions in the update and email-clearing scenarios.
+- [x] 5.5 Run app checks, Sweettests, and strict OpenSpec validation.

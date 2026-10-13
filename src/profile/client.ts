@@ -119,17 +119,19 @@ export function completeProfile (input: NewProfile): Profile {
   }
 }
 
+export type ProfileFailure = { status: 'failed', reason: string }
+
 export type CreateProfileResult =
   | { status: 'created', profile: Profile }
-  | { status: 'failed', reason: string }
+  | ProfileFailure
 
 export type UpdateProfileResult =
   | { status: 'updated', profile: Profile }
-  | { status: 'failed', reason: string }
+  | ProfileFailure
 
 export type Readiness =
   | { status: 'ready' }
-  | { status: 'failed', reason: string }
+  | ProfileFailure
 
 export interface ProfileClient {
   /** Wait until Holochain is reachable, or report that it failed to start. */

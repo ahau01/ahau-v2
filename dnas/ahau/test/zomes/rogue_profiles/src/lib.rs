@@ -6,7 +6,6 @@
 
 use hdk::prelude::*;
 use profiles_integrity::*;
-use serde::de::DeserializeOwned;
 
 #[path = "../../../profile_history.rs"]
 mod profile_history;
@@ -106,10 +105,13 @@ pub fn get_my_profile_history(_: ()) -> ExternResult<MyProfileHistory> {
     })
 }
 
-fn queried_entries<T: DeserializeOwned>(
+fn queried_entries<T>(
     entry_type: UnitEntryTypes,
     label: &str,
-) -> ExternResult<Vec<T>> {
+) -> ExternResult<Vec<T>>
+where
+    T: TryFrom<SerializedBytes, Error = SerializedBytesError>,
+{
     query(
         ChainQueryFilter::new()
             .entry_type(entry_type.try_into()?)

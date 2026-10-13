@@ -22,7 +22,7 @@ export interface ProfileEdit {
   subscribe (listener: (state: ProfileEditState) => void): () => void
 }
 
-export function createProfileEdit (onSave: (profile: NewProfile) => Promise<UpdateProfileResult>): ProfileEdit {
+export function createProfileEdit (saveProfile: (profile: NewProfile) => Promise<UpdateProfileResult>): ProfileEdit {
   let state: ProfileEditState = { kind: 'closed' }
   const listeners = new Set<(state: ProfileEditState) => void>()
 
@@ -60,7 +60,7 @@ export function createProfileEdit (onSave: (profile: NewProfile) => Promise<Upda
       set({ kind: 'saving', form })
       let result: UpdateProfileResult
       try {
-        result = await onSave(read.profile)
+        result = await saveProfile(read.profile)
       } catch (err) {
         result = { status: 'failed', reason: err instanceof Error ? err.message : String(err) }
       }

@@ -246,6 +246,18 @@ async fn coordinator_updates_both_sections_twice_from_their_original_versions() 
         profile_names(&history),
         ["Mere", "Mere Rangi", "Mere Rangi-Williams"]
     );
+    assert_eq!(
+        history
+            .personal_information
+            .iter()
+            .map(|personal| personal.email.as_deref())
+            .collect::<Vec<_>>(),
+        [
+            Some("mere@example.com"),
+            Some("mere.rangi@example.com"),
+            Some("mere.williams@example.com")
+        ]
+    );
 
     let saved: Option<MyProfile> = network.call(0, "profiles", "get_my_profile", ()).await;
     let saved = saved.unwrap();
@@ -253,30 +265,6 @@ async fn coordinator_updates_both_sections_twice_from_their_original_versions() 
     assert_eq!(
         saved.personal.email.as_deref(),
         Some("mere.williams@example.com")
-    );
-}
-
-#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_only_history_reader_returns_this_agents_authored_versions_in_chain_order() {
-    let network = test_network(1).await;
-    create_profile_then_update(
-        &network,
-        my_profile("Mere", "mere@example.com"),
-        vec![my_profile("Mere Rangi", "rangi@example.com")],
-    )
-    .await;
-
-    let history: MyProfileHistory = network
-        .call(0, "rogue_profiles", "get_my_profile_history", ())
-        .await;
-    assert_eq!(profile_names(&history), ["Mere", "Mere Rangi"]);
-    assert_eq!(
-        history
-            .personal_information
-            .iter()
-            .map(|personal| personal.email.as_deref())
-            .collect::<Vec<_>>(),
-        [Some("mere@example.com"), Some("rangi@example.com")]
     );
 }
 

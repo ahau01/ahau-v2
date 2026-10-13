@@ -10,6 +10,7 @@ PR #85 added profile editing and tells people that edits add versions, but its c
 - Give a successful profile update its own `updated` result status, distinct from profile creation.
 - Rename the profile-page callbacks to make the write request and the post-save local profile update clear at each layer, using the app's lowercase Svelte callback prop convention.
 - Reduce duplication in the test-only history reader and Sweettest fixtures, share the history response type, and report missing source-chain entries explicitly.
+- Refine callback names at the application boundary, share the profile client failure result type, consolidate redundant history assertions, and move profile client stubs into test support.
 - Defer choosing another agent's profile version by `action_seq` until tribe and group creation provides the profile-viewing context. The wording in issue #47 describes that future work and is not part of this change.
 
 ## Capabilities

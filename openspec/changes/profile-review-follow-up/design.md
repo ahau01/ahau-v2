@@ -4,7 +4,7 @@
 
 See proposal.md for motivation and `specs/own-profile/spec.md` for the result contract. The merged `edit-own-profile` change is archived and its requirements are now in the live spec.
 
-The coordinator Sweettests currently make two profile updates and check only the latest profile. They cannot directly inspect the source-chain versions through the current test harness. Profile updates currently return the `created` result variant, and `App.svelte`, `Shell.svelte` and `ProfilePage.svelte` pass separate callbacks named `onupdate` and `onsave` even though the former performs the remote write and the latter only updates the in-memory profile.
+The coordinator Sweettests originally made two profile updates and checked only the latest profile. A test-only source-chain reader now proves earlier versions remain. Profile updates return a distinct `updated` result. A follow-up review found a few naming and test-organization improvements around that implementation.
 
 ## Goals / Non-Goals
 
@@ -13,6 +13,9 @@ The coordinator Sweettests currently make two profile updates and check only the
 - Directly verify the profile and personal-information history behavior promised by the live spec.
 - Make an update success distinguishable from a create success in `ProfileClient` and the edit state machine.
 - Name the async write callback and the post-save state notification according to their roles.
+- Make callback implementations and injected writer names describe their behavior at each code boundary.
+- Share the repeated profile client failure result shape and make test-only client defaults visibly test support.
+- Keep source-chain history assertions in the scenarios that exercise profile updates, without a separate test that repeats those assertions.
 
 **Non-Goals:**
 
@@ -36,11 +39,11 @@ Define `UpdateProfileResult` as a union whose successful variant is `{ status: '
 
 Alternative considered: keep the shared `created` success shape for symmetry between the two save operations. Rejected because callers cannot distinguish a newly created profile from an appended version, and the status says the wrong thing after an edit.
 
-### Name callbacks after the operations they represent
+### Name callback props and implementations for their boundaries
 
-Rename the async callback that asks the client to write an edit to `onsave`. Rename the callback invoked with the successful profile to `onprofilesaved`. Use lowercase Svelte callback prop names consistently with existing props such as `onsubmit` and `oncancel`. Thread those names through `App.svelte`, `Shell.svelte` and `ProfilePage.svelte` so the call path describes the remote save and the resulting local state update separately. Name the edit state machine's injected writer `onSave` as well.
+Use lowercase Svelte callback prop names `onsave` and `onprofilesaved`, consistent with existing props such as `onsubmit` and `oncancel`. At the `App.svelte` implementation boundary, use action names that state what each function does: one invokes `client.updateMyProfile`, and one stores the returned profile. In the plain TypeScript edit state machine, name the injected writer `saveProfile`, since it is a dependency rather than a Svelte callback prop.
 
-Alternative considered: retain the old `onupdate` and `onsave` roles and add comments. Rejected because the names themselves continue to imply the wrong responsibility at the component boundary. CamelCase component callback props were also considered, but rejected to match the app's established lowercase Svelte callback convention.
+Keep the forwarding closure from `ProfilePage.svelte` into `createProfileEdit`. It reads the current Svelte callback prop when a save runs; passing the prop directly captures its initial value. Add a short comment documenting this requirement.
 
 ### Keep test history inspection explicit and shared
 
@@ -50,9 +53,23 @@ Alternative considered: leave the response type duplicated because the harness c
 
 ### Reuse profile client test defaults
 
-Provide a shared `ProfileClient` stub factory for app tests that need the standard successful create and update behavior. Keep test-specific overrides at each call site; do not abstract bespoke call counting or guard behavior.
+Provide a shared `ProfileClient` stub factory for app tests that need the standard successful create and update behavior. Place it under `src/test-support/` so its test-only role is clear. Keep test-specific overrides at each call site; do not abstract bespoke call counting or guard behavior.
 
 Alternative considered: leave full client stubs repeated in each test file. Rejected because the repeated default contract caused the update result migration to touch several otherwise unrelated fixtures.
+
+### Share the failure result shape
+
+Use one `ProfileFailure` type for the identical `{ status: 'failed', reason }` variant in create, update, and readiness results. Keep each operation's success variant specific to its operation.
+
+Alternative considered: repeat the small structural failure type in each union. Rejected because all three results intentionally share the same failure contract.
+
+### Keep history assertions with the update scenarios
+
+Assert profile history ordering in the successive-update Sweettest and personal-information history in the email-clearing Sweettest. Remove the separate test that exercised the test-only history reader with the same two-version assertions; the reader remains exercised by both product behavior scenarios.
+
+### Keep human-readable entry labels in the history helper
+
+Keep passing a short display label alongside the entry type to the generic history decoder. The label translates Rust entry type names into readable error messages, especially for `PersonalInformation`, so it adds diagnostic context rather than duplicating implementation data mechanically.
 
 ## Risks / Trade-offs
 

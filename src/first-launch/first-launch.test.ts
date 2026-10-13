@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import { completeProfile, type NewProfile, type ProfileClient } from '../profile/client.js'
-import { stubProfileClient } from '../profile/test-client.js'
+import { stubProfileClient } from '../test-support/profile-client.js'
 import { createFirstLaunch, emptyProfileForm, type FirstLaunch, type ProfileForm } from './first-launch.js'
 
 /**

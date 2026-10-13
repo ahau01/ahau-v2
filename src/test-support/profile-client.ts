@@ -1,4 +1,4 @@
-import { completeProfile, type ProfileClient } from './client.js'
+import { completeProfile, type ProfileClient } from '../profile/client.js'
 
 /** Standard successful client behavior for tests that only override selected calls. */
 export function stubProfileClient (overrides: Partial<ProfileClient> = {}): ProfileClient {
