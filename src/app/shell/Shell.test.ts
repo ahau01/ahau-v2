@@ -20,7 +20,11 @@ const settle = () => new Promise(resolve => setTimeout(resolve, 0))
 async function showAt (hash: string, profile = mere) {
   location.hash = hash
   await settle()
-  render(Shell, { profile })
+  render(Shell, {
+    profile,
+    onupdate: async input => ({ status: 'created', profile: completeProfile(input) }),
+    onsave: () => {}
+  })
   return userEvent.setup()
 }
 
@@ -240,13 +244,14 @@ describe('own profile page', () => {
     expect(within(personal).queryAllByRole('term')).toHaveLength(0)
   })
 
-  test('offers no edit, header-image or photo control', async () => {
+  test('offers profile editing but no header-image or photo control', async () => {
     await show({ name: 'Mere', profession: 'Kaiako' })
 
     const main = screen.getByRole('main')
-    expect(within(main).queryAllByRole('button')).toHaveLength(0)
+    expect(within(main).getByRole('button', { name: 'Edit profile' })).toBeTruthy()
+    expect(within(main).queryByRole('button', { name: /upload profile photo/i })).toBeNull()
     expect(within(main).queryAllByRole('link')).toHaveLength(0)
     expect(main.querySelector('input')).toBeNull()
-    expect(within(main).queryByText(/edit|upload|photo|header image/i)).toBeNull()
+    expect(within(main).queryByText(/upload|photo|header image/i)).toBeNull()
   })
 })

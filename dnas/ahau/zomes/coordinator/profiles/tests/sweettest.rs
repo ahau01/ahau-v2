@@ -147,6 +147,14 @@ async fn another_agent_cannot_overwrite_a_profile() {
             my_profile("Mere", "mere@example.com"),
         )
         .await;
+    network
+        .call::<_, MyProfile>(
+            1,
+            "profiles",
+            "create_my_profile",
+            my_profile("Hemi", "hemi@example.com"),
+        )
+        .await;
     network.sync().await;
 
     let error = network
@@ -166,6 +174,117 @@ async fn another_agent_cannot_overwrite_a_profile() {
     );
     let accepted: Option<MyProfile> = network.call(0, "profiles", "get_my_profile", ()).await;
     assert_eq!(accepted.unwrap().profile.name, "Mere");
+
+    network
+        .call::<_, MyProfile>(
+            0,
+            "profiles",
+            "update_my_profile",
+            my_profile("Mere Rangi", "mere.rangi@example.com"),
+        )
+        .await;
+    network
+        .call::<_, MyProfile>(
+            1,
+            "profiles",
+            "update_my_profile",
+            my_profile("Hemi Rangi", "hemi.rangi@example.com"),
+        )
+        .await;
+    network.sync().await;
+
+    let mere: Option<MyProfile> = network.call(0, "profiles", "get_my_profile", ()).await;
+    let hemi: Option<MyProfile> = network.call(1, "profiles", "get_my_profile", ()).await;
+    assert_eq!(mere.unwrap().profile.name, "Mere Rangi");
+    assert_eq!(hemi.unwrap().profile.name, "Hemi Rangi");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn coordinator_updates_both_sections_twice_from_their_original_versions() {
+    let network = test_network(1).await;
+    network
+        .call::<_, MyProfile>(
+            0,
+            "profiles",
+            "create_my_profile",
+            my_profile("Mere", "mere@example.com"),
+        )
+        .await;
+
+    network
+        .call::<_, MyProfile>(
+            0,
+            "profiles",
+            "update_my_profile",
+            my_profile("Mere Rangi", "mere.rangi@example.com"),
+        )
+        .await;
+    network
+        .call::<_, MyProfile>(
+            0,
+            "profiles",
+            "update_my_profile",
+            my_profile("Mere Rangi-Williams", "mere.williams@example.com"),
+        )
+        .await;
+
+    let saved: Option<MyProfile> = network.call(0, "profiles", "get_my_profile", ()).await;
+    let saved = saved.unwrap();
+    assert_eq!(saved.profile.name, "Mere Rangi-Williams");
+    assert_eq!(
+        saved.personal.email.as_deref(),
+        Some("mere.williams@example.com")
+    );
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn coordinator_update_creates_personal_information_for_an_older_profile() {
+    let network = test_network(1).await;
+    network
+        .call::<_, ()>(0, "rogue_profiles", "create_profile", profile("Mere"))
+        .await;
+
+    network
+        .call::<_, MyProfile>(
+            0,
+            "profiles",
+            "update_my_profile",
+            my_profile("Mere Rangi", "mere@example.com"),
+        )
+        .await;
+
+    let saved: Option<MyProfile> = network.call(0, "profiles", "get_my_profile", ()).await;
+    let saved = saved.unwrap();
+    assert_eq!(saved.profile.name, "Mere Rangi");
+    assert_eq!(saved.personal.email.as_deref(), Some("mere@example.com"));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_refused_coordinator_update_leaves_both_sections_unchanged() {
+    let network = test_network(1).await;
+    network
+        .call::<_, MyProfile>(
+            0,
+            "profiles",
+            "create_my_profile",
+            my_profile("Mere", "mere@example.com"),
+        )
+        .await;
+
+    let error = network
+        .rejected(
+            0,
+            "profiles",
+            "update_my_profile",
+            my_profile(" ", "changed@example.com"),
+        )
+        .await;
+    assert!(error.contains("A profile needs a name"), "{error}");
+
+    let saved: Option<MyProfile> = network.call(0, "profiles", "get_my_profile", ()).await;
+    let saved = saved.unwrap();
+    assert_eq!(saved.profile.name, "Mere");
+    assert_eq!(saved.personal.email.as_deref(), Some("mere@example.com"));
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

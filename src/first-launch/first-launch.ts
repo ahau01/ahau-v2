@@ -8,7 +8,10 @@
  * from launch into the shell.
  */
 
-import { BIRTH_ORDER_INVALID, type Gender, type NewProfile, type PersonalInformation, type Profile, type ProfileClient } from '../profile/client.js'
+import { type Profile, type ProfileClient } from '../profile/client.js'
+import { emptyProfileForm, readForm, type ProfileForm, type ProfileFormErrors } from '../profile/form.js'
+
+export { emptyProfileForm, readForm, type ProfileForm, type ProfileFormErrors } from '../profile/form.js'
 
 export type FirstLaunchState =
   | { kind: 'starting' }
@@ -34,53 +37,6 @@ export function isLaunchState (state: FirstLaunchState): state is LaunchState {
 
 export function isCreateProfileState (state: FirstLaunchState): state is CreateProfileState {
   return state.kind === 'needs-profile' || state.kind === 'saving'
-}
-
-/** The create-profile form as the person has filled it in, exactly as typed. */
-export interface ProfileForm {
-  name: string
-  birthOrder: string
-  gender: Gender | null
-  fullName: string
-  /** One per "Also known as" box, blank or not. */
-  altNames: string[]
-  /** Each part is '' until picked; month is '01' to '12'. */
-  dateOfBirth: { day: string, month: string, year: string }
-  placeOfBirth: string
-  description: string
-  profession: string
-  skills: string[]
-  education: string[]
-  personal: Record<keyof PersonalInformation, string>
-}
-
-export function emptyProfileForm (): ProfileForm {
-  return {
-    name: '',
-    birthOrder: '',
-    gender: null,
-    fullName: '',
-    altNames: [],
-    dateOfBirth: { day: '', month: '', year: '' },
-    placeOfBirth: '',
-    description: '',
-    profession: '',
-    skills: [],
-    education: [],
-    personal: { email: '', phone: '', address: '', postcode: '', city: '', country: '' }
-  }
-}
-
-/**
- * Why a save was refused: per field, or `save` when Holochain refused it.
- * A new object each time, even for the same messages, so a screen can tell
- * a repeated refusal from no change and react again.
- */
-export interface ProfileFormErrors {
-  name?: string
-  birthOrder?: string
-  dateOfBirth?: string
-  save?: string
 }
 
 export interface FirstLaunch {
@@ -181,102 +137,4 @@ export function createFirstLaunch (client: ProfileClient): FirstLaunch {
       }
     }
   }
-}
-
-/**
- * The profile to save from what was typed: trimmed, with blank fields and
- * blank boxes left out. Or why it can't be saved yet.
- */
-function readForm (form: ProfileForm): { profile: NewProfile } | { errors: ProfileFormErrors } {
-  const validation = validateForm(form)
-  if ('errors' in validation) return validation
-
-  return { profile: constructProfile(form, validation.values) }
-}
-
-interface ValidatedForm {
-  name: string
-  birthOrder?: number
-  dateOfBirth?: string
-}
-
-function validateForm (form: ProfileForm): { values: ValidatedForm } | { errors: ProfileFormErrors } {
-  // A name of only spaces is no name. The zome refuses it too.
-  const name = form.name.trim()
-  const birthOrderText = form.birthOrder.trim()
-  const dateOfBirth = readDate(form.dateOfBirth)
-
-  // Every problem at once, so the person isn't sent back field by field.
-  const errors: ProfileFormErrors = {}
-  if (!name) errors.name = 'Please enter a name.'
-  if (birthOrderText && !/^[1-9]\d*$/.test(birthOrderText)) errors.birthOrder = BIRTH_ORDER_INVALID
-  if ('error' in dateOfBirth) errors.dateOfBirth = dateOfBirth.error
-  if (Object.keys(errors).length > 0 || 'error' in dateOfBirth) return { errors }
-
-  return {
-    values: {
-      name,
-      ...(birthOrderText ? { birthOrder: Number(birthOrderText) } : {}),
-      ...(dateOfBirth.date ? { dateOfBirth: dateOfBirth.date } : {})
-    }
-  }
-}
-
-function constructProfile (form: ProfileForm, values: ValidatedForm): NewProfile {
-  const profile: NewProfile = {
-    name: values.name,
-    ...text('fullName', form.fullName),
-    ...text('placeOfBirth', form.placeOfBirth),
-    ...text('description', form.description),
-    ...text('profession', form.profession),
-    ...list('altNames', form.altNames),
-    ...list('skills', form.skills),
-    ...list('education', form.education)
-  }
-  if (values.birthOrder !== undefined) profile.birthOrder = values.birthOrder
-  if (form.gender) profile.gender = form.gender
-  if (values.dateOfBirth) profile.dateOfBirth = values.dateOfBirth
-
-  const personal: Partial<PersonalInformation> = {}
-  for (const [key, value] of Object.entries(form.personal) as Array<[keyof PersonalInformation, string]>) {
-    if (value.trim()) personal[key] = value.trim()
-  }
-  if (Object.keys(personal).length > 0) profile.personal = personal
-
-  return profile
-}
-
-/**
- * A date from its three dropdowns, as the old app read them
- * (ahau-monorepo apps/ahau/ui/src/lib/date-helpers.mjs, convertDateObjToString):
- * a year alone or a year and month is a date; a gap before a picked part isn't.
- */
-function readDate ({ day, month, year }: ProfileForm['dateOfBirth']): { date: string } | { error: string } {
-  const hasYear = Boolean(year)
-  const hasMonth = Boolean(month)
-  const hasDay = Boolean(day)
-
-  if (!hasYear) {
-    if (hasMonth) return { error: 'Please specify a year' }
-    if (hasDay) return { error: 'Please specify a year and month' }
-    return { date: '' }
-  }
-
-  if (!hasMonth) {
-    if (hasDay) return { error: 'Please specify a month' }
-    return { date: year }
-  }
-
-  if (!hasDay) return { date: `${year}-${month}` }
-  return { date: `${year}-${month}-${day}` }
-}
-
-function text<K extends string> (key: K, value: string): Partial<Record<K, string>> {
-  const trimmed = value.trim()
-  return trimmed ? { [key]: trimmed } as Record<K, string> : {}
-}
-
-function list<K extends string> (key: K, values: string[]): Partial<Record<K, string[]>> {
-  const filled = values.map(value => value.trim()).filter(Boolean)
-  return filled.length > 0 ? { [key]: filled } as Record<K, string[]> : {}
 }

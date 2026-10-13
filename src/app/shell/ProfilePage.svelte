@@ -1,14 +1,32 @@
 <script lang="ts">
   import { profileSections } from '../../own-profile/sections.js'
-  import type { Profile } from '../../profile/client.js'
+  import type { NewProfile, Profile, UpdateProfileResult } from '../../profile/client.js'
+  import { createProfileEdit, type ProfileEditState } from '../../profile/edit.js'
   import Avatar from '../Avatar.svelte'
   import { focusOnMount } from '../first-launch/focus-on-mount.js'
+  import ProfileFormDialog from '../first-launch/ProfileForm.svelte'
 
-  // The profile this agent wrote about itself, as launch read it (design D5).
-  // Nothing from any other agent. No edit, header-image or photo control (#47, #43).
-  let { profile }: { profile: Profile } = $props()
+  // The profile this agent wrote about itself. Editing goes through App.svelte
+  // callbacks; this page never imports the client. Header/photo controls stay
+  // unavailable (#43).
+  let { profile, onupdate, onsave }: {
+    profile: Profile
+    onupdate: (profile: NewProfile) => Promise<UpdateProfileResult>
+    onsave: (profile: Profile) => void
+  } = $props()
 
+  const edit = createProfileEdit(profile => onupdate(profile))
+  let current = $state<ProfileEditState>(edit.state)
   const sections = $derived(profileSections(profile))
+
+  $effect(() => edit.subscribe(next => {
+    current = next
+    if (next.kind === 'saved') onsave(next.profile)
+  }))
+
+  function openEdit () {
+    edit.open(profile)
+  }
 </script>
 
 {#snippet items (section: { items: Array<{ label: string, value: string }>, isEmpty: boolean })}
@@ -43,6 +61,8 @@
       <h2 id="profile-section-heading">Profile</h2>
       <!-- True today: any agent on the network can read a Profile (#67). -->
       <p class="visibility">Anyone using Āhau can see this.</p>
+      <p class="visibility">Changes add a new version. Earlier versions stay on the network.</p>
+      <button type="button" class="edit" onclick={openEdit}>Edit profile</button>
     </header>
     {@render items(sections.profile)}
   </section>
@@ -59,6 +79,20 @@
     {@render items(sections.personal)}
   </section>
 </article>
+
+{#if current.kind === 'open' || current.kind === 'saving' || current.kind === 'refused'}
+  <ProfileFormDialog
+    initialForm={current.form}
+    saving={current.kind === 'saving'}
+    errors={current.kind === 'refused' ? current.errors : undefined}
+    saveLabel="Save"
+    cancelLabel="Cancel"
+    onsubmit={form => { void edit.submit(form) }}
+    oncancel={() => edit.cancel()}
+  >
+    {#snippet title()}Change your profile{/snippet}
+  </ProfileFormDialog>
+{/if}
 
 <style>
   .banner {
@@ -105,6 +139,17 @@
     margin: 0;
     font-size: 0.8rem;
     color: var(--ahau-shell-field-label);
+  }
+
+  .edit {
+    margin-left: auto;
+    padding: 6px 12px;
+    border: 1px solid var(--ahau-shell-card-border);
+    border-radius: var(--ahau-radius);
+    background: #fff;
+    color: var(--ahau-shell-text);
+    font: inherit;
+    cursor: pointer;
   }
 
   /* components/profile/ProfileInfoCard.vue, ProfileCard.vue .rounded-border */

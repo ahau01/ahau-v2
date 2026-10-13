@@ -8,24 +8,35 @@
     type FirstLaunchState
   } from '../first-launch/first-launch.js'
   import { LANDING } from '../navigation/routes.js'
-  import type { ProfileClient } from '../profile/client.js'
+  import type { NewProfile, Profile, ProfileClient, UpdateProfileResult } from '../profile/client.js'
   import niho from './assets/niho.svg'
   import CreateProfile from './first-launch/CreateProfile.svelte'
   import LaunchScreen from './first-launch/LaunchScreen.svelte'
   import { replaceRoute } from './shell/route.js'
   import Shell from './shell/Shell.svelte'
 
-  // Screens render whichever state the launch logic is in; they never call
-  // the profile client themselves. The shell shows the profile launch read,
-  // and fetches nothing (design D5).
+  // App owns the profile value and client calls. Shell screens receive the
+  // value and callbacks, so saving can update every avatar without a reload.
   let { client }: { client: ProfileClient } = $props()
 
   // One client for the app's life; a new one means a new app, not a re-render.
   const firstLaunch = createFirstLaunch(untrack(() => client))
   let current = $state<FirstLaunchState>(firstLaunch.state)
+  let profile = $state<Profile | null>(null)
 
-  $effect(() => firstLaunch.subscribe(next => { current = next }))
+  $effect(() => firstLaunch.subscribe(next => {
+    current = next
+    if (next.kind === 'ready') profile = next.profile
+  }))
   $effect(() => { void firstLaunch.start() })
+
+  async function updateProfile (input: NewProfile): Promise<UpdateProfileResult> {
+    return await client.updateMyProfile(input)
+  }
+
+  function saveProfile (saved: Profile) {
+    profile = saved
+  }
 
   // Going in always lands on your profile, whatever the address held before
   // launch (design D3). Replaced, so back doesn't return to it.
@@ -35,8 +46,8 @@
   }
 </script>
 
-{#if current.kind === 'ready'}
-  <Shell profile={current.profile} />
+{#if current.kind === 'ready' && profile}
+  <Shell {profile} onupdate={updateProfile} onsave={saveProfile} />
 {:else}
   <main class="launch" style:--niho={`url(${niho})`}>
     {#if isLaunchState(current)}

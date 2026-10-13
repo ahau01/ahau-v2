@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Profile } from '../../profile/client.js'
+  import type { NewProfile, Profile, UpdateProfileResult } from '../../profile/client.js'
   import niho from '../assets/niho.svg'
   import ArchivePage from './ArchivePage.svelte'
   import ProfilePage from './ProfilePage.svelte'
@@ -9,9 +9,13 @@
   import TribesPage from './TribesPage.svelte'
   import WhakapapaPage from './WhakapapaPage.svelte'
 
-  // A pure view of the profile launch read. No component here imports the
-  // profile client; the empty pages have no client at all (design D4).
-  let { profile }: { profile: Profile } = $props()
+  // App owns the profile and calls the client. This shell passes update/save
+  // callbacks; no shell component imports its runtime API (design D6).
+  let { profile, onupdate, onsave }: {
+    profile: Profile
+    onupdate: (profile: NewProfile) => Promise<UpdateProfileResult>
+    onsave: (profile: Profile) => void
+  } = $props()
 
   const route = currentRoute()
 </script>
@@ -26,7 +30,7 @@
         <main>
           <!-- Each page mounts afresh on navigating, so its heading takes focus. -->
           {#if $route.section === 'profile'}
-            <ProfilePage {profile} />
+            <ProfilePage {profile} {onupdate} {onsave} />
           {:else if $route.section === 'archive'}
             <ArchivePage />
           {:else}

@@ -14,6 +14,7 @@ function stubClient(overrides: Partial<ProfileClient> = {}): ProfileClient {
     waitUntilReady: async () => ({ status: 'ready' }),
     getMyProfile: async () => null,
     createMyProfile: async profile => ({ status: 'created', profile: completeProfile(profile) }),
+    updateMyProfile: async profile => ({ status: 'created', profile: completeProfile(profile) }),
     close: async () => {},
     ...overrides
   }
@@ -451,6 +452,7 @@ test('first launch: going in is not a login; it calls nothing', async () => {
     waitUntilReady: async () => { guard('waitUntilReady'); return { status: 'ready' } },
     getMyProfile: async () => { guard('getMyProfile'); return completeProfile({ name: 'Mere' }) },
     createMyProfile: async () => { guard('createMyProfile'); throw new Error('unreachable') },
+    updateMyProfile: async () => { guard('updateMyProfile'); throw new Error('unreachable') },
     close: async () => { guard('close') }
   })
   await firstLaunch.start()
