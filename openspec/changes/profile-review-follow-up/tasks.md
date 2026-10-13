@@ -33,3 +33,9 @@
 - [x] 5.3 Move the profile client stub factory into an explicit test-support directory.
 - [x] 5.4 Remove the duplicate history-reader Sweettest while preserving version-order assertions in the update and email-clearing scenarios.
 - [x] 5.5 Run app checks, Sweettests, and strict OpenSpec validation.
+
+## Review follow-ups 3
+
+- [x] 6.1 Add successful `updated` result assertions for real and pretend profile clients.
+- [x] 6.2 Rename the coordinator Sweettest so it describes the saved-version assertions it performs.
+- [x] 6.3 Run app checks, Sweettests, and strict OpenSpec validation.

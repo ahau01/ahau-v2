@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { AppWebsocket } from '@holochain/client'
 
-import { createProfileClient, PROFILE_FUNCTIONS } from './client.js'
+import { completeProfile, createProfileClient, PROFILE_FUNCTIONS } from './client.js'
 
 /**
  * Profile client behaviour that needs no conductor. TypeScript client
@@ -24,6 +25,24 @@ test('promise: createMyProfile before waitUntilReady reports failed, not a valid
     await client.createMyProfile({ name: 'Mere' }),
     { status: 'failed', reason: NOT_CONNECTED }
   )
+})
+
+test('promise: updateMyProfile reports the updated result and saved profile', async t => {
+  const saved = completeProfile({ name: 'Mere Rangi' })
+  const connection = {
+    appInfo: async () => ({ status: { type: 'enabled' } }),
+    client: { close: async () => {} },
+    callZome: async () => saved
+  } as unknown as AppWebsocket
+  t.mock.method(AppWebsocket, 'connect', async () => connection)
+  const client = createProfileClient()
+
+  await client.waitUntilReady()
+
+  assert.deepEqual(await client.updateMyProfile({ name: 'Mere Rangi' }), {
+    status: 'updated',
+    profile: saved
+  })
 })
 
 test('the dev signing grant lists exactly the profile functions the client calls', () => {

@@ -16,6 +16,8 @@ The coordinator Sweettests originally made two profile updates and checked only 
 - Make callback implementations and injected writer names describe their behavior at each code boundary.
 - Share the repeated profile client failure result shape and make test-only client defaults visibly test support.
 - Keep source-chain history assertions in the scenarios that exercise profile updates, without a separate test that repeats those assertions.
+- Protect the `updated` result status directly in tests for both the real and pretend profile clients.
+- Name the coordinator history test after what it asserts unless it also verifies each update action's original action link.
 
 **Non-Goals:**
 
@@ -66,6 +68,12 @@ Alternative considered: repeat the small structural failure type in each union. 
 ### Keep history assertions with the update scenarios
 
 Assert profile history ordering in the successive-update Sweettest and personal-information history in the email-clearing Sweettest. Remove the separate test that exercised the test-only history reader with the same two-version assertions; the reader remains exercised by both product behavior scenarios.
+
+The successive-update test asserts saved versions and their source-chain order, but does not inspect the update action's `original_action_address`. Name it accordingly rather than claiming it verifies those links.
+
+### Test the profile update result at the client boundary
+
+Assert that `updateMyProfile` in both the real websocket client and the pretend client returns `{ status: 'updated', profile }` after a successful write. These tests protect the client contract directly, while the edit state machine tests protect its response to that contract.
 
 ### Keep human-readable entry labels in the history helper
 

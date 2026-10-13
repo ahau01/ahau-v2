@@ -227,7 +227,7 @@ async fn another_agent_cannot_overwrite_a_profile() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn coordinator_updates_both_sections_twice_from_their_original_versions() {
+async fn coordinator_updates_both_sections_twice_and_preserves_all_versions() {
     let network = test_network(1).await;
     create_profile_then_update(
         &network,
