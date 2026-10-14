@@ -134,10 +134,8 @@ jobs:
         )
       )
     runs-on: ubuntu-latest
-    # 90, not 60. A cold run measured 54m35s: rust-cache namespaces its key
-    # by job name, so this job cannot read the cache #86's `sweettest` job
-    # warmed, and `Test zomes` pays the whole Holochain crate compile.
-    timeout-minutes: 90
+    # 60m leaves about 20m over the cold 38m zome test plus setup.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -170,6 +168,3 @@ jobs:
 
       - name: Test zomes
         run: nix develop --command npm run test:zomes
-
-      - name: Run Sweettest serially
-        run: nix develop --command npm run test:sweettest
