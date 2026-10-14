@@ -17,9 +17,11 @@ git show edf5a8c:reference/leg1-contract/README.md
 git ls-tree -r --name-only edf5a8c reference/leg1-contract
 ```
 
-The reasoning behind the cross-cutting semantics is in
-[`docs/contract-decisions.md`](../../contract-decisions.md). Where the contract
-resisted implementation is in [`contract-friction.md`](contract-friction.md).
+The cross-cutting semantics below absorb the former
+`docs/contract-decisions.md`, which compared SSB, Holochain and nostr for
+each; it is in git history (`git show edf5a8c:docs/contract-decisions.md`).
+Where the contract resisted implementation is in
+[`contract-friction.md`](contract-friction.md).
 
 ## How it was derived
 
@@ -79,13 +81,15 @@ The result shapes:
   commit is `committed`.
 - **Retraction, not deletion.** The only promise is that later reads from this
   backend won't return the record. Nothing is erased, and peers that already
-  hold the data may keep it.
+  hold the data may keep it. None of SSB, Holochain or nostr erases anything.
+  `deleteAhau` is not a retraction: it removes the local store, not a record.
 - **`PermissionWriteResult` / `ApprovalResult`**: writes that carry a
   permission rule report the `enforcement` level actually applied. Approval
   reports which records it `applied`, so "approved" can't silently mean
   "discarded".
 - **`PairedWriteResult`**: a group's public and private profiles are one
-  operation. The result says `atomic` or `independent` per part.
+  operation. The result says `atomic` or `independent` per part. Holochain
+  gets atomicity by committing both entries in one zome call; nostr can't.
 - **Traversal stays a walk** (`{from, depth}`), not a filter, so graph-walking
   doesn't move into the frontend per backend.
 

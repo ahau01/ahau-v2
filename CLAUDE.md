@@ -13,6 +13,9 @@ unresolved decisions that affect people for human direction.
 - Source chains record authored actions. Updates and deletes add actions;
   DHT data propagates across peers and may be delayed or incomplete. Don't
   assume a globally current, mutable database view.
+- Removal is retraction, never erasure. A delete stops later reads returning
+  the record; peers that already hold it keep it. Don't tell people removed
+  data is gone.
 - Treat visibility and capability grants as part of data design; UI checks
   alone do not enforce access. Keep Holochain calls behind feature clients,
   following `src/profile/`.
