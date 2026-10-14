@@ -46,6 +46,6 @@ For a non-draft pull request with relevant changes, `holochain` runs zome tests 
 - [`CLAUDE.md`](CLAUDE.md): project-wide kaupapa principles and working practices.
 - [`openspec/specs/`](openspec/specs/): current behavior.
 - [`docs/INDEX.md`](docs/INDEX.md): supporting research and history.
-- [`reference/leg1-contract/`](reference/leg1-contract/): frozen checklist of the old app's data-layer capabilities; it is not a spec for new code.
+- [`docs/history/leg1/leg1-contract.md`](docs/history/leg1/leg1-contract.md): frozen checklist of the old app's data-layer capabilities; it is not a spec for new code.
 
 No license has been chosen for this rebuild yet.

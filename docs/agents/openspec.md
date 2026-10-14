@@ -34,7 +34,7 @@ to `both` or `commands`, `openspec update` regenerates
 - **GitHub issues**: the backlog and intake (see
   [issue-tracker.md](issue-tracker.md)). Nothing about a change's scope or
   design lives on the issue once the change exists.
-- **`reference/leg1-contract/`**: frozen reference — a checklist of what
+- **`docs/history/leg1/leg1-contract.md`**: frozen reference — a checklist of what
   the old app's data layer could do, not an interface new code must
   implement.
 - **`docs/`**: supporting evidence, research, and historical reasoning. Not

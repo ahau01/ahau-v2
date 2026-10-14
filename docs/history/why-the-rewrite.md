@@ -558,6 +558,10 @@ was to let protocol adapters be swapped, and to prove that by running two
 very different adapters (Holochain and nostr) behind it with zero frontend
 changes.
 
+> The `reference/leg1-contract/` paths in this document were later compressed
+> into [`leg1/leg1-contract.md`](leg1/leg1-contract.md). The originals are in
+> git history at commit `edf5a8c`.
+
 Three things have since changed:
 
 1. **ADR-0003 (above) removed the second adapter.** With nostr dropped, Holochain is
