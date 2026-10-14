@@ -34,7 +34,7 @@ fetched. Crate versions come from the crates.io API.
 - Redesign around user capabilities directly on Holochain. The spec is a capability inventory (#13). The Leg 1 contract in `src/contract/` is frozen reference and a checklist, not an interface to implement.
 - The shell talks to Holochain only through thin per-feature client modules (for example a `groups` client). No adapter layer.
 - Kaupapa principles are invariants. Kaupapa tests move to Holochain tests against a real conductor. The multi-source "both assertions survive" test does not exist yet, and it belongs in the first slice touching relationship data, together with the deferred offline-then-sync validation.
-- Removal is retraction, never erasure. A permission is either enforced or it isn't, and the UI must never show an unenforced rule as a lock. Graph traversal happens in the backend ([contract-decisions.md](../contract-decisions.md) §1, §4).
+- Removal is retraction, never erasure. A permission is either enforced or it isn't, and the UI must never show an unenforced rule as a lock. Graph traversal happens in the backend (`CLAUDE.md`; [Leg 1 semantics](../history/leg1/leg1-contract.md#cross-cutting-semantics)).
 - The dev environment is pinned to Holochain 0.6 through Holonix `main-0.6` (`flake.nix`). `flake.lock` pins `holochain-0.6.3`. JS deps are `@holochain/client` 0.20.8 and `@holochain/tryorama` 0.19.2 (`package.json`; README "Holochain" section).
 
 ### 1.2 Sequencing as it stands (2026-10-04)
@@ -162,8 +162,8 @@ fetched. Crate versions come from the crates.io API.
   from the DHT". Multiple updates coexist, and "it's up to you to decide
   whether two updates on the same entry or action are a conflict". A
   `Delete` marks rather than erases, and remains visible via `get_details`
-  (entries.md). This lines up with CLAUDE.md rule 1 and contract-decisions
-  §1, *provided the app doesn't add a "latest wins" read on top*.
+  (entries.md). This lines up with CLAUDE.md rule 1 and its removal-is-retraction
+  rule, *provided the app doesn't add a "latest wins" read on top*.
 - **Links can't be updated, only created or deleted.**
   - Link types are defined with `#[hdk_link_types]`.
   - `get_links` takes a `LinkQuery`.
@@ -419,12 +419,12 @@ fetched. Crate versions come from the crates.io API.
     bucketed by name prefix.
   - [ ] Removing a link hides it from `get_links` but it **still appears in
     `get_links_details`** with its delete action. A test asserts both.
-  - [ ] A short note linking this to contract-decisions §1, "removal is
+  - [ ] A short note linking this to CLAUDE.md's "removal is
     retraction".
 - **Read:**
   - [links-paths-and-anchors.md](https://github.com/holochain/docs-pages/blob/main/src/pages/build/links-paths-and-anchors.md)
   - upgrade-holochain-0.6.md (LinkQuery/GetOptions changes)
-  - [contract-decisions.md](../contract-decisions.md) §1
+  - [leg1-contract.md](../history/leg1/leg1-contract.md#cross-cutting-semantics)
 - **Feeds:** port of `semantics/retraction-hides-without-erasing`
   (the Holochain-backed version of the SSB-era conformance case); group
   listing in the first slice.
@@ -599,7 +599,7 @@ fetched. Crate versions come from the crates.io API.
     display is left to the render layer (CLAUDE.md rule 1).
 - **Read:** CLAUDE.md "Four things not to do"; entries.md;
   links-paths-and-anchors.md (hotspots, for popular tūpuna); validate-callback.md;
-  contract-decisions.md §1 and §4 (walks in the backend).
+  leg1-contract.md cross-cutting semantics (walks in the backend).
 - **Feeds:** the first relationship-data slice. Not yet planned; it follows
   group permissions.
 - **⚑ Kaupapa (relationship data, sync, identity):** this is the explicit

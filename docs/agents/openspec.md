@@ -39,7 +39,7 @@ to `both` or `commands`, `openspec update` regenerates
   implement.
 - **`docs/`**: supporting evidence, research, and historical reasoning. Not
   authoritative for current product requirements or architecture. Older
-  decision records such as `contract-decisions.md` remain useful rationale;
+  decision records such as `history/leg1/leg1-contract.md` remain useful rationale;
   any principle still governing current behavior must also be stated in its
   current authoritative home (`CLAUDE.md`, a spec, or a change's
   `design.md`).

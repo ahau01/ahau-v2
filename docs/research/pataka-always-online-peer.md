@@ -379,7 +379,7 @@ independent full-arc holders.
 pātaka):
 
 1. **Everything already synced stays.** On 0.6 a full-arc node has a full
-   copy. Nothing in Holochain erases it (`contract-decisions.md` §1:
+   copy. Nothing in Holochain erases it (`CLAUDE.md`:
    removal is retraction).
 2. **It may keep receiving new data.** App-level blocking is gone (0.6.1).
    Blocking happens only to authors of invalid ops. A removed agent whose

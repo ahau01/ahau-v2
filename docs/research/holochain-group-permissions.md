@@ -67,7 +67,7 @@ Markdown source at a pinned commit; the live page is
 5. **Removal is retraction, and the source docs agree.** Delete marks data
    and erases nothing. "It is impossible to force another person to delete
    data once they have seen it" **[V]** ([entries][dp-entries-delete]). This
-   matches [contract-decisions §1](../contract-decisions.md). A revoked
+   matches [Leg 1 retraction](../history/leg1/leg1-contract.md#cross-cutting-semantics). A revoked
    member's already-synced copy is beyond the reach of any Holochain
    mechanism.
 6. **One agent key equals one device.** DPKI was removed in 0.6 **[V]**
@@ -333,7 +333,7 @@ access-control reference.
 - **Who can revoke [I].** In an append-only model a revocation is a new
   `RoleRevocation { grant: ActionHash }` entry, validated like a grant: the
   author cites their authority. Nothing is deleted, which matches
-  contract-decisions §1. Moss chose not to support revocation at all.
+  Leg 1's removal-is-retraction rule. Moss chose not to support revocation at all.
 
 ### 3.3 What revocation can and can't do
 
@@ -362,7 +362,7 @@ validated on `AgentValidationPkg`. All group content lives in that DHT.
 - Confidentiality from non-members is structural **[V]**
   ([architecture][dp-c2-cells]).
 - Discovery data (Āhau's public group profile,
-  [contract-decisions §3](../contract-decisions.md)) has to live in a
+  [Leg 1 paired writes](../history/leg1/leg1-contract.md#cross-cutting-semantics)) has to live in a
   separate shared DNA. Invitations must not publish the seed publicly, as
   membrane-invitations does **[I]**.
 
@@ -426,7 +426,7 @@ members only, and members copy forward or re-reference what they keep.
 ### 4.2 How Āhau's plan maps, and the gaps
 
 - **Group = paired public profile plus members-only record**
-  ([contract-decisions §3](../contract-decisions.md)). This maps to a shared
+  ([Leg 1 paired writes](../history/leg1/leg1-contract.md#cross-cutting-semantics)). This maps to a shared
   discovery DNA for profiles plus (a) for the private side. A single
   atomic paired write across two DNAs isn't possible: atomicity holds only
   within one cell's call **[I]**. The `atomicMultiWrite` reasoning needs
