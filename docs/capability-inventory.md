@@ -6,12 +6,11 @@ old Āhau app, written from their point of view and without implementation
 detail. It is a checklist so nothing gets dropped in the capability-driven
 redesign — it is not a spec to copy screen by screen.
 
-**This first section covers the top-level pages only**
-([#60](https://github.com/ahau01/ahau-v2/issues/60)). It feeds the "next slice:
-landing and a navigable shell" map
-([#59](https://github.com/ahau01/ahau-v2/issues/59)). Deeper areas (story and
-artefact forms, whakapapa editing details, tribe settings, registrations and
-submissions) get one line each here. Later sections can expand them.
+This inventory covers the main pages and the user actions available within
+them. It feeds the "next slice: landing and a navigable shell" map
+([#59](https://github.com/ahau01/ahau-v2/issues/59)); it remains a checklist
+of user-visible behavior rather than a screen-by-screen design or a map of
+the underlying SSB message types.
 
 ## How this was gathered
 
@@ -412,6 +411,30 @@ when you hold a credential (`SideNavMenu.vue:223-225`).
 | Registered member | Sends proof of that credential to an outside verifier using an invitation code | `CredentialPreview.vue:85-95`; `components/wallet/InputInviteDialog.vue:80-84` | unverified | identity | |
 | Any person | Sees "No identity credentials found" when they have none | `WalletShow.vue:22-37` | unverified (the nav hides the page in this case) | none | |
 
+## Cross-cutting behavior
+
+These behaviors apply across pages and are not tied to one route. The v1
+behavior map's plugin and GraphQL details help explain how the old app
+supports them, but this inventory records the user-visible capability rather
+than the underlying message types.
+
+| Who | What | Where seen | Status | Kaupapa flag | Keep? |
+|---|---|---|---|---|---|
+| Any person | Reads records already held on this device while disconnected from peers | `desktop/ssb.plugins.js`; `desktop/ssb.config.js`; `vue-apollo.js` | inferred from the local SSB database and indexes | sync | |
+| Any person | Creates or updates records while disconnected; connected peers receive them after replication resumes. The UI does not show a per-action offline queue or status. | `desktop/ssb.plugins.js`; `desktop/ssb.config.js`; `mobile/src/nodejs-project/ssb.plugins.js` | inferred from local mutations and enabled replication | sync | |
+| A person | Enters profile, story and relationship details; forms enforce field-specific requirements and omit empty profile fields when saving | `components/profile/ProfileForm.vue`; `lib/profile-helpers.mjs`; `store/modules/person/apollo-helpers.js` | confirmed in code | identity | |
+| Kaitiaki | Defines extra tribe profile fields, including their type, whether they are required, who can see them and their order | `lib/custom-field-helpers.mjs`; `components/dialog/community/TribeSettings.vue` | confirmed in code | identity, permissions | |
+| Member without direct edit rights | Proposes a permitted change for kaitiaki review when the tribe or whakapapa allows submissions | `store/modules/submissions/index.js`; `components/dialog/submission/ReviewSubmissionDialog.vue`; `views/WhakapapaShow.vue` | confirmed in code; available actions depend on the record's permissions | permissions | |
+| Kaitiaki | Reviews pending tribe join requests and proposed changes from notifications; can approve or reject proposals with a comment | `components/menu/NotificationPanel.vue`; `components/dialog/registration/ReviewRegistrationDialog.vue`; `components/dialog/submission/ReviewSubmissionDialog.vue` | unverified | identity, permissions | |
+| A person who submitted a proposal | Deletes their own proposal from its review dialog or notification list | `store/modules/submissions/apollo-helpers.js`; `components/menu/NotificationList.vue` | unverified | permissions | |
+
+Visibility depends on the profile and record being viewed: a person's contact
+details are shown to kaitiaki, while the ordinary member view omits them
+(`SideNodeDialog.vue:216-224`). Public profile fields and member-only tribe
+information are separate in the old app. These are UI-visible distinctions;
+this inventory does not treat a UI check as the underlying access-control
+boundary.
+
 ---
 
 ## Open questions
@@ -453,3 +476,17 @@ when you hold a credential (`SideNavMenu.vue:223-225`).
    registration (`lib/tribes-application-helpers.mjs`
    `copyProfileInformation`) isn't covered here. It needs its own look under
    identity rules.
+10. **Has subgroup creation become available in a later v1 build?** This
+    inventory's source commit marks grouping members into sub-groups as
+    "coming soon" (`GroupsList.vue:5-15, 50-70`), while the newer behavior
+    map describes creating a subgroup. Check the exact UI revision and its
+    feature settings before changing that status.
+11. **Can another person's profile be opened as a page?** This inventory's
+    source commit found no UI path to the `.../person/:profileId/profile`
+    route, while the newer behavior map lists that route. Distinguish a route
+    that can be entered directly from a page users can reach through the UI.
+12. **Which story fields are actually saved?** This inventory describes
+    access as part of a story and says a story can be added with access
+    settings. The newer behavior map says some fields or actions, including
+    access, are absent from save allowlists. Trace the form and save path
+    against the same v1 revision before treating access as a current capability.
