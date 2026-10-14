@@ -8,7 +8,7 @@
  *
  * Neither the token nor the signing key is a person's login. Identity is
  * still the conductor's agent key; these only let this page call the
- * profile functions for that agent.
+ * feature-client functions for that agent.
  */
 
 import {
@@ -28,6 +28,7 @@ import {
   type ProfileClient,
   type ProfileClientOptions
 } from './client.js'
+import { WHAKAPAPA_FUNCTIONS, ZOME as WHAKAPAPA_ZOME } from '../whakapapa/client.js'
 
 /** Must match `-f` in the `conductor` script in package.json. */
 export const DEV_ADMIN_PORT = 4444
@@ -84,8 +85,11 @@ export async function issueDevConnection (options: IssueDevConnectionOptions): P
     const cellId = await profileCell(admin, appId)
     const { token } = await admin.issueAppAuthenticationToken({ installed_app_id: appId })
     const [keyPair, signingKey] = await generateSigningKeyPair()
-    // Only the profile functions can be called with this key; the conductor enforces it.
-    const functions = PROFILE_FUNCTIONS.map((fn): [string, string] => [ZOME, fn])
+    // Only feature-client functions can be called with this key; the conductor enforces it.
+    const functions = [
+      ...PROFILE_FUNCTIONS.map((fn): [string, string] => [ZOME, fn]),
+      ...WHAKAPAPA_FUNCTIONS.map((fn): [string, string] => [WHAKAPAPA_ZOME, fn])
+    ]
     const capSecret = await admin.grantSigningKey(cellId, { type: 'listed', value: functions }, signingKey)
     return {
       appToken: [...token],

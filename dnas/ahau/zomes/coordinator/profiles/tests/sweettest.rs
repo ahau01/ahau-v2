@@ -1,123 +1,14 @@
-use std::{fmt::Debug, fs, path::PathBuf};
-
-use holochain::{
-    prelude::{AppBundle, MemproofMap, RoleName},
-    sweettest::{await_consistency, SweetCell, SweetConductorBatch},
-};
 use profiles_integrity::{Gender, PartialDate, PersonalInformation, Profile};
-use serde::{de::DeserializeOwned, Serialize};
 
 use profiles::MyProfile;
+
+#[path = "../../../../test/sweettest.rs"]
+mod shared_sweettest;
+use shared_sweettest::{test_network, TestNetwork};
 
 #[path = "../../../../test/profile_history.rs"]
 mod profile_history;
 use profile_history::MyProfileHistory;
-
-struct TestNetwork {
-    conductors: SweetConductorBatch,
-    cells: Vec<SweetCell>,
-}
-
-impl TestNetwork {
-    async fn call<I, O>(&self, index: usize, zome: &str, function: &str, payload: I) -> O
-    where
-        I: Serialize + Debug,
-        O: DeserializeOwned + Debug,
-    {
-        let zome = self.cells[index].zome(zome);
-        self.conductors[index]
-            .sweet_handle()
-            .call(&zome, function, payload)
-            .await
-    }
-
-    async fn rejected<I>(&self, index: usize, zome: &str, function: &str, payload: I) -> String
-    where
-        I: Serialize + Debug,
-    {
-        let zome = self.cells[index].zome(zome);
-        self.conductors[index]
-            .sweet_handle()
-            .call_fallible::<_, ()>(&zome, function, payload)
-            .await
-            .expect_err("expected the zome call to be rejected")
-            .to_string()
-    }
-
-    async fn sync(&self) {
-        await_consistency(self.cells.iter())
-            .await
-            .expect("DHT sync timed out");
-    }
-}
-
-async fn test_network(agent_count: usize) -> TestNetwork {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../..");
-    let rogue_happ_path = root.join("workdir/rogue/ahau-rogue.happ");
-    let production_dna_path = root.join("dnas/ahau/workdir/ahau.dna");
-
-    let rogue_bundle = AppBundle::unpack(
-        fs::read(&rogue_happ_path)
-            .unwrap_or_else(|_| {
-                panic!(
-                    "missing {}; run npm run test:sweettest",
-                    rogue_happ_path.display()
-                )
-            })
-            .as_slice(),
-    )
-    .expect("rogue test hApp should unpack");
-    let mut resolved = rogue_bundle
-        .resolve_cells(MemproofMap::default(), Default::default())
-        .await
-        .expect("rogue test hApp should resolve");
-    assert_eq!(
-        resolved.dnas_to_register.len(),
-        1,
-        "rogue hApp should have one DNA"
-    );
-    let (rogue_dna, _) = resolved.dnas_to_register.pop().unwrap();
-
-    let production_dna = holochain::sweettest::SweetDnaFile::from_bundle(&production_dna_path)
-        .await
-        .unwrap_or_else(|_| {
-            panic!(
-                "missing {}; run npm run test:sweettest",
-                production_dna_path.display()
-            )
-        });
-    assert_eq!(
-        rogue_dna.dna_hash(),
-        production_dna.dna_hash(),
-        "rogue test hApp must use the production profiles integrity DNA",
-    );
-
-    let dnas = [(RoleName::from("ahau"), rogue_dna)];
-    let mut conductors = if agent_count > 1 {
-        SweetConductorBatch::from_standard_config_rendezvous(agent_count).await
-    } else {
-        SweetConductorBatch::from_standard_config(agent_count).await
-    };
-    let apps = conductors
-        .setup_app("profiles-sweettest", &dnas)
-        .await
-        .expect("install rogue test hApp for each agent")
-        .into_inner();
-    let cells = apps
-        .into_iter()
-        .map(|app| {
-            let mut cells = app.into_cells();
-            assert_eq!(cells.len(), 1);
-            cells.remove(0)
-        })
-        .collect();
-
-    if agent_count > 1 {
-        conductors.exchange_peer_info().await;
-    }
-
-    TestNetwork { conductors, cells }
-}
 
 fn profile(name: &str) -> Profile {
     Profile {
@@ -165,7 +56,7 @@ fn profile_names(history: &MyProfileHistory) -> Vec<&str> {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn another_agent_cannot_overwrite_a_profile() {
-    let network = test_network(2).await;
+    let network = test_network(2, "profiles-sweettest").await;
     network
         .call::<_, MyProfile>(
             0,
@@ -228,7 +119,7 @@ async fn another_agent_cannot_overwrite_a_profile() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn coordinator_updates_both_sections_twice_and_preserves_all_versions() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     create_profile_then_update(
         &network,
         my_profile("Mere", "mere@example.com"),
@@ -270,7 +161,7 @@ async fn coordinator_updates_both_sections_twice_and_preserves_all_versions() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn clearing_email_keeps_the_earlier_personal_information_version() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     create_profile_then_update(
         &network,
         my_profile("Mere", "mere@example.com"),
@@ -297,7 +188,7 @@ async fn clearing_email_keeps_the_earlier_personal_information_version() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn coordinator_update_creates_personal_information_for_an_older_profile() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     network
         .call::<_, ()>(0, "rogue_profiles", "create_profile", profile("Mere"))
         .await;
@@ -319,7 +210,7 @@ async fn coordinator_update_creates_personal_information_for_an_older_profile() 
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_refused_coordinator_update_leaves_both_sections_unchanged() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     network
         .call::<_, MyProfile>(
             0,
@@ -347,7 +238,7 @@ async fn a_refused_coordinator_update_leaves_both_sections_unchanged() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_profile_is_authored_by_the_calling_agent() {
-    let network = test_network(2).await;
+    let network = test_network(2, "profiles-sweettest").await;
     network
         .call::<_, ()>(
             1,
@@ -369,7 +260,7 @@ async fn a_profile_is_authored_by_the_calling_agent() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn another_agent_cannot_delete_a_profile() {
-    let network = test_network(2).await;
+    let network = test_network(2, "profiles-sweettest").await;
     network
         .call::<_, MyProfile>(
             0,
@@ -395,7 +286,7 @@ async fn another_agent_cannot_delete_a_profile() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn another_agent_cannot_read_personal_information_contents() {
-    let network = test_network(2).await;
+    let network = test_network(2, "profiles-sweettest").await;
     network
         .call::<_, MyProfile>(
             0,
@@ -422,7 +313,7 @@ async fn another_agent_cannot_read_personal_information_contents() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn another_agent_cannot_overwrite_personal_information() {
-    let network = test_network(2).await;
+    let network = test_network(2, "profiles-sweettest").await;
     network
         .call::<_, MyProfile>(
             0,
@@ -457,7 +348,7 @@ async fn another_agent_cannot_overwrite_personal_information() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn another_agent_cannot_delete_personal_information() {
-    let network = test_network(2).await;
+    let network = test_network(2, "profiles-sweettest").await;
     network
         .call::<_, MyProfile>(
             0,
@@ -484,7 +375,7 @@ async fn another_agent_cannot_delete_personal_information() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn personal_information_requires_a_profile() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     let error = network
         .rejected(
             0,
@@ -501,7 +392,7 @@ async fn personal_information_requires_a_profile() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn an_agent_cannot_create_second_personal_information() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     network
         .call::<_, ()>(0, "rogue_profiles", "create_profile", profile("Mere"))
         .await;
@@ -529,7 +420,7 @@ async fn an_agent_cannot_create_second_personal_information() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn an_author_can_update_their_profile() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     network
         .call::<_, ()>(0, "rogue_profiles", "create_profile", profile("Mere"))
         .await;
@@ -547,7 +438,7 @@ async fn an_author_can_update_their_profile() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn an_author_can_update_their_personal_information() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     network
         .call::<_, ()>(0, "rogue_profiles", "create_profile", profile("Mere"))
         .await;
@@ -576,7 +467,7 @@ async fn an_author_can_update_their_personal_information() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn profile_updates_must_point_to_the_first_version() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     network
         .call::<_, ()>(0, "rogue_profiles", "create_profile", profile("Mere"))
         .await;
@@ -606,7 +497,7 @@ async fn profile_updates_must_point_to_the_first_version() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn personal_information_updates_must_point_to_the_first_version() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     network
         .call::<_, ()>(0, "rogue_profiles", "create_profile", profile("Mere"))
         .await;
@@ -647,7 +538,7 @@ async fn personal_information_updates_must_point_to_the_first_version() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn an_author_cannot_delete_their_profile() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     network
         .call::<_, ()>(0, "rogue_profiles", "create_profile", profile("Mere"))
         .await;
@@ -661,7 +552,7 @@ async fn an_author_cannot_delete_their_profile() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn an_agent_cannot_create_a_second_profile() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     network
         .call::<_, ()>(0, "rogue_profiles", "create_profile", profile("First"))
         .await;
@@ -676,7 +567,7 @@ async fn an_agent_cannot_create_a_second_profile() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn invalid_profile_fields_are_rejected() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     let error = network
         .rejected(0, "rogue_profiles", "create_profile", profile(" "))
         .await;
@@ -705,7 +596,7 @@ async fn invalid_profile_fields_are_rejected() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn rust_gender_variants_are_accepted_and_unknown_values_rejected() {
-    let network = test_network(1).await;
+    let network = test_network(1, "profiles-sweettest").await;
     let variants = [Gender::Male, Gender::Female, Gender::Other, Gender::Unknown];
     for (index, gender) in variants.into_iter().enumerate() {
         let mut next = profile("Mere");

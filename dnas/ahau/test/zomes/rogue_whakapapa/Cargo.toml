@@ -1,0 +1,13 @@
+[package]
+name = "rogue_whakapapa"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+hdk = { workspace = true }
+serde = { workspace = true }
+whakapapa_integrity = { path = "../../../zomes/integrity/whakapapa" }

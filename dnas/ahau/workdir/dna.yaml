@@ -9,6 +9,10 @@ integrity:
       hash: null
       path: ../../../target/wasm32-unknown-unknown/release/profiles_integrity.wasm
       dependencies: null
+    - name: whakapapa_integrity
+      hash: null
+      path: ../../../target/wasm32-unknown-unknown/release/whakapapa_integrity.wasm
+      dependencies: null
 coordinator:
   zomes:
     - name: profiles
@@ -16,3 +20,8 @@ coordinator:
       path: ../../../target/wasm32-unknown-unknown/release/profiles.wasm
       dependencies:
         - name: profiles_integrity
+    - name: whakapapa
+      hash: null
+      path: ../../../target/wasm32-unknown-unknown/release/whakapapa.wasm
+      dependencies:
+        - name: whakapapa_integrity
