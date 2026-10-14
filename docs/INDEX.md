@@ -22,7 +22,7 @@ Leg 1 docs (`history/leg1/`) and migrated reference material from
 
 | Location | Contents |
 |---|---|
-| [`history/leg1/`](history/leg1/) | Finished Leg 1 work: the 2 Leg 1/Leg 2 rebuild PRDs (`ahau-v2-repo-foundation.prd.md`, `ahau-v2-frontend-rebuild.prd.md` — the latter superseded by the redesign around user capabilities directly on Holochain, kept as record), the 5 completed Leg 1 milestone plans (`ahau-v2-*.plan.md`), and `contract-friction.md`, `writing-an-adapter.md`, `decentralized-backend-research.md` (where the contract resisted implementation, how to write an adapter, research into candidate Leg 2 protocols). `ahau-monorepo`'s own PRDs and plans live in that repo. |
+| [`history/leg1/`](history/leg1/) | Finished Leg 1 work: the 2 Leg 1/Leg 2 rebuild PRDs (`ahau-v2-repo-foundation.prd.md`, `ahau-v2-frontend-rebuild.prd.md` — the latter superseded by the redesign around user capabilities directly on Holochain, kept as record), the 5 completed Leg 1 milestone plans (`ahau-v2-*.plan.md`), `leg1-contract.md` (the compressed record of the frozen Leg 1 data-access contract: its operations, semantics and derivation), and `contract-friction.md`, `writing-an-adapter.md`, `decentralized-backend-research.md` (where the contract resisted implementation, how to write an adapter, research into candidate Leg 2 protocols). `ahau-monorepo`'s own PRDs and plans live in that repo. |
 
 ### A note on paths inside the Leg 1/Leg 2 PRDs and plans
 
@@ -31,10 +31,10 @@ Relative paths inside `history/leg1/ahau-v2-*.prd.md` and
 root (e.g. `plans/data-access-triage.json`, `plans/data-access-inventory.json`) — that
 repo is now confirmed stale and out of scope for this migration, so those
 paths won't resolve here and aren't being fixed retroactively; they're a
-record of where the inventory work actually happened. The equivalents this
-repo actually reads are vendored under
-`reference/leg1-contract/contract-source/`, which is what the manifest
-derivation and coverage scripts there use. They're a frozen snapshot.
+record of where the inventory work actually happened. This repo's vendored
+copies of those files, with the contract, fixture and conformance suite built
+from them, are summarized in `history/leg1/leg1-contract.md`. The originals are
+in git history at commit `edf5a8c` (`reference/leg1-contract/`).
 
 The plans' "Files to Change" tables and task steps name `ahau-v2` files at the
 paths they had when each plan was written (e.g. `docs/contract-friction.md`,
