@@ -68,7 +68,7 @@ pub fn get_whakapapa(_: ()) -> ExternResult<Whakapapa> {
     let relative_type: EntryType = UnitEntryTypes::Relative.try_into()?;
     let relationship_type: EntryType = UnitEntryTypes::Relationship.try_into()?;
     let mut name_versions = Vec::<(ActionHash, ActionHash, String)>::new();
-    let mut deleted_names = std::collections::BTreeSet::<ActionHash>::new();
+    let mut retracted_actions = std::collections::BTreeSet::<ActionHash>::new();
     let mut relationships = std::collections::BTreeMap::<ActionHash, Relationship>::new();
     // Entry-type filtering omits Delete actions, which have no entry type of
     // their own. Read all chain actions so retractions can be applied too.
@@ -93,14 +93,14 @@ pub fn get_whakapapa(_: ()) -> ExternResult<Whakapapa> {
                 relationships.insert(hash, relationship);
             }
             Action::Delete(delete) => {
-                deleted_names.insert(delete.deletes_address.clone());
+                retracted_actions.insert(delete.deletes_address.clone());
                 relationships.remove(&delete.deletes_address);
             }
             _ => {}
         }
     }
     Ok(Whakapapa {
-        relatives: latest_names(name_versions, deleted_names)
+        relatives: latest_names(name_versions, retracted_actions)
             .into_iter()
             .map(|(action, name)| NamedRelative { action, name })
             .collect(),

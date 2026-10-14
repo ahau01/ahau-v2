@@ -43,7 +43,6 @@ export interface WhakapapaClient {
   close (): Promise<void>
 }
 
-export const APP_ID = 'ahau'
 export const ROLE = 'ahau'
 export const ZOME = 'whakapapa'
 /** Must match `WHAKAPAPA_NEEDS_PROFILE` in the integrity zome. */

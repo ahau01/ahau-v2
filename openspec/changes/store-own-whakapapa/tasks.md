@@ -7,7 +7,7 @@
 ## 2. Integrity zome
 
 - [x] 2.1 Add the whakapapa integrity zome and DNA registration for private `Relative` and `Relationship` entries, with `PersonRef`/direction types and a random nonce field; verify the DNA and workspace compile.
-- [x] 2.2 Implement metadata-based author-only update/delete and first-Create checks plus the profile-exists chain check; unit-test valid updates, updates of updates, wrong target types, unrelated deletes, and author refusals with `cargo test -p whakapapa_integrity`.
+- [x] 2.2 Implement metadata-based author-only update/delete and first-Create checks plus the profile-exists chain check; unit-test valid updates, refused updates of updates, wrong target types, unrelated deletes, and author refusals with `cargo test -p whakapapa_integrity`.
 
 ## 3. Coordinator and privacy proof
 

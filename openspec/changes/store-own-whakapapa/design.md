@@ -51,6 +51,8 @@ The dev signing key is granted the `get_whakapapa` and `add_relative` functions 
 
 Deleting a Relative's original Create retracts only that name version; a surviving Update keeps the Relative visible under its latest name, and its live Relationships remain. This is the intended behavior for this change.
 
+Retracting every name version of a Relative removes it from `relatives`, but any Relationship naming it stays in `relationships` until that Relationship's own Create is retracted. A read can therefore return a Relationship whose `PersonRef` names no listed Relative, and `add_relative` refuses that Relative as an anchor. This is intended: removing a person's name does not silently remove the connections someone recorded, matching the non-goal of deleting people as a side effect. Clients must tolerate such references. How the app presents them (hidden, shown as retracted, or offered for retraction) is decided when a change first displays the tree.
+
 ## Risks / Trade-offs
 
 - [Peers can observe private-entry action authorship and timing] → State this limitation in the capability and any client-facing privacy description; do not promise anonymity or concealment of tree shape metadata.
