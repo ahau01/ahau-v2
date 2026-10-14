@@ -51,6 +51,12 @@ pub struct UpdateRelativeInput {
     pub name: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateRelativeVersionInput {
+    pub original: ActionHash,
+    pub name: String,
+}
+
 #[hdk_extern]
 pub fn update_agent_relative(input: UpdateRelativeInput) -> ExternResult<ActionHash> {
     let original = agent_entry_action(input.agent, UnitEntryTypes::Relative)?.ok_or(
@@ -58,6 +64,17 @@ pub fn update_agent_relative(input: UpdateRelativeInput) -> ExternResult<ActionH
     )?;
     update_entry(
         original,
+        EntryTypes::Relative(Relative {
+            name: input.name,
+            nonce: vec![0; 32],
+        }),
+    )
+}
+
+#[hdk_extern]
+pub fn update_relative_version(input: UpdateRelativeVersionInput) -> ExternResult<ActionHash> {
+    update_entry(
+        input.original,
         EntryTypes::Relative(Relative {
             name: input.name,
             nonce: vec![0; 32],

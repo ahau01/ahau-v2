@@ -1,5 +1,6 @@
 use serde_json::{json, Value};
-use whakapapa::Whakapapa;
+use whakapapa::{AddRelativeInput, Whakapapa};
+use whakapapa_integrity::{Direction, PersonRef, Relationship};
 use whakapapa_integrity::WHAKAPAPA_NEEDS_PROFILE;
 
 #[path = "../../../../test/sweettest.rs"]
@@ -46,6 +47,161 @@ async fn relative_and_relationship_are_created_and_read_together() {
     assert_eq!(result.relationships.len(), 1);
     let read: Whakapapa = network.call(0, "whakapapa", "get_whakapapa", ()).await;
     assert_eq!(read, result);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn child_can_be_added_of_an_existing_relative() {
+    let network = test_network(1, "whakapapa-sweettest").await;
+    create_profile(&network, 0).await;
+    let parent: Whakapapa = network
+        .call(
+            0,
+            "whakapapa",
+            "add_relative",
+            json!({"name":"Māmā","direction":"Parent","of":"Me"}),
+        )
+        .await;
+    let parent_ref = PersonRef::Relative(parent.relatives[0].action.clone());
+    let child: Whakapapa = network
+        .call(
+            0,
+            "whakapapa",
+            "add_relative",
+            AddRelativeInput {
+                name: "Tama".into(),
+                direction: Direction::Child,
+                of: parent_ref.clone(),
+            },
+        )
+        .await;
+
+    let child_ref = PersonRef::Relative(
+        child
+            .relatives
+            .iter()
+            .find(|relative| relative.name == "Tama")
+            .unwrap()
+            .action
+            .clone(),
+    );
+    assert!(child.relationships.contains(&Relationship {
+        parent: parent_ref,
+        child: child_ref,
+    }));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn relative_reference_must_exist_on_the_calling_agent_chain() {
+    let network = test_network(2, "whakapapa-sweettest").await;
+    create_profile(&network, 0).await;
+    create_profile(&network, 1).await;
+    let foreign: Whakapapa = network
+        .call(
+            1,
+            "whakapapa",
+            "add_relative",
+            json!({"name":"Māmā","direction":"Parent","of":"Me"}),
+        )
+        .await;
+    let error = network
+        .rejected(
+            0,
+            "whakapapa",
+            "add_relative",
+            AddRelativeInput {
+                name: "Tama".into(),
+                direction: Direction::Child,
+                of: PersonRef::Relative(foreign.relatives[0].action.clone()),
+            },
+        )
+        .await;
+
+    assert!(error.contains(whakapapa::RELATIVE_NOT_FOUND), "{error}");
+    let empty: Whakapapa = network.call(0, "whakapapa", "get_whakapapa", ()).await;
+    assert!(empty.relatives.is_empty());
+    assert!(empty.relationships.is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn one_person_can_have_two_recorded_parents() {
+    let network = test_network(1, "whakapapa-sweettest").await;
+    create_profile(&network, 0).await;
+    let first: Whakapapa = network
+        .call(
+            0,
+            "whakapapa",
+            "add_relative",
+            json!({"name":"Tama","direction":"Child","of":"Me"}),
+        )
+        .await;
+    let child_ref = PersonRef::Relative(first.relatives[0].action.clone());
+    let second: Whakapapa = network
+        .call(
+            0,
+            "whakapapa",
+            "add_relative",
+            AddRelativeInput {
+                name: "Matua 1".into(),
+                direction: Direction::Parent,
+                of: child_ref.clone(),
+            },
+        )
+        .await;
+    let final_whakapapa: Whakapapa = network
+        .call(
+            0,
+            "whakapapa",
+            "add_relative",
+            AddRelativeInput {
+                name: "Matua 2".into(),
+                direction: Direction::Parent,
+                of: child_ref.clone(),
+            },
+        )
+        .await;
+
+    assert_eq!(final_whakapapa.relatives.len(), 3);
+    assert_eq!(
+        final_whakapapa
+            .relationships
+            .iter()
+            .filter(|relationship| {
+                relationship.child == child_ref
+                    && matches!(relationship.parent, PersonRef::Relative(_))
+            })
+            .count(),
+        2
+    );
+    assert_eq!(second.relationships.len(), 2);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn retracting_original_create_keeps_a_surviving_update_and_relationship() {
+    let network = test_network(1, "whakapapa-sweettest").await;
+    create_profile(&network, 0).await;
+    let created: Whakapapa = network
+        .call(
+            0,
+            "whakapapa",
+            "add_relative",
+            json!({"name":"Māmā","direction":"Parent","of":"Me"}),
+        )
+        .await;
+    let original = created.relatives[0].action.clone();
+    network
+        .call::<_, holochain::prelude::ActionHash>(
+            0,
+            "rogue_whakapapa",
+            "update_relative_version",
+            json!({"original":original.clone(),"name":"Mama updated"}),
+        )
+        .await;
+    network.call::<_, ()>(0, "rogue_whakapapa", "delete_relative_version", original).await;
+
+    let remaining: Whakapapa = network.call(0, "whakapapa", "get_whakapapa", ()).await;
+    assert_eq!(remaining.relatives.len(), 1);
+    assert_eq!(remaining.relatives[0].name, "Mama updated");
+    assert_eq!(remaining.relationships, created.relationships);
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

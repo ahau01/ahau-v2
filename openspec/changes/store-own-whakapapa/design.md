@@ -45,6 +45,12 @@ The spike confirms that HDI's flattened private `StoreRecord` operation exposes 
 
 Expose the operations through `src/whakapapa/` following `src/profile/client.ts`; app code must not import Holochain APIs directly. This change adds no UI integration, so the existing `#/me/whakapapa` empty state and navigation contract remain intact.
 
+The dev signing key is granted the `get_whakapapa` and `add_relative` functions for the whakapapa zome, alongside its profile functions. The conductor enforces this allowlist.
+
+### Retraction is version-level
+
+Deleting a Relative's original Create retracts only that name version; a surviving Update keeps the Relative visible under its latest name, and its live Relationships remain. This is the intended behavior for this change.
+
 ## Risks / Trade-offs
 
 - [Peers can observe private-entry action authorship and timing] → State this limitation in the capability and any client-facing privacy description; do not promise anonymity or concealment of tree shape metadata.
@@ -56,7 +62,8 @@ Expose the operations through `src/whakapapa/` following `src/profile/client.ts`
 
 Adding `whakapapa_integrity` changes the DNA hash. Existing dev cells and their profiles remain on the old DNA; this change does not migrate them into the new DNA. Preserve the old conductor data and old hApp bundle before installing the changed DNA. A new cell needs a profile before it can add whakapapa. No destructive data conversion is part of this change. Rollback means using the old hApp with its old cell; it does not erase actions from either source chain.
 
-## Open Questions
+## Accepted constraints and follow-up
 
-- Is it acceptable for only the same agent key to read this account, so a different agent key on another device cannot access it?
-- Is it acceptable for peers to see the author and timing of private-entry actions?
+- Same agent key only: accepted for this change; revisit when multi-device access lands.
+- Peers see authorship and timing: accepted for this change; revisit when broader sharing lands.
+- When a page first needs profile and whakapapa together, consolidate their duplicated client connection setup, move the whakapapa import out of `profile/dev-connection.ts`, and remove the single-use token.
