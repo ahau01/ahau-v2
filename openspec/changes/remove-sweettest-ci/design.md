@@ -35,7 +35,7 @@ Remove the README's `## CI` section. The `continuous-integration` capability spe
 
 ### Reduce the Holochain job timeout to 60 minutes
 
-The current cold zome test run is about 38 minutes, excluding setup. With SweetTest removed, a 60-minute timeout preserves about 20 minutes of margin while avoiding the former 90-minute allowance. Keep the existing timeout if future measurements show the remaining Holochain job regularly needs more time; the timeout does not change which checks run.
+The current cold zome test run is about 38 minutes, excluding setup. With SweetTest removed, a 60-minute timeout preserves about 20 minutes of margin while avoiding the former 90-minute allowance. Raise the timeout if future measurements show the remaining Holochain job regularly needs more time; the timeout does not change which checks run.
 
 ## Risks / Trade-offs
 
