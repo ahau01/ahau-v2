@@ -10,7 +10,7 @@
     "test": "npm run build && node --test dist && vitest run",
     "build:happ": "cargo build --release --target wasm32-unknown-unknown && hc dna pack dnas/ahau/workdir && hc app pack workdir",
     "test:zomes": "cargo test --workspace",
-    "test:sweettest": "npm run build:happ && hc dna pack dnas/ahau/test/workdir && hc app pack workdir/rogue && cargo test -p profiles --features sweettest --test sweettest -- --test-threads=1",
+    "test:sweettest": "npm run build:happ && hc dna pack dnas/ahau/test/workdir && hc app pack workdir/rogue && cargo test -p profiles --features sweettest --test sweettest -- --test-threads=1 && cargo test -p whakapapa --features sweettest --test sweettest -- --test-threads=1",
     "conductor": "npm run build:happ && hc sandbox clean && echo pass | hc sandbox --piped -f=4444 generate workdir/ahau.happ --app-id ahau --run=8888 network mem",
     "dev": "vite",
     "build:app": "vite build",

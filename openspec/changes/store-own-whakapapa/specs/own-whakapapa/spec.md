@@ -61,7 +61,7 @@ An agent SHALL have a profile on their source chain before creating whakapapa en
 - **THEN** the operation is refused and no whakapapa entries are committed
 
 ### Requirement: Only the author can update or retract their entries
-An entry SHALL only be updatable or deletable by the agent who authored it. An update SHALL point to the entry's first Create action. A delete SHALL retract only the addressed entry.
+A Relative SHALL only be updatable or deletable by the agent who authored it. An update SHALL point to the Relative's first Create action. A Relationship SHALL not be updatable and may only be retracted by its author. A delete SHALL retract only the addressed action version.
 
 #### Scenario: Another agent cannot update or retract an entry
 - **WHEN** another agent attempts to update or delete the author's entry
@@ -71,12 +71,20 @@ An entry SHALL only be updatable or deletable by the agent who authored it. An u
 - **WHEN** the author updates an entry
 - **THEN** the update points to its first Create action
 
+#### Scenario: Updating a Relationship is refused
+- **WHEN** an agent attempts to update a Relationship
+- **THEN** validation refuses the update
+
 ### Requirement: Reading whakapapa returns latest names and live relationships
 The read SHALL return the author's relatives with their latest names and all relationships not retracted by a delete, using the author's source-chain query. It SHALL NOT depend on public links or other agents' data.
 
 #### Scenario: Updated relative name is returned
 - **WHEN** a relative has a later name version
 - **THEN** the read returns the latest name for that relative
+
+#### Scenario: Retracting one name version preserves other versions
+- **WHEN** the author deletes a Relative Update
+- **THEN** that version is retracted and the latest remaining name is returned
 
 #### Scenario: Retracted relationship is not live
 - **WHEN** a relationship has been retracted

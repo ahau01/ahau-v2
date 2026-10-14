@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "noEmit": true },
-  "include": ["src/app/**/*.ts", "src/app/**/*.svelte", "src/first-launch/**/*.ts", "src/navigation/**/*.ts", "src/own-profile/**/*.ts", "src/profile/client.ts", "src/profile/pretend-client.ts", "src/profile/dev-connection.ts"],
+  "include": ["src/app/**/*.ts", "src/app/**/*.svelte", "src/first-launch/**/*.ts", "src/navigation/**/*.ts", "src/own-profile/**/*.ts", "src/profile/client.ts", "src/profile/pretend-client.ts", "src/profile/dev-connection.ts", "src/whakapapa/client.ts"],
   "exclude": ["src/**/*.test.ts"]
 }
