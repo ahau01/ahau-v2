@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-10-11
+# Pure refactor: the genders offered, their labels and their icons are
+# identical before and after, so no requirement changes. See proposal.md.
+skip_specs: true
